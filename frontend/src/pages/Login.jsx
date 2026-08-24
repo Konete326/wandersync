@@ -46,8 +46,8 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const res = await login({ email, password });
-      showToast('Welcome back to WanderSync!', 'success');
+      const res = await login({ email: email.trim().toLowerCase(), password });
+      showToast(`Welcome back, ${res.data.user.name.split(' ')[0]}!`, 'success');
       if (res.data?.user?.role === 'admin') {
         navigate('/admin');
       } else {
@@ -162,7 +162,7 @@ const Login = () => {
                     type="email"
                     value={email}
                     onBlur={() => setTouched((p) => ({ ...p, email: true }))}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value.trim())}
                     placeholder="traveler@example.com"
                     className={`w-full pl-9 pr-9 py-2 rounded-lg bg-secondary/50 border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none transition-colors ${
                       !isEmailValid && email

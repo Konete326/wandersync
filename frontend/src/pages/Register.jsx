@@ -57,7 +57,7 @@ const Register = () => {
 
     setLoading(true);
     try {
-      await register({ name, email, password });
+      await register({ name: name.trim(), email: email.trim().toLowerCase(), password });
       showToast('Account created successfully! Welcome to WanderSync.', 'success');
       navigate('/my-trips');
     } catch (error) {
@@ -145,7 +145,7 @@ const Register = () => {
                     type="email"
                     value={email}
                     onBlur={() => setTouched((p) => ({ ...p, email: true }))}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value.trim())}
                     placeholder="traveler@example.com"
                     className={`w-full pl-9 pr-9 py-2 rounded-lg bg-secondary/50 border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none transition-colors ${
                       !isEmailValid && email

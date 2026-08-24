@@ -15,14 +15,17 @@ export const register = async (req, res) => {
       return sendError(res, 'Please provide all required fields', 400);
     }
 
-    const userExists = await User.findOne({ email });
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name.trim();
+
+    const userExists = await User.findOne({ email: cleanEmail });
     if (userExists) {
       return sendError(res, 'User with this email already exists', 400);
     }
 
     const user = await User.create({
-      name,
-      email,
+      name: cleanName,
+      email: cleanEmail,
       password,
       preferences: {
         travelStyle: travelStyle || 'moderate',
@@ -54,7 +57,8 @@ export const login = async (req, res) => {
       return sendError(res, 'Please provide email and password', 400);
     }
 
-    const user = await User.findOne({ email }).select('+password');
+    const cleanEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
     if (!user || !(await user.matchPassword(password))) {
       return sendError(res, 'Invalid email or password', 401);
     }
@@ -89,7 +93,7 @@ export const updateProfile = async (req, res) => {
       return sendError(res, 'User not found', 404);
     }
 
-    if (name) user.name = name;
+    if (name) user.name = name.trim();
     if (travelStyle) user.preferences.travelStyle = travelStyle;
     if (currency) user.preferences.currency = currency;
     if (avatar) user.avatar = avatar;
