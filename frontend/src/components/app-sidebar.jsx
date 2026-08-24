@@ -55,7 +55,7 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="p-2 border-t border-sidebar-border">
+      <SidebarFooter className="p-2 group-data-[collapsible=icon]:p-1.5 border-t border-sidebar-border flex items-center justify-center">
         <NavUser />
       </SidebarFooter>
     </Sidebar>
