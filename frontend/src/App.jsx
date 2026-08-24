@@ -14,6 +14,7 @@ const Home = lazy(() => import('./pages/Home'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
 const Features = lazy(() => import('./pages/Features'));
 const Gallery = lazy(() => import('./pages/Gallery'));
+const DestinationExplorer = lazy(() => import('./pages/DestinationExplorer'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const Community = lazy(() => import('./pages/Community'));
 const CreateTrip = lazy(() => import('./pages/CreateTrip'));
@@ -87,6 +88,22 @@ function AppLayout() {
             element={
               <ClientRoute>
                 <Gallery />
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/gallery/:id"
+            element={
+              <ClientRoute>
+                <DestinationExplorer />
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/destination/:id"
+            element={
+              <ClientRoute>
+                <DestinationExplorer />
               </ClientRoute>
             }
           />
