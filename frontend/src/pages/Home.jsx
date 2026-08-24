@@ -23,10 +23,10 @@ const videos = [
 ];
 
 const stats = [
-  '60+ Deep Sessions',
-  '12,000+ Creators',
-  '4.8 User Satisfaction',
-  'Intentional-First Design'
+  '60,000+ AI Itineraries',
+  '12,000+ Global Explorers',
+  '4.9 Satisfaction Score',
+  'Live Weather & Map Telemetry'
 ];
 
 const navLinks = [
@@ -40,7 +40,7 @@ const Home = () => {
   const [activeVideo, setActiveVideo] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [email, setEmail] = useState('');
+  const [promptText, setPromptText] = useState('');
   const videoRefs = useRef([]);
   const navigate = useNavigate();
   const { showToast } = useModal();
@@ -73,15 +73,13 @@ const Home = () => {
     }, 1000);
   };
 
-  const handleGetAccess = (e) => {
+  const handleStartPlanning = (e) => {
     e.preventDefault();
-    if (!email.trim()) {
+    if (!promptText.trim()) {
       navigate('/create');
       return;
     }
-    showToast(`Welcome! Invitation sent to ${email}`, 'success');
-    setEmail('');
-    navigate('/create', { state: { initialPrompt: email } });
+    navigate('/create', { state: { initialPrompt: promptText } });
   };
 
   const isDarkContent = activeVideo === 2;
@@ -122,7 +120,7 @@ const Home = () => {
             onClick={() => navigate('/')}
             className="text-white italic text-2xl sm:text-3xl tracking-tight cursor-pointer font-['Instrument_Serif']"
           >
-            Lumora
+            WanderSync
           </div>
 
           <nav className="hidden md:flex items-center gap-6 liquid-glass rounded-full px-5 py-2">
@@ -176,7 +174,7 @@ const Home = () => {
               <X className="size-6" />
             </button>
             <div className="text-white italic text-4xl font-['Instrument_Serif'] mb-3">
-              Lumora
+              WanderSync
             </div>
             {navLinks.map((link, i) => (
               <button
@@ -209,31 +207,31 @@ const Home = () => {
           <div
             className={`liquid-glass rounded-full px-4 py-1.5 text-[11px] sm:text-xs font-sans font-medium mb-4 sm:mb-6 transition-colors duration-700 border ${badgeBorderClass} ${contentColorClass}`}
           >
-            Over 10,000 minds already finding their clarity
+            Next-Gen AI Travel Maestro & Journey Architecture
           </div>
 
           <h1
             className={`font-['Instrument_Serif'] text-3xl sm:text-5xl md:text-7xl lg:text-[5.2rem] leading-[1.08] tracking-tight max-w-4xl transition-colors duration-700 ${contentColorClass}`}
           >
-            Clarity in an Endlessly
-            <br className="hidden sm:inline" /> Noisy Universe
+            Transform Inspiration Into
+            <br className="hidden sm:inline" /> Flawless Journeys
           </h1>
 
           <p
             className={`font-sans text-xs sm:text-base md:text-lg max-w-xl leading-relaxed mt-3 sm:mt-5 transition-colors duration-700 ${subtextColorClass}`}
           >
-            Rise above the chaos of pings, infinite scrolling, and relentless demands.
-            Discover how to protect your presence and create with intention.
+            Rise above chaotic travel planning. Discover bespoke day-by-day itineraries,
+            interactive maps, live weather forecasts, and real-time budgeting orchestrated by Gemini AI.
           </p>
 
           <form
-            onSubmit={handleGetAccess}
+            onSubmit={handleStartPlanning}
             className="liquid-glass rounded-full p-1 sm:p-1.5 flex items-center max-w-[300px] sm:max-w-md w-full mt-5 sm:mt-8 shadow-2xl"
           >
             <input
               type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={promptText}
+              onChange={(e) => setPromptText(e.target.value)}
               placeholder="e.g. 5 days in Kyoto for peace & culture"
               className={`w-full bg-transparent px-3 sm:px-4 py-2 font-sans text-xs sm:text-sm focus:outline-none placeholder:transition-colors placeholder:duration-700 ${
                 isDarkContent
