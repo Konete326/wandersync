@@ -9,6 +9,11 @@ export const fetchGalleryItems = async (page = 1, limit = 12, country = '', cate
   return response.data;
 };
 
+export const fetchGalleryItemById = async (id) => {
+  const response = await api.get(`/gallery/${id}`);
+  return response.data;
+};
+
 export const uploadGalleryItem = async (formData) => {
   const response = await api.post('/gallery', formData, {
     headers: {

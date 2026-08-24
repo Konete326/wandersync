@@ -24,9 +24,19 @@ export const getGalleryItems = async (req, res) => {
   }
 };
 
+export const getGalleryItemById = async (req, res) => {
+  try {
+    const item = await Gallery.findById(req.params.id).populate('createdBy', 'name email');
+    if (!item) return sendError(res, 'Destination not found', 404);
+    return sendSuccess(res, 'Destination details fetched', item);
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
 export const createGalleryItem = async (req, res) => {
   try {
-    const { title, country, city, location, description, category, featured } = req.body;
+    const { title, country, city, location, description, category, featured, bestTimeToVisit, idealDuration, estimatedBudget, currency, language, transportation } = req.body;
     if (!title || !country || !city) return sendError(res, 'Title, country, and city are required', 400);
     let imageUrl = req.body.imageUrl || '';
     let publicId = '';
@@ -36,8 +46,7 @@ export const createGalleryItem = async (req, res) => {
       publicId = uploadResult.publicId;
     }
     if (!imageUrl) return sendError(res, 'Please provide a primary landmark image', 400);
-    const touristPlaces = typeof req.body.touristPlaces === 'string' ? JSON.parse(req.body.touristPlaces) : (req.body.touristPlaces || []);
-    const hotels = typeof req.body.hotels === 'string' ? JSON.parse(req.body.hotels) : (req.body.hotels || []);
+    const parseField = (val) => (typeof val === 'string' ? JSON.parse(val) : (val || []));
     const item = await Gallery.create({
       title: title.trim(),
       country: country.trim(),
@@ -47,8 +56,16 @@ export const createGalleryItem = async (req, res) => {
       category: category || 'Landscape',
       imageUrl,
       publicId,
-      touristPlaces,
-      hotels,
+      bestTimeToVisit: bestTimeToVisit || 'Year-round',
+      idealDuration: idealDuration || '5-7 Days',
+      estimatedBudget: estimatedBudget || '$120-$200/day',
+      currency: currency || 'USD ($)',
+      language: language || 'English / Local',
+      transportation: transportation || '',
+      travelTips: parseField(req.body.travelTips),
+      touristPlaces: parseField(req.body.touristPlaces),
+      hotels: parseField(req.body.hotels),
+      localFoods: parseField(req.body.localFoods),
       featured: featured === 'true' || featured === true,
       createdBy: req.user ? req.user._id : null
     });
@@ -62,28 +79,20 @@ export const updateGalleryItem = async (req, res) => {
   try {
     const item = await Gallery.findById(req.params.id);
     if (!item) return sendError(res, 'Destination not found', 404);
-    const { title, country, city, location, description, category, featured } = req.body;
-    if (title) item.title = title.trim();
-    if (country) item.country = country.trim();
-    if (city) item.city = city.trim();
-    if (location) item.location = location.trim();
-    if (description !== undefined) item.description = description.trim();
-    if (category) item.category = category;
-    if (featured !== undefined) item.featured = featured === 'true' || featured === true;
+    const fields = ['title', 'country', 'city', 'location', 'description', 'category', 'bestTimeToVisit', 'idealDuration', 'estimatedBudget', 'currency', 'language', 'transportation'];
+    fields.forEach((f) => { if (req.body[f] !== undefined) item[f] = req.body[f]; });
+    if (req.body.featured !== undefined) item.featured = req.body.featured === 'true' || req.body.featured === true;
     if (req.file) {
       if (item.publicId) await deleteImage(item.publicId).catch(() => {});
       const uploadResult = await uploadImageBuffer(req.file.buffer, 'wandersync/gallery');
       item.imageUrl = uploadResult.url;
       item.publicId = uploadResult.publicId;
-    } else if (req.body.imageUrl) {
-      item.imageUrl = req.body.imageUrl;
-    }
-    if (req.body.touristPlaces) {
-      item.touristPlaces = typeof req.body.touristPlaces === 'string' ? JSON.parse(req.body.touristPlaces) : req.body.touristPlaces;
-    }
-    if (req.body.hotels) {
-      item.hotels = typeof req.body.hotels === 'string' ? JSON.parse(req.body.hotels) : req.body.hotels;
-    }
+    } else if (req.body.imageUrl) item.imageUrl = req.body.imageUrl;
+    const parseField = (val) => (typeof val === 'string' ? JSON.parse(val) : val);
+    if (req.body.touristPlaces) item.touristPlaces = parseField(req.body.touristPlaces);
+    if (req.body.hotels) item.hotels = parseField(req.body.hotels);
+    if (req.body.localFoods) item.localFoods = parseField(req.body.localFoods);
+    if (req.body.travelTips) item.travelTips = parseField(req.body.travelTips);
     await item.save();
     return sendSuccess(res, 'Destination updated successfully', item);
   } catch (error) {

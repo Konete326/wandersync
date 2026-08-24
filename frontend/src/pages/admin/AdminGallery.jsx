@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Plus,
   Search,
@@ -11,14 +12,19 @@ import {
   ChevronRight,
   ImageIcon,
   Sparkles,
-  MapPin
+  MapPin,
+  Calendar,
+  Clock,
+  DollarSign,
+  Languages,
+  Utensils,
+  Lightbulb
 } from 'lucide-react';
 import { fetchGalleryItems, deleteGalleryItem } from '@/services/galleryService';
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import DestinationCard from '@/components/admin/DestinationCard';
-import DestinationModal from '@/components/admin/DestinationModal';
 
 const categories = [
   'All',
@@ -32,6 +38,7 @@ const categories = [
 ];
 
 export default function AdminGallery() {
+  const navigate = useNavigate();
   const { showModal, showToast } = useModal();
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
@@ -42,8 +49,6 @@ export default function AdminGallery() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editItem, setEditItem] = useState(null);
   const [inspectItem, setInspectItem] = useState(null);
 
   const loadItems = async (pageNum = 1, currentLimit = limit) => {
@@ -73,13 +78,11 @@ export default function AdminGallery() {
   };
 
   const handleOpenAdd = () => {
-    setEditItem(null);
-    setModalOpen(true);
+    navigate('/admin/media/new');
   };
 
   const handleOpenEdit = (item) => {
-    setEditItem(item);
-    setModalOpen(true);
+    navigate(`/admin/media/edit/${item._id}`);
   };
 
   const handleDelete = (id) => {
@@ -295,16 +298,9 @@ export default function AdminGallery() {
         </div>
       </div>
 
-      <DestinationModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSuccess={() => loadItems(page, limit)}
-        editItem={editItem}
-      />
-
       {inspectItem && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
-          <div className="max-w-2xl w-full rounded-2xl bg-[#121215] border border-orange-500/30 shadow-2xl space-y-3.5 max-h-[85vh] overflow-y-auto p-4 sm:p-5 font-sans">
+          <div className="max-w-3xl w-full rounded-2xl bg-[#121215] border border-orange-500/30 shadow-2xl space-y-3.5 max-h-[88vh] overflow-y-auto p-4 sm:p-6 font-sans">
             <div className="flex items-center justify-between border-b border-border/70 pb-3">
               <div>
                 <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">
@@ -313,16 +309,28 @@ export default function AdminGallery() {
                 <h3 className="text-base sm:text-lg font-bold text-foreground mt-1">{inspectItem.title}</h3>
                 <p className="text-xs text-muted-foreground">{inspectItem.city}, {inspectItem.country} • {inspectItem.location}</p>
               </div>
-              <button
-                onClick={() => setInspectItem(null)}
-                className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-colors cursor-pointer"
-              >
-                <X className="size-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const editId = inspectItem._id;
+                    setInspectItem(null);
+                    navigate(`/admin/media/edit/${editId}`);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/30 text-xs font-bold hover:bg-orange-500/20 transition-all cursor-pointer"
+                >
+                  Edit in Studio
+                </button>
+                <button
+                  onClick={() => setInspectItem(null)}
+                  className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-colors cursor-pointer"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-3.5 text-xs">
-              <div className="relative h-40 sm:h-44 w-full rounded-xl overflow-hidden border border-border">
+            <div className="space-y-4 text-xs">
+              <div className="relative h-44 sm:h-52 w-full rounded-xl overflow-hidden border border-border">
                 <img
                   src={inspectItem.imageUrl}
                   alt={inspectItem.title}
@@ -330,10 +338,39 @@ export default function AdminGallery() {
                 />
               </div>
 
+              {/* Traveler Essentials Summary */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-secondary/40 p-3 rounded-xl border border-border text-[11px]">
+                <div>
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <Calendar className="size-3 text-orange-400" /> Best Time:
+                  </span>
+                  <p className="font-bold text-foreground">{inspectItem.bestTimeToVisit || 'Year-round'}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <Clock className="size-3 text-orange-400" /> Ideal Duration:
+                  </span>
+                  <p className="font-bold text-foreground">{inspectItem.idealDuration || '5-7 Days'}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <DollarSign className="size-3 text-orange-400" /> Daily Budget:
+                  </span>
+                  <p className="font-bold text-foreground">{inspectItem.estimatedBudget || '$120-$200/day'}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <Languages className="size-3 text-orange-400" /> Language:
+                  </span>
+                  <p className="font-bold text-foreground">{inspectItem.language || 'English'}</p>
+                </div>
+              </div>
+
               <div className="p-3 bg-secondary/30 rounded-xl border border-border text-zinc-300 leading-relaxed text-xs">
                 {inspectItem.description || 'No description provided.'}
               </div>
 
+              {/* Tourist Attractions */}
               <div className="space-y-2">
                 <h4 className="font-bold text-foreground flex items-center gap-1.5">
                   <Navigation className="size-3.5 text-orange-400" />
@@ -345,13 +382,17 @@ export default function AdminGallery() {
                       {spot.imageUrl && (
                         <img src={spot.imageUrl} alt={spot.name} className="h-20 w-full object-cover rounded-lg border border-border/60" />
                       )}
-                      <p className="font-bold text-foreground mt-1 text-xs">{spot.name}</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="font-bold text-foreground text-xs">{spot.name}</p>
+                        <span className="text-[10px] text-orange-400 font-semibold">{spot.ticketPrice || 'Free'}</span>
+                      </div>
                       <p className="text-[11px] text-muted-foreground leading-relaxed">{spot.description}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
+              {/* Hotels */}
               <div className="space-y-2 pt-2.5 border-t border-border/70">
                 <h4 className="font-bold text-foreground flex items-center gap-1.5">
                   <Building className="size-3.5 text-orange-400" />
@@ -376,6 +417,27 @@ export default function AdminGallery() {
                   ))}
                 </div>
               </div>
+
+              {/* Foods */}
+              {inspectItem.localFoods?.length > 0 && (
+                <div className="space-y-2 pt-2.5 border-t border-border/70">
+                  <h4 className="font-bold text-foreground flex items-center gap-1.5">
+                    <Utensils className="size-3.5 text-orange-400" />
+                    <span>Local Dishes & Culinary Highlights ({inspectItem.localFoods.length})</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {inspectItem.localFoods.map((food, i) => (
+                      <div key={i} className="p-2 bg-secondary/40 border border-border/60 rounded-lg flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-foreground text-xs">{food.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{food.description}</p>
+                        </div>
+                        <span className="text-[10px] text-orange-400 font-bold">{food.price || '$15'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

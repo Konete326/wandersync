@@ -1,0 +1,984 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  ArrowLeft,
+  Sparkles,
+  UploadCloud,
+  X,
+  Plus,
+  Trash2,
+  MapPin,
+  Globe,
+  Building,
+  Navigation,
+  Utensils,
+  Lightbulb,
+  Compass,
+  Calendar,
+  Clock,
+  DollarSign,
+  Languages,
+  Bus,
+  Star,
+  CheckCircle2,
+  Save,
+  ImageIcon
+} from 'lucide-react';
+import { uploadImage } from '@/services/mediaService';
+import {
+  uploadGalleryItem,
+  updateGalleryItem,
+  fetchGalleryItemById,
+  autofillDestinationAi
+} from '@/services/galleryService';
+import { useModal } from '@/context/ModalContext';
+import GlowingButton from '@/components/common/GlowingButton';
+import Loader from '@/components/common/Loader';
+
+const categories = [
+  'Landscape',
+  'Cultural Heritage',
+  'Cityscapes',
+  'Coastal',
+  'Mountains',
+  'Nature',
+  'Tropical'
+];
+
+export default function AdminDestinationEditor() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { showToast } = useModal();
+  const isEditing = Boolean(id);
+
+  const [loading, setLoading] = useState(isEditing);
+  const [saving, setSaving] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const [formData, setFormData] = useState({
+    title: '',
+    country: '',
+    city: '',
+    location: '',
+    category: 'Landscape',
+    description: '',
+    imageUrl: '',
+    bestTimeToVisit: 'Oct - Apr',
+    idealDuration: '5-7 Days',
+    estimatedBudget: '$120-$180/day',
+    currency: 'USD ($)',
+    language: 'English / Local',
+    transportation: 'Subway, Rail & Taxis',
+    featured: false,
+    travelTips: ['Carry local currency for small vendors', 'Check visa requirements 30 days prior'],
+    touristPlaces: [
+      {
+        name: '',
+        imageUrl: '',
+        description: '',
+        ticketPrice: 'Free',
+        duration: '2-3 hours'
+      }
+    ],
+    hotels: [
+      {
+        name: '',
+        imageUrl: '',
+        rating: 4.8,
+        priceRange: '$$$',
+        pricePerNight: '$180/night',
+        amenities: ['Free WiFi', 'Breakfast Included']
+      }
+    ],
+    localFoods: [
+      {
+        name: '',
+        description: '',
+        price: '$15'
+      }
+    ]
+  });
+
+  const [primaryFile, setPrimaryFile] = useState(null);
+  const [primaryPreview, setPrimaryPreview] = useState('');
+  const [uploadingSpotIndex, setUploadingSpotIndex] = useState(null);
+  const [uploadingHotelIndex, setUploadingHotelIndex] = useState(null);
+
+  useEffect(() => {
+    if (isEditing) {
+      const loadItem = async () => {
+        try {
+          const res = await fetchGalleryItemById(id);
+          if (res.data) {
+            setFormData({
+              title: res.data.title || '',
+              country: res.data.country || '',
+              city: res.data.city || '',
+              location: res.data.location || '',
+              category: res.data.category || 'Landscape',
+              description: res.data.description || '',
+              imageUrl: res.data.imageUrl || '',
+              bestTimeToVisit: res.data.bestTimeToVisit || 'Year-round',
+              idealDuration: res.data.idealDuration || '5-7 Days',
+              estimatedBudget: res.data.estimatedBudget || '$120-$200/day',
+              currency: res.data.currency || 'USD ($)',
+              language: res.data.language || 'English / Local',
+              transportation: res.data.transportation || '',
+              featured: Boolean(res.data.featured),
+              travelTips: res.data.travelTips?.length ? res.data.travelTips : ['Carry local cash'],
+              touristPlaces: res.data.touristPlaces?.length ? res.data.touristPlaces : [{ name: '', imageUrl: '', description: '', ticketPrice: 'Free', duration: '2 hours' }],
+              hotels: res.data.hotels?.length ? res.data.hotels : [{ name: '', imageUrl: '', rating: 4.8, priceRange: '$$$', pricePerNight: '$180/night', amenities: [] }],
+              localFoods: res.data.localFoods?.length ? res.data.localFoods : [{ name: '', description: '', price: '$15' }]
+            });
+            setPrimaryPreview(res.data.imageUrl || '');
+          }
+        } catch {
+          showToast('Failed to load destination details', 'error');
+          navigate('/admin/media');
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadItem();
+    }
+  }, [id, isEditing]);
+
+  const handlePrimaryFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPrimaryFile(file);
+      setPrimaryPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSpotFileChange = async (index, file) => {
+    if (!file) return;
+    setUploadingSpotIndex(index);
+    try {
+      const res = await uploadImage(file, 'wandersync/spots');
+      if (res.data?.url) {
+        const updated = [...formData.touristPlaces];
+        updated[index].imageUrl = res.data.url;
+        setFormData((prev) => ({ ...prev, touristPlaces: updated }));
+        showToast('Tourist attraction image uploaded', 'success');
+      }
+    } catch {
+      showToast('Failed to upload tourist spot image', 'error');
+    } finally {
+      setUploadingSpotIndex(null);
+    }
+  };
+
+  const handleHotelFileChange = async (index, file) => {
+    if (!file) return;
+    setUploadingHotelIndex(index);
+    try {
+      const res = await uploadImage(file, 'wandersync/hotels');
+      if (res.data?.url) {
+        const updated = [...formData.hotels];
+        updated[index].imageUrl = res.data.url;
+        setFormData((prev) => ({ ...prev, hotels: updated }));
+        showToast('Hotel photo uploaded', 'success');
+      }
+    } catch {
+      showToast('Failed to upload hotel photo', 'error');
+    } finally {
+      setUploadingHotelIndex(null);
+    }
+  };
+
+  const handleAiAutofill = async () => {
+    if (!formData.country || !formData.city) {
+      showToast('Please enter both Country and City first to use AI Autofill', 'warning');
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const res = await autofillDestinationAi(formData.country, formData.city);
+      if (res.data) {
+        setFormData((prev) => ({
+          ...prev,
+          title: res.data.title || prev.title,
+          location: res.data.location || prev.location,
+          category: res.data.category || prev.category,
+          description: res.data.description || prev.description,
+          bestTimeToVisit: res.data.bestTimeToVisit || prev.bestTimeToVisit,
+          idealDuration: res.data.idealDuration || prev.idealDuration,
+          estimatedBudget: res.data.estimatedBudget || prev.estimatedBudget,
+          currency: res.data.currency || prev.currency,
+          language: res.data.language || prev.language,
+          transportation: res.data.transportation || prev.transportation,
+          travelTips: res.data.travelTips?.length ? res.data.travelTips : prev.travelTips,
+          touristPlaces: res.data.touristPlaces?.length ? res.data.touristPlaces : prev.touristPlaces,
+          hotels: res.data.hotels?.length ? res.data.hotels : prev.hotels,
+          localFoods: res.data.localFoods?.length ? res.data.localFoods : prev.localFoods
+        }));
+        showToast('Destination details autofilled by Gemini AI! You can customize or upload photos.', 'success');
+      }
+    } catch {
+      showToast('AI Autofill service temporarily busy. Please try again.', 'error');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.title || !formData.country || !formData.city) {
+      showToast('Title, country, and city are mandatory fields', 'warning');
+      return;
+    }
+    if (!primaryFile && !formData.imageUrl) {
+      showToast('Please upload a primary landmark photo', 'warning');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const body = new FormData();
+      body.append('title', formData.title);
+      body.append('country', formData.country);
+      body.append('city', formData.city);
+      body.append('location', formData.location || `${formData.city}, ${formData.country}`);
+      body.append('category', formData.category);
+      body.append('description', formData.description);
+      body.append('bestTimeToVisit', formData.bestTimeToVisit);
+      body.append('idealDuration', formData.idealDuration);
+      body.append('estimatedBudget', formData.estimatedBudget);
+      body.append('currency', formData.currency);
+      body.append('language', formData.language);
+      body.append('transportation', formData.transportation);
+      body.append('featured', String(formData.featured));
+
+      body.append('travelTips', JSON.stringify(formData.travelTips.filter(Boolean)));
+      body.append('touristPlaces', JSON.stringify(formData.touristPlaces.filter((p) => p.name)));
+      body.append('hotels', JSON.stringify(formData.hotels.filter((h) => h.name)));
+      body.append('localFoods', JSON.stringify(formData.localFoods.filter((f) => f.name)));
+
+      if (primaryFile) {
+        body.append('image', primaryFile);
+      } else if (formData.imageUrl) {
+        body.append('imageUrl', formData.imageUrl);
+      }
+
+      if (isEditing) {
+        await updateGalleryItem(id, body);
+        showToast('Destination successfully updated!', 'success');
+      } else {
+        await uploadGalleryItem(body);
+        showToast('New destination published to live catalog!', 'success');
+      }
+      navigate('/admin/media');
+    } catch {
+      showToast('Failed to save destination', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="py-20 flex items-center justify-center">
+        <Loader text="Loading destination studio..." />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-7xl mx-auto space-y-4 font-sans pb-12">
+      {/* Top Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/80 pb-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/admin/media')}
+            className="p-1.5 rounded-lg bg-secondary/60 hover:bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            title="Back to Catalog"
+          >
+            <ArrowLeft className="size-4" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-bold font-heading text-foreground">
+                {isEditing ? 'Edit Destination Details' : 'Create New Travel Destination'}
+              </h1>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                {isEditing ? 'Editing Mode' : 'New Catalog Entry'}
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Comprehensive travel builder for landmarks, tourist attractions, hotels with nightly rates, foods, and logistics.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleAiAutofill}
+            disabled={aiLoading}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/30 hover:bg-orange-500/20 transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Sparkles className={`size-3.5 ${aiLoading ? 'animate-spin' : ''}`} />
+            <span>{aiLoading ? 'AI Generating...' : 'Gemini AI Deep Fill'}</span>
+          </button>
+
+          <GlowingButton
+            onClick={handleSubmit}
+            disabled={saving}
+            size="sm"
+            innerClassName="py-1.5 px-3.5 text-xs font-bold flex items-center gap-1.5"
+          >
+            <Save className="size-3.5 text-orange-400" />
+            <span>{saving ? 'Publishing...' : isEditing ? 'Update Destination' : 'Publish Destination'}</span>
+          </GlowingButton>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* SECTION 1: Primary Destination & Hero Landmark Media */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
+          <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
+            <Compass className="size-4 text-orange-400" />
+            <h2 className="text-sm font-bold text-foreground">1. Primary Landmark & Media</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div className="md:col-span-8 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-zinc-300">Country *</label>
+                  <div className="relative">
+                    <Globe className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                    <input
+                      type="text"
+                      required
+                      value={formData.country}
+                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                      placeholder="e.g. Japan"
+                      className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-zinc-300">City / Destination *</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                    <input
+                      type="text"
+                      required
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      placeholder="e.g. Kyoto"
+                      className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-zinc-300">Destination Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="e.g. Kyoto - Ancient Temples & Bamboo Groves"
+                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-zinc-300">Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-zinc-300">Comprehensive Overview & Description</label>
+                <textarea
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Enter a rich, engaging overview describing the history, atmosphere, and essence of this travel destination..."
+                  className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50 resize-none leading-relaxed"
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-4 space-y-1">
+              <label className="text-[11px] font-bold text-zinc-300">Primary Landmark Cover Photo *</label>
+              <div className="relative h-44 w-full rounded-xl border border-dashed border-border hover:border-orange-500/40 bg-secondary/30 flex flex-col items-center justify-center overflow-hidden transition-colors">
+                {primaryPreview ? (
+                  <div className="relative size-full group">
+                    <img src={primaryPreview} alt="Cover Preview" className="size-full object-cover" />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <label className="px-2.5 py-1 rounded-lg bg-orange-500 text-zinc-950 font-bold text-xs cursor-pointer">
+                        Change Photo
+                        <input type="file" accept="image/*" onChange={handlePrimaryFileChange} className="hidden" />
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="size-full flex flex-col items-center justify-center p-4 cursor-pointer text-center space-y-1.5">
+                    <UploadCloud className="size-6 text-orange-400" />
+                    <span className="text-xs font-bold text-foreground">Upload Cover Image</span>
+                    <span className="text-[10px] text-muted-foreground">PNG, JPG, WebP (Cloudinary direct)</span>
+                    <input type="file" accept="image/*" onChange={handlePrimaryFileChange} className="hidden" />
+                  </label>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 2: Traveler Practical Essentials */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
+          <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
+            <Lightbulb className="size-4 text-orange-400" />
+            <h2 className="text-sm font-bold text-foreground">2. Traveler Essentials & Logistics</h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-zinc-300 flex items-center gap-1">
+                <Calendar className="size-3 text-orange-400" /> Best Time to Visit
+              </label>
+              <input
+                type="text"
+                value={formData.bestTimeToVisit}
+                onChange={(e) => setFormData({ ...formData, bestTimeToVisit: e.target.value })}
+                placeholder="e.g. Oct - Apr"
+                className="w-full px-2.5 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-zinc-300 flex items-center gap-1">
+                <Clock className="size-3 text-orange-400" /> Ideal Duration
+              </label>
+              <input
+                type="text"
+                value={formData.idealDuration}
+                onChange={(e) => setFormData({ ...formData, idealDuration: e.target.value })}
+                placeholder="e.g. 5-7 Days"
+                className="w-full px-2.5 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-zinc-300 flex items-center gap-1">
+                <DollarSign className="size-3 text-orange-400" /> Daily Budget
+              </label>
+              <input
+                type="text"
+                value={formData.estimatedBudget}
+                onChange={(e) => setFormData({ ...formData, estimatedBudget: e.target.value })}
+                placeholder="e.g. $140-$200/day"
+                className="w-full px-2.5 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-zinc-300 flex items-center gap-1">
+                <DollarSign className="size-3 text-orange-400" /> Local Currency
+              </label>
+              <input
+                type="text"
+                value={formData.currency}
+                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                placeholder="e.g. JPY (¥) / USD"
+                className="w-full px-2.5 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-zinc-300 flex items-center gap-1">
+                <Languages className="size-3 text-orange-400" /> Language
+              </label>
+              <input
+                type="text"
+                value={formData.language}
+                onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                placeholder="e.g. Japanese / English"
+                className="w-full px-2.5 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-zinc-300 flex items-center gap-1">
+                <Bus className="size-3 text-orange-400" /> Transit / Transit Pass
+              </label>
+              <input
+                type="text"
+                value={formData.transportation}
+                onChange={(e) => setFormData({ ...formData, transportation: e.target.value })}
+                placeholder="e.g. JR Pass & Subway"
+                className="w-full px-2.5 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-border/70">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <CheckCircle2 className="size-3.5 text-orange-400" />
+                <span>Essential Traveler Tips ({formData.travelTips.length})</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, travelTips: [...formData.travelTips, ''] })}
+                className="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 cursor-pointer"
+              >
+                <Plus className="size-3" /> Add Tip
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {formData.travelTips.map((tip, i) => (
+                <div key={i} className="flex items-center gap-1.5 bg-secondary/40 border border-border rounded-lg px-2.5 py-1">
+                  <input
+                    type="text"
+                    value={tip}
+                    onChange={(e) => {
+                      const updated = [...formData.travelTips];
+                      updated[i] = e.target.value;
+                      setFormData({ ...formData, travelTips: updated });
+                    }}
+                    placeholder={`Traveler tip #${i + 1}...`}
+                    className="w-full bg-transparent text-xs text-foreground focus:outline-none"
+                  />
+                  {formData.travelTips.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, travelTips: formData.travelTips.filter((_, idx) => idx !== i) })}
+                      className="text-muted-foreground hover:text-rose-400 p-0.5 cursor-pointer"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 3: Key Tourist Attractions (Multiple with Photos & Tickets) */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
+          <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
+            <div className="flex items-center gap-2">
+              <Navigation className="size-4 text-orange-400" />
+              <h2 className="text-sm font-bold text-foreground">
+                3. Key Tourist Spots & Attractions ({formData.touristPlaces.length})
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setFormData({
+                  ...formData,
+                  touristPlaces: [
+                    ...formData.touristPlaces,
+                    { name: '', imageUrl: '', description: '', ticketPrice: 'Free', duration: '2 hours' }
+                  ]
+                })
+              }
+              className="px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/30 text-xs font-bold hover:bg-orange-500/20 transition-all flex items-center gap-1 cursor-pointer"
+            >
+              <Plus className="size-3" /> Add Attraction
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {formData.touristPlaces.map((spot, i) => (
+              <div key={i} className="p-3.5 rounded-xl bg-secondary/30 border border-border space-y-2.5 relative group">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                    Attraction #{i + 1}
+                  </span>
+                  {formData.touristPlaces.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, touristPlaces: formData.touristPlaces.filter((_, idx) => idx !== i) })}
+                      className="p-1 text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors cursor-pointer"
+                      title="Remove attraction"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                  <div className="sm:col-span-5 space-y-1">
+                    <label className="text-[10px] font-bold text-zinc-300">Spot Photo (Direct Upload)</label>
+                    <div className="relative h-24 w-full rounded-lg border border-dashed border-border overflow-hidden bg-zinc-900 flex items-center justify-center">
+                      {spot.imageUrl ? (
+                        <div className="relative size-full group/img">
+                          <img src={spot.imageUrl} alt={spot.name} className="size-full object-cover" />
+                          <label className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-[10px] text-white font-bold cursor-pointer">
+                            Change
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleSpotFileChange(i, e.target.files?.[0])}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      ) : (
+                        <label className="size-full flex flex-col items-center justify-center p-2 cursor-pointer text-center">
+                          {uploadingSpotIndex === i ? (
+                            <span className="text-[10px] text-orange-400 animate-pulse">Uploading...</span>
+                          ) : (
+                            <>
+                              <UploadCloud className="size-4 text-orange-400 mb-0.5" />
+                              <span className="text-[10px] font-bold text-foreground">Upload Photo</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleSpotFileChange(i, e.target.files?.[0])}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="sm:col-span-7 space-y-2">
+                    <div className="space-y-0.5">
+                      <label className="text-[10px] font-bold text-zinc-300">Attraction Name *</label>
+                      <input
+                        type="text"
+                        value={spot.name}
+                        onChange={(e) => {
+                          const updated = [...formData.touristPlaces];
+                          updated[i].name = e.target.value;
+                          setFormData({ ...formData, touristPlaces: updated });
+                        }}
+                        placeholder="e.g. Fushimi Inari Shrine"
+                        className="w-full px-2.5 py-1 rounded bg-secondary/70 border border-border text-xs text-foreground focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-0.5">
+                        <label className="text-[9px] font-bold text-zinc-400">Entry Ticket</label>
+                        <input
+                          type="text"
+                          value={spot.ticketPrice || 'Free'}
+                          onChange={(e) => {
+                            const updated = [...formData.touristPlaces];
+                            updated[i].ticketPrice = e.target.value;
+                            setFormData({ ...formData, touristPlaces: updated });
+                          }}
+                          placeholder="e.g. Free / $15"
+                          className="w-full px-2 py-1 rounded bg-secondary/70 border border-border text-[11px] text-foreground focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-0.5">
+                        <label className="text-[9px] font-bold text-zinc-400">Duration</label>
+                        <input
+                          type="text"
+                          value={spot.duration || '2-3 hours'}
+                          onChange={(e) => {
+                            const updated = [...formData.touristPlaces];
+                            updated[i].duration = e.target.value;
+                            setFormData({ ...formData, touristPlaces: updated });
+                          }}
+                          placeholder="e.g. 2 hours"
+                          className="w-full px-2 py-1 rounded bg-secondary/70 border border-border text-[11px] text-foreground focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-0.5">
+                  <label className="text-[10px] font-bold text-zinc-300">Spot Description & Highlights</label>
+                  <textarea
+                    rows={2}
+                    value={spot.description}
+                    onChange={(e) => {
+                      const updated = [...formData.touristPlaces];
+                      updated[i].description = e.target.value;
+                      setFormData({ ...formData, touristPlaces: updated });
+                    }}
+                    placeholder="Short description of landmark significance and best view spots..."
+                    className="w-full px-2.5 py-1 rounded bg-secondary/70 border border-border text-xs text-foreground focus:outline-none resize-none"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION 4: Hotels & Accommodations (Nightly Rates, Photos & Ratings) */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
+          <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
+            <div className="flex items-center gap-2">
+              <Building className="size-4 text-orange-400" />
+              <h2 className="text-sm font-bold text-foreground">
+                4. Verified Hotels & Stays ({formData.hotels.length})
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setFormData({
+                  ...formData,
+                  hotels: [
+                    ...formData.hotels,
+                    { name: '', imageUrl: '', rating: 4.8, priceRange: '$$$', pricePerNight: '$180/night', amenities: ['Free WiFi'] }
+                  ]
+                })
+              }
+              className="px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/30 text-xs font-bold hover:bg-orange-500/20 transition-all flex items-center gap-1 cursor-pointer"
+            >
+              <Plus className="size-3" /> Add Hotel / Stay
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {formData.hotels.map((hotel, i) => (
+              <div key={i} className="p-3.5 rounded-xl bg-secondary/30 border border-border space-y-2.5 relative group">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                    Stay #{i + 1}
+                  </span>
+                  {formData.hotels.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, hotels: formData.hotels.filter((_, idx) => idx !== i) })}
+                      className="p-1 text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors cursor-pointer"
+                      title="Remove hotel"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                  <div className="sm:col-span-5 space-y-1">
+                    <label className="text-[10px] font-bold text-zinc-300">Hotel Photo</label>
+                    <div className="relative h-24 w-full rounded-lg border border-dashed border-border overflow-hidden bg-zinc-900 flex items-center justify-center">
+                      {hotel.imageUrl ? (
+                        <div className="relative size-full group/himg">
+                          <img src={hotel.imageUrl} alt={hotel.name} className="size-full object-cover" />
+                          <label className="absolute inset-0 bg-black/60 opacity-0 group-hover/himg:opacity-100 flex items-center justify-center text-[10px] text-white font-bold cursor-pointer">
+                            Change
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleHotelFileChange(i, e.target.files?.[0])}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      ) : (
+                        <label className="size-full flex flex-col items-center justify-center p-2 cursor-pointer text-center">
+                          {uploadingHotelIndex === i ? (
+                            <span className="text-[10px] text-orange-400 animate-pulse">Uploading...</span>
+                          ) : (
+                            <>
+                              <UploadCloud className="size-4 text-orange-400 mb-0.5" />
+                              <span className="text-[10px] font-bold text-foreground">Upload Photo</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleHotelFileChange(i, e.target.files?.[0])}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="sm:col-span-7 space-y-2">
+                    <div className="space-y-0.5">
+                      <label className="text-[10px] font-bold text-zinc-300">Hotel Name *</label>
+                      <input
+                        type="text"
+                        value={hotel.name}
+                        onChange={(e) => {
+                          const updated = [...formData.hotels];
+                          updated[i].name = e.target.value;
+                          setFormData({ ...formData, hotels: updated });
+                        }}
+                        placeholder="e.g. Hoshinoya Kyoto"
+                        className="w-full px-2.5 py-1 rounded bg-secondary/70 border border-border text-xs text-foreground focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <div className="space-y-0.5">
+                        <label className="text-[9px] font-bold text-zinc-400">Nightly Rate *</label>
+                        <input
+                          type="text"
+                          value={hotel.pricePerNight || '$180/night'}
+                          onChange={(e) => {
+                            const updated = [...formData.hotels];
+                            updated[i].pricePerNight = e.target.value;
+                            setFormData({ ...formData, hotels: updated });
+                          }}
+                          placeholder="$180/night"
+                          className="w-full px-1.5 py-1 rounded bg-secondary/70 border border-border text-[11px] text-foreground focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <label className="text-[9px] font-bold text-zinc-400">Tier</label>
+                        <select
+                          value={hotel.priceRange || '$$$'}
+                          onChange={(e) => {
+                            const updated = [...formData.hotels];
+                            updated[i].priceRange = e.target.value;
+                            setFormData({ ...formData, hotels: updated });
+                          }}
+                          className="w-full px-1 py-1 rounded bg-secondary/70 border border-border text-[11px] text-foreground focus:outline-none"
+                        >
+                          <option value="$">$ (Budget)</option>
+                          <option value="$$">$$ (Mid)</option>
+                          <option value="$$$">$$$ (Upscale)</option>
+                          <option value="$$$$">$$$$ (Luxury)</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <label className="text-[9px] font-bold text-zinc-400">Rating</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="1"
+                          max="5"
+                          value={hotel.rating || 4.8}
+                          onChange={(e) => {
+                            const updated = [...formData.hotels];
+                            updated[i].rating = parseFloat(e.target.value);
+                            setFormData({ ...formData, hotels: updated });
+                          }}
+                          className="w-full px-1.5 py-1 rounded bg-secondary/70 border border-border text-[11px] text-foreground focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION 5: Local Food & Culinary Recommendations */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
+          <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
+            <div className="flex items-center gap-2">
+              <Utensils className="size-4 text-orange-400" />
+              <h2 className="text-sm font-bold text-foreground">
+                5. Local Dishes & Food Specialties ({formData.localFoods.length})
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setFormData({
+                  ...formData,
+                  localFoods: [...formData.localFoods, { name: '', description: '', price: '$15' }]
+                })
+              }
+              className="px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/30 text-xs font-bold hover:bg-orange-500/20 transition-all flex items-center gap-1 cursor-pointer"
+            >
+              <Plus className="size-3" /> Add Dish
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {formData.localFoods.map((food, i) => (
+              <div key={i} className="p-3 rounded-xl bg-secondary/30 border border-border space-y-2 relative">
+                <div className="flex items-center justify-between">
+                  <input
+                    type="text"
+                    value={food.name}
+                    onChange={(e) => {
+                      const updated = [...formData.localFoods];
+                      updated[i].name = e.target.value;
+                      setFormData({ ...formData, localFoods: updated });
+                    }}
+                    placeholder="Dish Name (e.g. Kyoto Ramen)"
+                    className="w-full font-bold bg-transparent text-xs text-foreground focus:outline-none"
+                  />
+                  {formData.localFoods.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, localFoods: formData.localFoods.filter((_, idx) => idx !== i) })}
+                      className="text-muted-foreground hover:text-rose-400 p-0.5 cursor-pointer ml-1"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={food.price || '$15'}
+                    onChange={(e) => {
+                      const updated = [...formData.localFoods];
+                      updated[i].price = e.target.value;
+                      setFormData({ ...formData, localFoods: updated });
+                    }}
+                    placeholder="e.g. $12"
+                    className="w-20 px-2 py-0.5 rounded bg-secondary/70 border border-border text-[11px] text-foreground focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    value={food.description}
+                    onChange={(e) => {
+                      const updated = [...formData.localFoods];
+                      updated[i].description = e.target.value;
+                      setFormData({ ...formData, localFoods: updated });
+                    }}
+                    placeholder="Description & best market..."
+                    className="flex-1 px-2 py-0.5 rounded bg-secondary/70 border border-border text-[11px] text-foreground focus:outline-none"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom Action Footer */}
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/80">
+          <button
+            type="button"
+            onClick={() => navigate('/admin/media')}
+            className="px-4 py-2 rounded-xl bg-secondary/60 hover:bg-secondary border border-border text-xs text-foreground font-semibold transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+
+          <GlowingButton
+            type="submit"
+            disabled={saving}
+            size="md"
+            innerClassName="py-2.5 px-6 text-xs sm:text-sm font-bold flex items-center gap-2"
+          >
+            <Save className="size-4 text-orange-400" />
+            <span>{saving ? 'Publishing to Catalog...' : isEditing ? 'Update Destination' : 'Publish Destination'}</span>
+          </GlowingButton>
+        </div>
+      </form>
+    </div>
+  );
+}

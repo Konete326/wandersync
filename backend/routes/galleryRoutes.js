@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getGalleryItems,
+  getGalleryItemById,
   createGalleryItem,
   updateGalleryItem,
   deleteGalleryItem
@@ -11,6 +12,7 @@ import upload from '../middlewares/uploadMiddleware.js';
 const router = express.Router();
 
 router.get('/', getGalleryItems);
+router.get('/:id', getGalleryItemById);
 router.post('/', protect, adminOnly, upload.single('image'), createGalleryItem);
 router.put('/:id', protect, adminOnly, upload.single('image'), updateGalleryItem);
 router.delete('/:id', protect, adminOnly, deleteGalleryItem);

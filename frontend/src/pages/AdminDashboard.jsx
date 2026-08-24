@@ -8,6 +8,7 @@ const Dashboard = lazy(() =>
   import('@/components/dashboard').then((m) => ({ default: m.Dashboard }))
 );
 const AdminGallery = lazy(() => import('@/pages/admin/AdminGallery'));
+const AdminDestinationEditor = lazy(() => import('@/pages/admin/AdminDestinationEditor'));
 const AdminProfile = lazy(() => import('@/pages/admin/AdminProfile'));
 const AdminNotifications = lazy(() => import('@/pages/admin/AdminNotifications'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
@@ -34,6 +35,10 @@ export default function AdminDashboard() {
           <Route path="/ai-analytics" element={<AdminComingSoon />} />
           <Route path="/expenses" element={<AdminComingSoon />} />
           <Route path="/media" element={<AdminGallery />} />
+          <Route path="/media/new" element={<AdminDestinationEditor />} />
+          <Route path="/media/edit/:id" element={<AdminDestinationEditor />} />
+          <Route path="/destinations/create" element={<AdminDestinationEditor />} />
+          <Route path="/destinations/edit/:id" element={<AdminDestinationEditor />} />
           <Route path="/notifications" element={<AdminNotifications />} />
           <Route path="/changelog" element={<AdminChangelog />} />
           <Route path="/profile" element={<AdminProfile />} />
