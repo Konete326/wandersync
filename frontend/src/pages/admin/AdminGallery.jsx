@@ -42,7 +42,7 @@ export default function AdminGallery() {
   const { showModal, showToast } = useModal();
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(9);
+  const [limit] = useState(6);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -220,34 +220,12 @@ export default function AdminGallery() {
         </div>
       )}
 
-      {/* Mandatory Pagination Section on Every List View */}
+      {/* Mandatory Pagination Section */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/80 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <span>
-            Showing <strong className="text-foreground">{total === 0 ? 0 : (page - 1) * limit + 1}</strong> to{' '}
-            <strong className="text-foreground">{Math.min(page * limit, total)}</strong> of{' '}
-            <strong className="text-foreground">{total}</strong> destinations
-          </span>
-
-          <span className="text-zinc-600">|</span>
-
-          <div className="flex items-center gap-1">
-            <span className="text-[11px]">Show:</span>
-            <select
-              value={limit}
-              onChange={(e) => {
-                const newLimit = Number(e.target.value);
-                setLimit(newLimit);
-                setPage(1);
-              }}
-              className="bg-secondary/70 border border-border rounded px-1.5 py-0.5 text-xs text-foreground focus:outline-none"
-            >
-              <option value={6}>6</option>
-              <option value={9}>9</option>
-              <option value={12}>12</option>
-              <option value={24}>24</option>
-            </select>
-          </div>
+        <div>
+          Showing <strong className="text-foreground">{total === 0 ? 0 : (page - 1) * limit + 1}</strong> to{' '}
+          <strong className="text-foreground">{Math.min(page * limit, total)}</strong> of{' '}
+          <strong className="text-foreground">{total}</strong> destinations
         </div>
 
         <div className="flex items-center gap-1.5">

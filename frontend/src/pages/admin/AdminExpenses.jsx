@@ -439,31 +439,10 @@ export default function AdminExpenses() {
 
       {/* Mandatory Bottom Pagination Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/80 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <span>
-            Showing <strong className="text-foreground">{total === 0 ? 0 : (page - 1) * limit + 1}</strong> to{' '}
-            <strong className="text-foreground">{Math.min(page * limit, total)}</strong> of{' '}
-            <strong className="text-foreground">{total}</strong> expenses
-          </span>
-
-          <span className="text-zinc-600">|</span>
-
-          <div className="flex items-center gap-1">
-            <span className="text-[11px]">Show:</span>
-            <select
-              value={limit}
-              onChange={(e) => {
-                const newLimit = Number(e.target.value);
-                setLimit(newLimit);
-                setPage(1);
-              }}
-              className="bg-secondary/70 border border-border rounded px-1.5 py-0.5 text-xs text-foreground focus:outline-none cursor-pointer"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-          </div>
+        <div>
+          Showing <strong className="text-foreground">{total === 0 ? 0 : (page - 1) * limit + 1}</strong> to{' '}
+          <strong className="text-foreground">{Math.min(page * limit, total)}</strong> of{' '}
+          <strong className="text-foreground">{total}</strong> expenses
         </div>
 
         <div className="flex items-center gap-1.5">

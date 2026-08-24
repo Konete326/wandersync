@@ -136,7 +136,6 @@ export default function AiChatWidget({ tripContext = null }) {
           title="WanderSync AI Concierge"
         >
           <Bot className="size-5 text-orange-400 group-hover:rotate-12 transition-transform" />
-          <span className="absolute top-1.5 right-1.5 size-2 bg-orange-400 rounded-full animate-pulse ring-2 ring-[#121215]" />
         </button>
       )}
 
