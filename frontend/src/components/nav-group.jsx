@@ -24,14 +24,14 @@ export function NavGroup({ label, items, defaultOpen = true }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <SidebarGroup className="py-1">
+    <SidebarGroup className="py-1 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:py-1">
       {label && !isCollapsed && (
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className="flex items-center justify-between w-full px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors cursor-pointer group select-none rounded-lg hover:bg-secondary/40"
+          className="flex items-center justify-between w-full px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors cursor-pointer group select-none rounded-lg hover:bg-secondary/40 group-data-[collapsible=icon]:hidden"
         >
-          <span>{label}</span>
+          <span className="truncate">{label}</span>
           <ChevronDown
             className={`size-3 text-muted-foreground/70 transition-transform duration-200 ${
               isOpen ? 'rotate-0' : '-rotate-90'

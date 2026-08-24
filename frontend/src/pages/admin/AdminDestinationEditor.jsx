@@ -26,6 +26,7 @@ import {
   Images
 } from 'lucide-react';
 import { uploadImage } from '@/services/mediaService';
+import { compressImage } from '@/utils/imageCompressor';
 import {
   uploadGalleryItem,
   updateGalleryItem,
@@ -153,11 +154,12 @@ export default function AdminDestinationEditor() {
     }
   }, [id, isEditing]);
 
-  const handlePrimaryFileChange = (e) => {
+  const handlePrimaryFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      setPrimaryFile(file);
-      setPrimaryPreview(URL.createObjectURL(file));
+      const compressed = await compressImage(file);
+      setPrimaryFile(compressed);
+      setPrimaryPreview(URL.createObjectURL(compressed));
     }
   };
 
@@ -174,7 +176,7 @@ export default function AdminDestinationEditor() {
         }
         updated[index].images = [...(updated[index].images || []), newUrl];
         setFormData((prev) => ({ ...prev, touristPlaces: updated }));
-        showToast('Tourist attraction image uploaded', 'success');
+        showToast('Tourist attraction image compressed & uploaded', 'success');
       }
     } catch {
       showToast('Failed to upload tourist spot image', 'error');
@@ -206,7 +208,7 @@ export default function AdminDestinationEditor() {
         }
         updated[index].images = [...(updated[index].images || []), newUrl];
         setFormData((prev) => ({ ...prev, hotels: updated }));
-        showToast('Hotel photo uploaded', 'success');
+        showToast('Hotel photo compressed & uploaded', 'success');
       }
     } catch {
       showToast('Failed to upload hotel photo', 'error');
@@ -225,17 +227,20 @@ export default function AdminDestinationEditor() {
     setFormData((prev) => ({ ...prev, hotels: updated }));
   };
 
-  const handleGalleryUpload = async (file) => {
-    if (!file) return;
+  const handleGalleryUpload = async (files) => {
+    if (!files || !files.length) return;
     setUploadingGallery(true);
     try {
-      const res = await uploadImage(file, 'wandersync/gallery');
-      if (res.data?.url) {
+      const fileList = Array.from(files);
+      const uploadPromises = fileList.map((f) => uploadImage(f, 'wandersync/gallery'));
+      const results = await Promise.all(uploadPromises);
+      const newUrls = results.map((r) => r.data?.url).filter(Boolean);
+      if (newUrls.length > 0) {
         setFormData((prev) => ({
           ...prev,
-          galleryImages: [...prev.galleryImages, res.data.url]
+          galleryImages: [...prev.galleryImages, ...newUrls]
         }));
-        showToast('Additional destination photo added', 'success');
+        showToast(`${newUrls.length} destination photo(s) compressed & uploaded`, 'success');
       }
     } catch {
       showToast('Failed to upload gallery image', 'error');
@@ -325,7 +330,8 @@ export default function AdminDestinationEditor() {
       body.append('localFoods', JSON.stringify(formData.localFoods.filter((f) => f.name)));
 
       if (primaryFile) {
-        body.append('image', primaryFile);
+        const compressed = await compressImage(primaryFile);
+        body.append('image', compressed);
       } else if (formData.imageUrl) {
         body.append('imageUrl', formData.imageUrl);
       }
@@ -518,12 +524,13 @@ export default function AdminDestinationEditor() {
               </label>
               <label className="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 cursor-pointer">
                 <Plus className="size-3" />
-                <span>{uploadingGallery ? 'Uploading Photo...' : 'Add Extra Photo'}</span>
+                <span>{uploadingGallery ? 'Uploading...' : 'Add Extra Photos (Multiple)'}</span>
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   disabled={uploadingGallery}
-                  onChange={(e) => handleGalleryUpload(e.target.files?.[0])}
+                  onChange={(e) => handleGalleryUpload(e.target.files)}
                   className="hidden"
                 />
               </label>

@@ -15,6 +15,7 @@ import {
   Globe
 } from 'lucide-react';
 import { uploadImage } from '@/services/mediaService';
+import { compressImage } from '@/utils/imageCompressor';
 import {
   fetchSpotById,
   createSpot,
@@ -102,25 +103,29 @@ export default function AdminSpotEditor() {
     }
   }, [id, isEditing]);
 
-  const handleCoverChange = (e) => {
+  const handleCoverChange = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      setCoverFile(file);
-      setCoverPreview(URL.createObjectURL(file));
+      const compressed = await compressImage(file);
+      setCoverFile(compressed);
+      setCoverPreview(URL.createObjectURL(compressed));
     }
   };
 
-  const handleAddGalleryImage = async (file) => {
-    if (!file) return;
+  const handleAddGalleryImages = async (files) => {
+    if (!files || !files.length) return;
     setUploadingGallery(true);
     try {
-      const res = await uploadImage(file, 'wandersync/spots');
-      if (res.data?.url) {
-        setFormData((prev) => ({ ...prev, images: [...prev.images, res.data.url] }));
-        showToast('Photo added to attraction gallery', 'success');
+      const fileList = Array.from(files);
+      const uploadPromises = fileList.map((f) => uploadImage(f, 'wandersync/spots'));
+      const results = await Promise.all(uploadPromises);
+      const newUrls = results.map((r) => r.data?.url).filter(Boolean);
+      if (newUrls.length > 0) {
+        setFormData((prev) => ({ ...prev, images: [...prev.images, ...newUrls] }));
+        showToast(`${newUrls.length} spot photo(s) compressed & uploaded`, 'success');
       }
     } catch {
-      showToast('Failed to upload photo', 'error');
+      showToast('Failed to upload some images', 'error');
     } finally {
       setUploadingGallery(false);
     }
@@ -160,7 +165,8 @@ export default function AdminSpotEditor() {
       body.append('images', JSON.stringify(formData.images.filter(Boolean)));
 
       if (coverFile) {
-        body.append('image', coverFile);
+        const compressedCover = await compressImage(coverFile);
+        body.append('image', compressedCover);
       } else if (formData.coverImage) {
         body.append('coverImage', formData.coverImage);
       }

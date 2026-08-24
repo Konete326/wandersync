@@ -17,6 +17,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { uploadImage } from '@/services/mediaService';
+import { compressImage } from '@/utils/imageCompressor';
 import {
   fetchVehicleById,
   createVehicle,
@@ -111,25 +112,29 @@ export default function AdminVehicleEditor() {
     }
   }, [id, isEditing]);
 
-  const handleCoverChange = (e) => {
+  const handleCoverChange = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      setCoverFile(file);
-      setCoverPreview(URL.createObjectURL(file));
+      const compressed = await compressImage(file);
+      setCoverFile(compressed);
+      setCoverPreview(URL.createObjectURL(compressed));
     }
   };
 
-  const handleAddGalleryImage = async (file) => {
-    if (!file) return;
+  const handleAddGalleryImages = async (files) => {
+    if (!files || !files.length) return;
     setUploadingGallery(true);
     try {
-      const res = await uploadImage(file, 'wandersync/vehicles');
-      if (res.data?.url) {
-        setFormData((prev) => ({ ...prev, images: [...prev.images, res.data.url] }));
-        showToast('Vehicle photo added to fleet gallery', 'success');
+      const fileList = Array.from(files);
+      const uploadPromises = fileList.map((f) => uploadImage(f, 'wandersync/vehicles'));
+      const results = await Promise.all(uploadPromises);
+      const newUrls = results.map((r) => r.data?.url).filter(Boolean);
+      if (newUrls.length > 0) {
+        setFormData((prev) => ({ ...prev, images: [...prev.images, ...newUrls] }));
+        showToast(`${newUrls.length} fleet photo(s) compressed & uploaded`, 'success');
       }
     } catch {
-      showToast('Failed to upload image', 'error');
+      showToast('Failed to upload some images', 'error');
     } finally {
       setUploadingGallery(false);
     }
@@ -180,7 +185,8 @@ export default function AdminVehicleEditor() {
       body.append('images', JSON.stringify(formData.images.filter(Boolean)));
 
       if (coverFile) {
-        body.append('image', coverFile);
+        const compressedCover = await compressImage(coverFile);
+        body.append('image', compressedCover);
       } else if (formData.coverImage) {
         body.append('coverImage', formData.coverImage);
       }
@@ -438,12 +444,13 @@ export default function AdminVehicleEditor() {
               </label>
               <label className="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 cursor-pointer">
                 <Plus className="size-3" />
-                <span>{uploadingGallery ? 'Uploading...' : 'Add Fleet Photo'}</span>
+                <span>{uploadingGallery ? 'Uploading...' : 'Add Fleet Photos (Multiple)'}</span>
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   disabled={uploadingGallery}
-                  onChange={(e) => handleAddGalleryImage(e.target.files?.[0])}
+                  onChange={(e) => handleAddGalleryImages(e.target.files)}
                   className="hidden"
                 />
               </label>

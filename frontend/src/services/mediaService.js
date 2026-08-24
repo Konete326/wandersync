@@ -1,8 +1,10 @@
 import api from './api';
+import { compressImage } from '../utils/imageCompressor';
 
 export const uploadImage = async (file, folder = 'wandersync') => {
+  const compressed = await compressImage(file);
   const formData = new FormData();
-  formData.append('image', file);
+  formData.append('image', compressed);
   formData.append('folder', folder);
 
   const response = await api.post('/media/upload', formData, {
