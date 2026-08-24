@@ -8,30 +8,14 @@ export const getFlights = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 6;
     const filter = {};
     if (req.query.search) {
-      filter.$or = [
-        { airline: new RegExp(req.query.search, 'i') },
-        { flightNumber: new RegExp(req.query.search, 'i') },
-        { destinationCity: new RegExp(req.query.search, 'i') },
-        { destinationCountry: new RegExp(req.query.search, 'i') },
-        { originCity: new RegExp(req.query.search, 'i') }
-      ];
+      filter.$or = [{ airline: new RegExp(req.query.search, 'i') }, { flightNumber: new RegExp(req.query.search, 'i') }, { destinationCity: new RegExp(req.query.search, 'i') }, { destinationCountry: new RegExp(req.query.search, 'i') }, { originCity: new RegExp(req.query.search, 'i') }];
     }
-    if (req.query.destinationCountry && req.query.destinationCountry !== 'All') {
-      filter.destinationCountry = new RegExp(`^${req.query.destinationCountry}$`, 'i');
-    }
-    if (req.query.destinationCity && req.query.destinationCity !== 'All') {
-      filter.destinationCity = new RegExp(`^${req.query.destinationCity}$`, 'i');
-    }
+    if (req.query.destinationCountry && req.query.destinationCountry !== 'All') filter.destinationCountry = new RegExp(`^${req.query.destinationCountry}$`, 'i');
+    if (req.query.destinationCity && req.query.destinationCity !== 'All') filter.destinationCity = new RegExp(`^${req.query.destinationCity}$`, 'i');
     if (req.query.cabinClass && req.query.cabinClass !== 'All') filter.cabinClass = req.query.cabinClass;
     const total = await Flight.countDocuments(filter);
     const flights = await Flight.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit);
-    return sendSuccess(res, 'Flights fetched successfully', {
-      flights,
-      total,
-      page,
-      pages: Math.ceil(total / limit) || 1,
-      limit
-    });
+    return sendSuccess(res, 'Flights fetched successfully', { flights, total, page, pages: Math.ceil(total / limit) || 1, limit });
   } catch (error) {
     return sendError(res, error.message, 500);
   }
@@ -63,26 +47,18 @@ export const createFlight = async (req, res) => {
     if (!coverImage) return sendError(res, 'Please provide an airplane cover image', 400);
     const parseField = (val) => (typeof val === 'string' ? JSON.parse(val) : (val || []));
     const flight = await Flight.create({
-      airline: airline.trim(),
-      flightNumber: flightNumber.trim().toUpperCase(),
+      airline: airline.trim(), flightNumber: flightNumber.trim().toUpperCase(),
       aircraft: aircraft ? aircraft.trim() : 'Boeing 787 Dreamliner',
       originCountry: originCountry ? originCountry.trim() : 'United Arab Emirates',
       originCity: originCity ? originCity.trim() : 'Dubai',
       originAirport: originAirport ? originAirport.trim().toUpperCase() : 'DXB',
-      destinationCountry: destinationCountry.trim(),
-      destinationCity: destinationCity.trim(),
+      destinationCountry: destinationCountry.trim(), destinationCity: destinationCity.trim(),
       destinationAirport: destinationAirport ? destinationAirport.trim().toUpperCase() : 'HND',
-      departureTime: departureTime || '10:30 AM',
-      arrivalTime: arrivalTime || '06:45 PM',
-      duration: duration || '7h 15m (Non-Stop)',
-      cabinClass: cabinClass || 'Economy',
-      price: price.trim(),
-      baggage: baggage || '30 kg Check-in + 7 kg Cabin',
-      status: status || 'Available',
-      coverImage,
-      publicId,
-      images: parseField(req.body.images),
-      bookingUrl: bookingUrl || '',
+      departureTime: departureTime || '10:30 AM', arrivalTime: arrivalTime || '06:45 PM',
+      duration: duration || '7h 15m (Non-Stop)', cabinClass: cabinClass || 'Economy',
+      price: price.trim(), baggage: baggage || '30 kg Check-in + 7 kg Cabin',
+      status: status || 'Available', coverImage, publicId,
+      images: parseField(req.body.images), bookingUrl: bookingUrl || '',
       featured: featured === 'true' || featured === true
     });
     return sendSuccess(res, 'Flight scheduled successfully', flight, 201);

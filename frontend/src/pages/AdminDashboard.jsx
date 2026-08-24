@@ -20,6 +20,7 @@ const AdminFlights = lazy(() => import('@/pages/admin/AdminFlights'));
 const AdminFlightEditor = lazy(() => import('@/pages/admin/AdminFlightEditor'));
 const AdminGallery = lazy(() => import('@/pages/admin/AdminGallery'));
 const AdminDestinationEditor = lazy(() => import('@/pages/admin/AdminDestinationEditor'));
+const AdminAiAnalytics = lazy(() => import('@/pages/admin/AdminAiAnalytics'));
 const AdminExpenses = lazy(() => import('@/pages/admin/AdminExpenses'));
 const AdminProfile = lazy(() => import('@/pages/admin/AdminProfile'));
 const AdminNotifications = lazy(() => import('@/pages/admin/AdminNotifications'));
@@ -74,7 +75,7 @@ export default function AdminDashboard() {
           <Route path="/destinations/edit/:id" element={<AdminDestinationEditor />} />
 
           {/* AI, Expenses & System */}
-          <Route path="/ai-analytics" element={<AdminComingSoon />} />
+          <Route path="/ai-analytics" element={<AdminAiAnalytics />} />
           <Route path="/expenses" element={<AdminExpenses />} />
           <Route path="/notifications" element={<AdminNotifications />} />
           <Route path="/changelog" element={<AdminChangelog />} />

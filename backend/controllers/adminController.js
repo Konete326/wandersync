@@ -32,17 +32,11 @@ export const getAdminStats = async (req, res) => {
       return { day: dayNames[d.getDay()], date: dateStr, count: match ? match.count : 0 };
     });
     return sendSuccess(res, 'Admin statistics retrieved', {
-      totalTrips,
-      totalUsers,
-      totalExpenses,
-      totalDestinations,
-      totalBudgetTracked,
-      activeTravelers: totalUsers,
-      geminiInferences: totalTrips * 3,
-      dailyGenerations
+      totalTrips, totalUsers, totalExpenses, totalDestinations, totalBudgetTracked,
+      activeTravelers: totalUsers, geminiInferences: totalTrips * 4, dailyGenerations
     });
   } catch (error) {
-    return sendError(res, error.message || 'Failed to fetch admin stats', 500);
+    return sendError(res, error.message, 500);
   }
 };
 
@@ -51,7 +45,7 @@ export const getAdminRecentTrips = async (req, res) => {
     const trips = await Trip.find().populate('user', 'name email avatar').sort({ createdAt: -1 }).limit(10);
     return sendSuccess(res, 'Recent trips retrieved', trips);
   } catch (error) {
-    return sendError(res, error.message || 'Failed to fetch recent trips', 500);
+    return sendError(res, error.message, 500);
   }
 };
 
@@ -60,7 +54,7 @@ export const getAdminUsers = async (req, res) => {
     const users = await User.find().select('-password').sort({ createdAt: -1 }).limit(20);
     return sendSuccess(res, 'User directory retrieved', users);
   } catch (error) {
-    return sendError(res, error.message || 'Failed to fetch users', 500);
+    return sendError(res, error.message, 500);
   }
 };
 
@@ -76,7 +70,7 @@ export const getAdminActivityFeed = async (req, res) => {
     }));
     return sendSuccess(res, 'Activity feed retrieved', activities);
   } catch (error) {
-    return sendError(res, error.message || 'Failed to fetch activity feed', 500);
+    return sendError(res, error.message, 500);
   }
 };
 
@@ -87,37 +81,16 @@ export const getAdminNotifications = async (req, res) => {
     const destinations = await Gallery.find().sort({ createdAt: -1 }).limit(3);
     const list = [];
     trips.forEach((t) => {
-      list.push({
-        id: `trip-${t._id}`,
-        title: `AI Itinerary Generated: ${t.destination?.city || 'Trip'}`,
-        message: `${t.user?.name || 'A traveler'} generated a ${t.durationDays || 3}-day itinerary.`,
-        type: 'trip',
-        time: new Date(t.createdAt).toLocaleDateString(),
-        read: false
-      });
+      list.push({ id: `trip-${t._id}`, title: `AI Itinerary Generated: ${t.destination?.city || 'Trip'}`, message: `${t.user?.name || 'Traveler'} generated a ${t.durationDays || 3}-day itinerary.`, type: 'trip', time: new Date(t.createdAt).toLocaleDateString(), read: false });
     });
     users.forEach((u) => {
-      list.push({
-        id: `user-${u._id}`,
-        title: `Traveler Registered: ${u.name}`,
-        message: `Account created with email ${u.email}. Role: ${u.role}.`,
-        type: 'security',
-        time: new Date(u.createdAt).toLocaleDateString(),
-        read: true
-      });
+      list.push({ id: `user-${u._id}`, title: `Traveler Registered: ${u.name}`, message: `Account email: ${u.email}. Role: ${u.role}.`, type: 'security', time: new Date(u.createdAt).toLocaleDateString(), read: true });
     });
     destinations.forEach((d) => {
-      list.push({
-        id: `dest-${d._id}`,
-        title: `Destination Published: ${d.title}`,
-        message: `Verified landmark in ${d.city}, ${d.country} added to catalog.`,
-        type: 'ai',
-        time: new Date(d.createdAt).toLocaleDateString(),
-        read: true
-      });
+      list.push({ id: `dest-${d._id}`, title: `Destination Published: ${d.title}`, message: `Verified spot in ${d.city}, ${d.country} added.`, type: 'ai', time: new Date(d.createdAt).toLocaleDateString(), read: true });
     });
     return sendSuccess(res, 'Admin notifications retrieved', list);
   } catch (error) {
-    return sendError(res, error.message || 'Failed to fetch notifications', 500);
+    return sendError(res, error.message, 500);
   }
 };

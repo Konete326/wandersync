@@ -45,7 +45,7 @@ const Navbar = () => {
             to="/how-it-works"
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               isActive('/how-it-works')
-                ? 'bg-secondary text-cyan-400 border border-border'
+                ? 'bg-orange-500/15 text-orange-400 border border-orange-500/40 font-bold shadow-sm shadow-orange-500/10'
                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
             }`}
           >
@@ -55,7 +55,7 @@ const Navbar = () => {
             to="/features"
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               isActive('/features')
-                ? 'bg-secondary text-cyan-400 border border-border'
+                ? 'bg-orange-500/15 text-orange-400 border border-orange-500/40 font-bold shadow-sm shadow-orange-500/10'
                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
             }`}
           >
@@ -65,7 +65,7 @@ const Navbar = () => {
             to="/gallery"
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
               isActive('/gallery')
-                ? 'bg-secondary text-cyan-400 border border-border'
+                ? 'bg-orange-500/15 text-orange-400 border border-orange-500/40 font-bold shadow-sm shadow-orange-500/10'
                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
             }`}
           >
@@ -76,7 +76,7 @@ const Navbar = () => {
             to="/pricing"
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               isActive('/pricing')
-                ? 'bg-secondary text-cyan-400 border border-border'
+                ? 'bg-orange-500/15 text-orange-400 border border-orange-500/40 font-bold shadow-sm shadow-orange-500/10'
                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
             }`}
           >
@@ -86,7 +86,7 @@ const Navbar = () => {
             to="/community"
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               isActive('/community')
-                ? 'bg-secondary text-cyan-400 border border-border'
+                ? 'bg-orange-500/15 text-orange-400 border border-orange-500/40 font-bold shadow-sm shadow-orange-500/10'
                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
             }`}
           >
@@ -96,11 +96,11 @@ const Navbar = () => {
             to="/create"
             className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all ${
               isActive('/create')
-                ? 'bg-secondary text-cyan-400 border border-border'
+                ? 'bg-orange-500/15 text-orange-400 border border-orange-500/40 font-bold shadow-sm shadow-orange-500/10'
                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
             }`}
           >
-            <Sparkles className="size-3.5 text-cyan-400" />
+            <Sparkles className="size-3.5 text-orange-400" />
             <span>Create</span>
           </Link>
           {user && (
@@ -108,7 +108,7 @@ const Navbar = () => {
               to="/my-trips"
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 isActive('/my-trips')
-                  ? 'bg-secondary text-cyan-400 border border-border'
+                  ? 'bg-orange-500/15 text-orange-400 border border-orange-500/40 font-bold shadow-sm shadow-orange-500/10'
                   : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
               }`}
             >
@@ -118,10 +118,10 @@ const Navbar = () => {
           {user?.role === 'admin' && (
             <Link
               to="/admin"
-              className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 text-cyan-400 hover:bg-secondary"
+              className="px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30"
             >
-              <Shield className="size-3.5 text-cyan-400" />
-              <span>Admin</span>
+              <Shield className="size-3.5 text-orange-400" />
+              <span>Admin Hub</span>
             </Link>
           )}
         </nav>
@@ -136,7 +136,7 @@ const Navbar = () => {
                 <img
                   src={user.avatar?.url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
                   alt={user.name}
-                  className="size-5 rounded-full object-cover border border-cyan-400/40"
+                  className="size-5 rounded-full object-cover border border-orange-400/40"
                 />
                 <span className="text-xs font-medium text-foreground">{user.name?.split(' ')[0]}</span>
               </Link>
@@ -232,9 +232,9 @@ const Navbar = () => {
             <Link
               to="/admin"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-xl text-sm font-medium text-cyan-400 hover:bg-secondary"
+              className="block px-3 py-2 rounded-xl text-sm font-bold text-orange-400 bg-orange-500/10 border border-orange-500/20"
             >
-              Admin Dashboard
+              Admin Command Center
             </Link>
           )}
 
@@ -248,7 +248,7 @@ const Navbar = () => {
                 <img
                   src={user.avatar?.url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
                   alt={user.name}
-                  className="size-8 rounded-full object-cover border border-cyan-400"
+                  className="size-8 rounded-full object-cover border border-orange-400"
                 />
                 <div>
                   <p className="text-xs font-semibold text-foreground">{user.name}</p>
