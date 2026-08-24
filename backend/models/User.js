@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true, select: false },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  status: { type: String, enum: ['active', 'banned', 'suspended'], default: 'active' },
   avatar: {
     url: { type: String, default: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80' },
     publicId: { type: String, default: '' }

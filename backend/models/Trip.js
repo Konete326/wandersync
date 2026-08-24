@@ -53,6 +53,7 @@ const tripSchema = new mongoose.Schema({
     transitAdvice: [{ type: String }]
   },
   isPublic: { type: Boolean, default: false },
+  featured: { type: Boolean, default: false },
   shareSlug: { type: String, unique: true, sparse: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
