@@ -6,6 +6,11 @@ const gallerySchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  country: {
+    type: String,
+    default: 'Global',
+    trim: true
+  },
   location: {
     type: String,
     required: true,

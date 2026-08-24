@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Menu, X, ArrowRight, Sparkles } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
 import GlowingButton from '../components/common/GlowingButton';
+import logoImg from '../assets/logo.png';
 
 const videos = [
   {
@@ -120,9 +121,12 @@ const Home = () => {
         <header className="flex items-center justify-between w-full max-w-7xl mx-auto">
           <div
             onClick={() => navigate('/')}
-            className="text-white italic text-2xl sm:text-3xl tracking-tight cursor-pointer font-['Instrument_Serif']"
+            className="flex items-center gap-2.5 cursor-pointer group"
           >
-            WanderSync
+            <img src={logoImg} alt="WanderSync Logo" className="size-8 object-contain rounded-md shadow-sm" />
+            <span className="text-white italic text-2xl sm:text-3xl tracking-tight font-['Instrument_Serif'] group-hover:opacity-90 transition-opacity">
+              WanderSync
+            </span>
           </div>
 
           <nav className="hidden md:flex items-center gap-6 liquid-glass rounded-full px-5 py-2">
@@ -176,8 +180,11 @@ const Home = () => {
             >
               <X className="size-6" />
             </button>
-            <div className="text-white italic text-4xl font-['Instrument_Serif'] mb-3">
-              WanderSync
+            <div className="flex items-center gap-3 mb-3">
+              <img src={logoImg} alt="WanderSync Logo" className="size-10 object-contain rounded-md" />
+              <div className="text-white italic text-4xl font-['Instrument_Serif']">
+                WanderSync
+              </div>
             </div>
             {navLinks.map((link, i) => (
               <button

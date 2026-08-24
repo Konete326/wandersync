@@ -4,6 +4,7 @@ import { LogOut, Menu, X, Sparkles, Shield, Image as ImageIcon } from 'lucide-re
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import GlowingButton from './GlowingButton';
+import logoImg from '../../assets/logo.png';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -33,6 +34,7 @@ const Navbar = () => {
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 group">
+          <img src={logoImg} alt="WanderSync Logo" className="size-7 object-contain rounded-md shadow-sm" />
           <span className="text-2xl italic tracking-tight font-['Instrument_Serif'] text-foreground group-hover:opacity-90 transition-opacity">
             WanderSync
           </span>

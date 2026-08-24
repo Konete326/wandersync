@@ -1,7 +1,10 @@
 import api from './api';
 
-export const fetchGalleryItems = async (page = 1, limit = 8) => {
-  const response = await api.get(`/gallery?page=${page}&limit=${limit}`);
+export const fetchGalleryItems = async (page = 1, limit = 8, country = '', category = '') => {
+  let url = `/gallery?page=${page}&limit=${limit}`;
+  if (country && country !== 'All') url += `&country=${encodeURIComponent(country)}`;
+  if (category && category !== 'All') url += `&category=${encodeURIComponent(category)}`;
+  const response = await api.get(url);
   return response.data;
 };
 

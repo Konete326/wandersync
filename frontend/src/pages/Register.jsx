@@ -4,6 +4,7 @@ import { Mail, Lock, User, Eye, EyeOff, ArrowRight, ShieldCheck, MapPin, Globe }
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import GlowingButton from '../components/common/GlowingButton';
+import logoImg from '../assets/logo.png';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -79,9 +80,10 @@ const Register = () => {
               <div className="lg:hidden mb-1">
                 <Link
                   to="/"
-                  className="text-white italic text-2xl font-['Instrument_Serif'] tracking-tight"
+                  className="inline-flex items-center gap-2 text-white italic text-2xl font-['Instrument_Serif'] tracking-tight"
                 >
-                  WanderSync
+                  <img src={logoImg} alt="WanderSync Logo" className="size-6 object-contain rounded-md" />
+                  <span>WanderSync</span>
                 </Link>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold font-heading text-foreground tracking-tight">
@@ -200,9 +202,10 @@ const Register = () => {
           <div className="space-y-6 relative z-10">
             <Link
               to="/"
-              className="text-white italic text-2xl font-['Instrument_Serif'] tracking-tight hover:opacity-90 transition-opacity"
+              className="flex items-center gap-2.5 text-white italic text-2xl font-['Instrument_Serif'] tracking-tight hover:opacity-90 transition-opacity"
             >
-              WanderSync
+              <img src={logoImg} alt="WanderSync Logo" className="size-7 object-contain rounded-md shadow-sm" />
+              <span>WanderSync</span>
             </Link>
 
             <div className="space-y-2">

@@ -7,9 +7,17 @@ export const getGalleryItems = async (req, res) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 8;
     const skip = (page - 1) * limit;
+    const filter = {};
 
-    const total = await Gallery.countDocuments();
-    const items = await Gallery.find()
+    if (req.query.country && req.query.country !== 'All') {
+      filter.country = new RegExp(`^${req.query.country}$`, 'i');
+    }
+    if (req.query.category && req.query.category !== 'All') {
+      filter.category = new RegExp(`^${req.query.category}$`, 'i');
+    }
+
+    const total = await Gallery.countDocuments(filter);
+    const items = await Gallery.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -29,7 +37,7 @@ export const getGalleryItems = async (req, res) => {
 
 export const createGalleryItem = async (req, res) => {
   try {
-    const { title, location, description, category, featured } = req.body;
+    const { title, country, location, description, category, featured } = req.body;
     if (!title || !location) {
       return sendError(res, 'Title and location are required', 400);
     }
@@ -49,6 +57,7 @@ export const createGalleryItem = async (req, res) => {
 
     const item = await Gallery.create({
       title,
+      country: country || 'Global',
       location,
       description: description || '',
       category: category || 'Landscape',

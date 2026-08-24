@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   MapPin,
   UploadCloud,
@@ -8,7 +8,8 @@ import {
   X,
   Plus,
   Eye,
-  Sparkles
+  Sparkles,
+  Globe
 } from 'lucide-react';
 import { fetchGalleryItems, uploadGalleryItem, deleteGalleryItem } from '../services/galleryService';
 import { useAuth } from '../context/AuthContext';
@@ -16,21 +17,23 @@ import { useModal } from '../context/ModalContext';
 import Loader from '../components/common/Loader';
 import GlowingButton from '../components/common/GlowingButton';
 
-const categories = [
+const defaultCountries = [
   'All',
-  'Landscape',
-  'Cultural Heritage',
-  'Coastal',
-  'Mountains',
-  'Nature',
-  'Cityscapes',
-  'Tropical'
+  'Japan',
+  'Italy',
+  'Switzerland',
+  'Greece',
+  'Canada',
+  'Indonesia',
+  'France',
+  'Iceland'
 ];
 
 const fallbackPhotos = [
   {
     _id: 'sample-1',
     title: 'Fushimi Inari Torii Gates',
+    country: 'Japan',
     location: 'Kyoto, Japan',
     category: 'Cultural Heritage',
     description: 'Iconic vermilion torii paths weaving through the sacred mountain forest of Inari.',
@@ -39,6 +42,7 @@ const fallbackPhotos = [
   {
     _id: 'sample-2',
     title: 'Amalfi Coastal Vista',
+    country: 'Italy',
     location: 'Positano, Italy',
     category: 'Coastal',
     description: 'Pastel cliffside villas cascading into the azure Mediterranean waters.',
@@ -47,6 +51,7 @@ const fallbackPhotos = [
   {
     _id: 'sample-3',
     title: 'Matterhorn Alpine Peak',
+    country: 'Switzerland',
     location: 'Zermatt, Switzerland',
     category: 'Mountains',
     description: 'Glacial horizons and towering pyramid peaks in the Swiss Alps.',
@@ -55,6 +60,7 @@ const fallbackPhotos = [
   {
     _id: 'sample-4',
     title: 'Santorini Sunset Caldera',
+    country: 'Greece',
     location: 'Oia, Greece',
     category: 'Architecture',
     description: 'White-washed domes bathed in evening golden Aegean light.',
@@ -63,6 +69,7 @@ const fallbackPhotos = [
   {
     _id: 'sample-5',
     title: 'Moraine Lake Reflections',
+    country: 'Canada',
     location: 'Banff, Canada',
     category: 'Nature',
     description: 'Crystalline turquoise waters cradled by the Valley of the Ten Peaks.',
@@ -71,6 +78,7 @@ const fallbackPhotos = [
   {
     _id: 'sample-6',
     title: 'Tegallalang Rice Terraces',
+    country: 'Indonesia',
     location: 'Ubud, Bali',
     category: 'Tropical',
     description: 'Lush emerald valley stepped with traditional Balinese irrigation systems.',
@@ -82,7 +90,7 @@ export default function Gallery() {
   const { user } = useAuth();
   const { showModal, showToast } = useModal();
   const [items, setItems] = useState([]);
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCountry, setActiveCountry] = useState('All');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -90,6 +98,7 @@ export default function Gallery() {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
   const [title, setTitle] = useState('');
+  const [country, setCountry] = useState('Japan');
   const [locationName, setLocationName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Landscape');
@@ -100,7 +109,7 @@ export default function Gallery() {
   const loadGallery = async (pageNum = 1) => {
     setLoading(true);
     try {
-      const res = await fetchGalleryItems(pageNum, 6);
+      const res = await fetchGalleryItems(pageNum, 9);
       if (res.data?.items && res.data.items.length > 0) {
         setItems(res.data.items);
         setPage(res.data.page || pageNum);
@@ -121,6 +130,14 @@ export default function Gallery() {
     loadGallery(page);
   }, [page]);
 
+  const countryList = useMemo(() => {
+    const set = new Set(defaultCountries);
+    items.forEach((it) => {
+      if (it.country && it.country !== 'Global') set.add(it.country);
+    });
+    return Array.from(set);
+  }, [items]);
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -134,7 +151,7 @@ export default function Gallery() {
     if (!title.trim() || !locationName.trim() || !selectedFile) {
       showModal({
         title: 'Missing Fields',
-        message: 'Please provide a title, location, and select an image file.',
+        message: 'Please provide a title, country, location, and select an image file.',
         type: 'warning'
       });
       return;
@@ -143,6 +160,7 @@ export default function Gallery() {
     setSubmitting(true);
     const formData = new FormData();
     formData.append('title', title);
+    formData.append('country', country);
     formData.append('location', locationName);
     formData.append('description', description);
     formData.append('category', category);
@@ -150,9 +168,10 @@ export default function Gallery() {
 
     try {
       await uploadGalleryItem(formData);
-      showToast('Photo published to WanderSync Gallery!', 'success');
+      showToast('Photo published country-wise to Gallery!', 'success');
       setUploadModalOpen(false);
       setTitle('');
+      setCountry('Japan');
       setLocationName('');
       setDescription('');
       setSelectedFile(null);
@@ -189,10 +208,11 @@ export default function Gallery() {
     });
   };
 
-  const displayedItems = activeCategory === 'All'
+  const displayedItems = activeCountry === 'All'
     ? items
     : items.filter(
-        (it) => it.category?.toLowerCase() === activeCategory.toLowerCase()
+        (it) => it.country?.toLowerCase() === activeCountry.toLowerCase() ||
+                it.location?.toLowerCase().includes(activeCountry.toLowerCase())
       );
 
   return (
@@ -200,19 +220,23 @@ export default function Gallery() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 border-b border-border/80">
           <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto py-1 no-scrollbar">
-            {categories.map((cat) => {
-              const isActive = activeCategory === cat;
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mr-1 shrink-0">
+              <Globe className="size-3.5 text-cyan-400" />
+              <span className="font-semibold">Country:</span>
+            </div>
+            {countryList.map((c) => {
+              const isActive = activeCountry === c;
               return (
                 <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
+                  key={c}
+                  onClick={() => setActiveCountry(c)}
                   className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
                     isActive
-                      ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/50 shadow-sm shadow-cyan-500/10'
+                      ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/50 shadow-sm shadow-cyan-500/10 font-bold'
                       : 'bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border'
                   }`}
                 >
-                  {cat}
+                  {c}
                 </button>
               );
             })}
@@ -222,7 +246,7 @@ export default function Gallery() {
             <GlowingButton
               onClick={() => setUploadModalOpen(true)}
               size="sm"
-              innerClassName="font-bold flex items-center gap-1.5 py-1.5 px-4 text-xs"
+              innerClassName="font-bold flex items-center gap-1.5 py-1.5 px-4 text-xs shrink-0"
             >
               <Plus className="size-3.5" />
               <span>Add Photo</span>
@@ -236,12 +260,12 @@ export default function Gallery() {
           </div>
         ) : displayedItems.length === 0 ? (
           <div className="min-h-[40vh] flex flex-col items-center justify-center text-center space-y-3 bg-card/30 rounded-3xl border border-border p-8">
-            <p className="text-sm text-muted-foreground">No photos found for category "{activeCategory}".</p>
+            <p className="text-sm text-muted-foreground">No photos found for "{activeCountry}".</p>
             <button
-              onClick={() => setActiveCategory('All')}
+              onClick={() => setActiveCountry('All')}
               className="px-4 py-1.5 rounded-full bg-secondary text-cyan-400 text-xs font-semibold border border-border hover:bg-secondary/80 cursor-pointer"
             >
-              View All Photos
+              Explore All Countries
             </button>
           </div>
         ) : (
@@ -258,8 +282,9 @@ export default function Gallery() {
                     style={{ backgroundImage: `url(${item.imageUrl})` }}
                   >
                     <div className="uiverse-card-header-bar">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white border border-white/10 font-sans">
-                        {item.category || 'Landscape'}
+                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white border border-white/10 font-sans flex items-center gap-1">
+                        <Globe className="size-2.5 text-cyan-400" />
+                        <span>{item.country || 'Global'}</span>
                       </span>
                       <div className="flex items-center gap-2">
                         {user?.role === 'admin' && (
@@ -292,15 +317,15 @@ export default function Gallery() {
                     </div>
                     <div className="flex items-center justify-center gap-2 pt-1 text-muted-foreground">
                       <Sparkles className="size-3 text-cyan-400" />
-                      <span className="text-[11px] text-muted-foreground font-medium">Curated Expedition</span>
+                      <span className="text-[11px] text-muted-foreground font-medium">{item.category || 'Curated'}</span>
                     </div>
                   </div>
 
                   <div className="uiverse-card-footer font-sans">
                     <div className="uiverse-stats">
                       <div className="uiverse-stat">
-                        <span className="label">Category</span>
-                        <span className="value text-xs">{item.category?.split(' ')[0] || 'Travel'}</span>
+                        <span className="label">Country</span>
+                        <span className="value text-xs truncate max-w-[80px] mx-auto">{item.country || 'Global'}</span>
                       </div>
                       <div className="uiverse-stat">
                         <span className="label">Rating</span>
@@ -366,9 +391,14 @@ export default function Gallery() {
               </div>
               <div className="p-6 bg-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase font-semibold text-cyan-400 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">
-                    {selectedPhoto.category}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-semibold text-cyan-400 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">
+                      {selectedPhoto.country || 'Global'}
+                    </span>
+                    <span className="text-[10px] uppercase font-semibold text-muted-foreground px-2 py-0.5 rounded bg-secondary border border-border">
+                      {selectedPhoto.category}
+                    </span>
+                  </div>
                   <h2 className="text-xl font-bold font-heading text-foreground">
                     {selectedPhoto.title}
                   </h2>
@@ -393,7 +423,7 @@ export default function Gallery() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold font-heading text-foreground">Publish to Gallery</h3>
-                  <p className="text-xs text-muted-foreground font-sans">Store compressed photo on Cloudinary & sync with database</p>
+                  <p className="text-xs text-muted-foreground font-sans">Tag photo country-wise and upload compressed image</p>
                 </div>
                 <button
                   onClick={() => setUploadModalOpen(false)}
@@ -415,15 +445,28 @@ export default function Gallery() {
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="block font-medium text-muted-foreground">Location</label>
-                  <input
-                    type="text"
-                    value={locationName}
-                    onChange={(e) => setLocationName(e.target.value)}
-                    placeholder="e.g. Kyoto, Japan"
-                    className="w-full px-4 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="block font-medium text-muted-foreground">Country</label>
+                    <input
+                      type="text"
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      placeholder="e.g. Japan, Italy, Greece"
+                      className="w-full px-4 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block font-medium text-muted-foreground">City / Location</label>
+                    <input
+                      type="text"
+                      value={locationName}
+                      onChange={(e) => setLocationName(e.target.value)}
+                      placeholder="e.g. Kyoto, Japan"
+                      className="w-full px-4 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -432,7 +475,7 @@ export default function Gallery() {
                     rows="2"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="e.g. Iconic vermilion torii gates stretching along mount forest..."
+                    placeholder="e.g. Iconic vermilion torii gates stretching along mountain forest..."
                     className="w-full px-4 py-2 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
                   />
                 </div>

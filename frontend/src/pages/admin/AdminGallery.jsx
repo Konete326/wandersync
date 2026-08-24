@@ -8,7 +8,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
-  Sparkles
+  Sparkles,
+  Globe
 } from 'lucide-react';
 import { fetchGalleryItems, uploadGalleryItem, deleteGalleryItem } from '@/services/galleryService';
 import { useModal } from '@/context/ModalContext';
@@ -25,6 +26,7 @@ export default function AdminGallery() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   const [title, setTitle] = useState('');
+  const [country, setCountry] = useState('Japan');
   const [locationName, setLocationName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Landscape');
@@ -66,7 +68,7 @@ export default function AdminGallery() {
     if (!title.trim() || !locationName.trim() || !selectedFile) {
       showModal({
         title: 'Missing Details',
-        message: 'Please provide a title, location, and choose a photo to upload.',
+        message: 'Please provide a title, country, location, and choose a photo to upload.',
         type: 'warning'
       });
       return;
@@ -75,6 +77,7 @@ export default function AdminGallery() {
     setSubmitting(true);
     const formData = new FormData();
     formData.append('title', title);
+    formData.append('country', country);
     formData.append('location', locationName);
     formData.append('description', description);
     formData.append('category', category);
@@ -82,9 +85,10 @@ export default function AdminGallery() {
 
     try {
       await uploadGalleryItem(formData);
-      showToast('Photo uploaded to Cloudinary & saved to Atlas!', 'success');
+      showToast('Photo uploaded country-wise to Cloudinary & saved to Atlas!', 'success');
       setUploadModalOpen(false);
       setTitle('');
+      setCountry('Japan');
       setLocationName('');
       setDescription('');
       setSelectedFile(null);
@@ -126,7 +130,7 @@ export default function AdminGallery() {
         <div>
           <h1 className="text-2xl font-bold font-heading text-foreground">Media & Gallery Management</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Manage compressed destination photos synced with Cloudinary & MongoDB Atlas ({total} Total)
+            Manage compressed destination photos synced country-wise with Cloudinary & MongoDB Atlas ({total} Total)
           </p>
         </div>
         <GlowingButton
@@ -171,8 +175,9 @@ export default function AdminGallery() {
                   style={{ backgroundImage: `url(${item.imageUrl})` }}
                 >
                   <div className="uiverse-card-header-bar">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white border border-white/10 font-sans">
-                      {item.category || 'Landscape'}
+                    <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white border border-white/10 font-sans flex items-center gap-1">
+                      <Globe className="size-2.5 text-cyan-400" />
+                      <span>{item.country || 'Global'}</span>
                     </span>
                     <button
                       onClick={() => handleDelete(item._id)}
@@ -197,15 +202,15 @@ export default function AdminGallery() {
                   </div>
                   <div className="flex items-center justify-center gap-2 pt-1 text-muted-foreground">
                     <Sparkles className="size-3 text-cyan-400" />
-                    <span className="text-[11px] text-muted-foreground font-medium">Cloudinary Synced</span>
+                    <span className="text-[11px] text-muted-foreground font-medium">{item.category || 'Cloudinary Synced'}</span>
                   </div>
                 </div>
 
                 <div className="uiverse-card-footer font-sans">
                   <div className="uiverse-stats">
                     <div className="uiverse-stat">
-                      <span className="label">Category</span>
-                      <span className="value text-xs">{item.category?.split(' ')[0] || 'Travel'}</span>
+                      <span className="label">Country</span>
+                      <span className="value text-xs truncate max-w-[80px] mx-auto">{item.country || 'Global'}</span>
                     </div>
                     <div className="uiverse-stat">
                       <span className="label">Storage</span>
@@ -272,15 +277,28 @@ export default function AdminGallery() {
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-muted-foreground font-medium">Location</label>
-                <input
-                  type="text"
-                  value={locationName}
-                  onChange={(e) => setLocationName(e.target.value)}
-                  placeholder="e.g. Santorini, Greece"
-                  className="w-full px-3 py-2 rounded-xl bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-muted-foreground font-medium">Country</label>
+                  <input
+                    type="text"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    placeholder="e.g. Greece, Japan"
+                    className="w-full px-3 py-2 rounded-xl bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-muted-foreground font-medium">City / Location</label>
+                  <input
+                    type="text"
+                    value={locationName}
+                    onChange={(e) => setLocationName(e.target.value)}
+                    placeholder="e.g. Santorini, Greece"
+                    className="w-full px-3 py-2 rounded-xl bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1">
@@ -307,6 +325,7 @@ export default function AdminGallery() {
                   <option value="Coastal">Coastal & Beach</option>
                   <option value="Mountains">Mountains</option>
                   <option value="Nature">Nature & Wildlife</option>
+                  <option value="Tropical">Tropical</option>
                 </select>
               </div>
 
