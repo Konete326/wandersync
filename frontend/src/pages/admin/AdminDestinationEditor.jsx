@@ -22,7 +22,8 @@ import {
   Star,
   CheckCircle2,
   Save,
-  ImageIcon
+  ImageIcon,
+  Images
 } from 'lucide-react';
 import { uploadImage } from '@/services/mediaService';
 import {
@@ -63,6 +64,7 @@ export default function AdminDestinationEditor() {
     category: 'Landscape',
     description: '',
     imageUrl: '',
+    galleryImages: [],
     bestTimeToVisit: 'Oct - Apr',
     idealDuration: '5-7 Days',
     estimatedBudget: '$120-$180/day',
@@ -75,6 +77,7 @@ export default function AdminDestinationEditor() {
       {
         name: '',
         imageUrl: '',
+        images: [],
         description: '',
         ticketPrice: 'Free',
         duration: '2-3 hours'
@@ -84,6 +87,7 @@ export default function AdminDestinationEditor() {
       {
         name: '',
         imageUrl: '',
+        images: [],
         rating: 4.8,
         priceRange: '$$$',
         pricePerNight: '$180/night',
@@ -103,6 +107,7 @@ export default function AdminDestinationEditor() {
   const [primaryPreview, setPrimaryPreview] = useState('');
   const [uploadingSpotIndex, setUploadingSpotIndex] = useState(null);
   const [uploadingHotelIndex, setUploadingHotelIndex] = useState(null);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
 
   useEffect(() => {
     if (isEditing) {
@@ -118,6 +123,7 @@ export default function AdminDestinationEditor() {
               category: res.data.category || 'Landscape',
               description: res.data.description || '',
               imageUrl: res.data.imageUrl || '',
+              galleryImages: res.data.galleryImages || [],
               bestTimeToVisit: res.data.bestTimeToVisit || 'Year-round',
               idealDuration: res.data.idealDuration || '5-7 Days',
               estimatedBudget: res.data.estimatedBudget || '$120-$200/day',
@@ -126,8 +132,12 @@ export default function AdminDestinationEditor() {
               transportation: res.data.transportation || '',
               featured: Boolean(res.data.featured),
               travelTips: res.data.travelTips?.length ? res.data.travelTips : ['Carry local cash'],
-              touristPlaces: res.data.touristPlaces?.length ? res.data.touristPlaces : [{ name: '', imageUrl: '', description: '', ticketPrice: 'Free', duration: '2 hours' }],
-              hotels: res.data.hotels?.length ? res.data.hotels : [{ name: '', imageUrl: '', rating: 4.8, priceRange: '$$$', pricePerNight: '$180/night', amenities: [] }],
+              touristPlaces: res.data.touristPlaces?.length
+                ? res.data.touristPlaces.map((p) => ({ ...p, images: p.images || [] }))
+                : [{ name: '', imageUrl: '', images: [], description: '', ticketPrice: 'Free', duration: '2 hours' }],
+              hotels: res.data.hotels?.length
+                ? res.data.hotels.map((h) => ({ ...h, images: h.images || [] }))
+                : [{ name: '', imageUrl: '', images: [], rating: 4.8, priceRange: '$$$', pricePerNight: '$180/night', amenities: [] }],
               localFoods: res.data.localFoods?.length ? res.data.localFoods : [{ name: '', description: '', price: '$15' }]
             });
             setPrimaryPreview(res.data.imageUrl || '');
@@ -158,7 +168,11 @@ export default function AdminDestinationEditor() {
       const res = await uploadImage(file, 'wandersync/spots');
       if (res.data?.url) {
         const updated = [...formData.touristPlaces];
-        updated[index].imageUrl = res.data.url;
+        const newUrl = res.data.url;
+        if (!updated[index].imageUrl) {
+          updated[index].imageUrl = newUrl;
+        }
+        updated[index].images = [...(updated[index].images || []), newUrl];
         setFormData((prev) => ({ ...prev, touristPlaces: updated }));
         showToast('Tourist attraction image uploaded', 'success');
       }
@@ -169,6 +183,16 @@ export default function AdminDestinationEditor() {
     }
   };
 
+  const handleRemoveSpotImage = (spotIndex, imgIndex) => {
+    const updated = [...formData.touristPlaces];
+    const removedImg = updated[spotIndex].images[imgIndex];
+    updated[spotIndex].images = updated[spotIndex].images.filter((_, idx) => idx !== imgIndex);
+    if (updated[spotIndex].imageUrl === removedImg) {
+      updated[spotIndex].imageUrl = updated[spotIndex].images[0] || '';
+    }
+    setFormData((prev) => ({ ...prev, touristPlaces: updated }));
+  };
+
   const handleHotelFileChange = async (index, file) => {
     if (!file) return;
     setUploadingHotelIndex(index);
@@ -176,7 +200,11 @@ export default function AdminDestinationEditor() {
       const res = await uploadImage(file, 'wandersync/hotels');
       if (res.data?.url) {
         const updated = [...formData.hotels];
-        updated[index].imageUrl = res.data.url;
+        const newUrl = res.data.url;
+        if (!updated[index].imageUrl) {
+          updated[index].imageUrl = newUrl;
+        }
+        updated[index].images = [...(updated[index].images || []), newUrl];
         setFormData((prev) => ({ ...prev, hotels: updated }));
         showToast('Hotel photo uploaded', 'success');
       }
@@ -185,6 +213,42 @@ export default function AdminDestinationEditor() {
     } finally {
       setUploadingHotelIndex(null);
     }
+  };
+
+  const handleRemoveHotelImage = (hotelIndex, imgIndex) => {
+    const updated = [...formData.hotels];
+    const removedImg = updated[hotelIndex].images[imgIndex];
+    updated[hotelIndex].images = updated[hotelIndex].images.filter((_, idx) => idx !== imgIndex);
+    if (updated[hotelIndex].imageUrl === removedImg) {
+      updated[hotelIndex].imageUrl = updated[hotelIndex].images[0] || '';
+    }
+    setFormData((prev) => ({ ...prev, hotels: updated }));
+  };
+
+  const handleGalleryUpload = async (file) => {
+    if (!file) return;
+    setUploadingGallery(true);
+    try {
+      const res = await uploadImage(file, 'wandersync/gallery');
+      if (res.data?.url) {
+        setFormData((prev) => ({
+          ...prev,
+          galleryImages: [...prev.galleryImages, res.data.url]
+        }));
+        showToast('Additional destination photo added', 'success');
+      }
+    } catch {
+      showToast('Failed to upload gallery image', 'error');
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
+  const handleRemoveGalleryImage = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      galleryImages: prev.galleryImages.filter((_, i) => i !== index)
+    }));
   };
 
   const handleAiAutofill = async () => {
@@ -209,8 +273,12 @@ export default function AdminDestinationEditor() {
           language: res.data.language || prev.language,
           transportation: res.data.transportation || prev.transportation,
           travelTips: res.data.travelTips?.length ? res.data.travelTips : prev.travelTips,
-          touristPlaces: res.data.touristPlaces?.length ? res.data.touristPlaces : prev.touristPlaces,
-          hotels: res.data.hotels?.length ? res.data.hotels : prev.hotels,
+          touristPlaces: res.data.touristPlaces?.length
+            ? res.data.touristPlaces.map((p) => ({ ...p, images: p.images || (p.imageUrl ? [p.imageUrl] : []) }))
+            : prev.touristPlaces,
+          hotels: res.data.hotels?.length
+            ? res.data.hotels.map((h) => ({ ...h, images: h.images || (h.imageUrl ? [h.imageUrl] : []) }))
+            : prev.hotels,
           localFoods: res.data.localFoods?.length ? res.data.localFoods : prev.localFoods
         }));
         showToast('Destination details autofilled by Gemini AI! You can customize or upload photos.', 'success');
@@ -250,6 +318,7 @@ export default function AdminDestinationEditor() {
       body.append('transportation', formData.transportation);
       body.append('featured', String(formData.featured));
 
+      body.append('galleryImages', JSON.stringify(formData.galleryImages.filter(Boolean)));
       body.append('travelTips', JSON.stringify(formData.travelTips.filter(Boolean)));
       body.append('touristPlaces', JSON.stringify(formData.touristPlaces.filter((p) => p.name)));
       body.append('hotels', JSON.stringify(formData.hotels.filter((h) => h.name)));
@@ -306,7 +375,7 @@ export default function AdminDestinationEditor() {
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Comprehensive travel builder for landmarks, tourist attractions, hotels with nightly rates, foods, and logistics.
+              Comprehensive travel builder for landmarks, tourist attractions, multi-image hotels, foods, and logistics.
             </p>
           </div>
         </div>
@@ -339,7 +408,7 @@ export default function AdminDestinationEditor() {
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
           <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
             <Compass className="size-4 text-orange-400" />
-            <h2 className="text-sm font-bold text-foreground">1. Primary Landmark & Media</h2>
+            <h2 className="text-sm font-bold text-foreground">1. Primary Landmark & Multi-Photo Gallery</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
@@ -439,6 +508,43 @@ export default function AdminDestinationEditor() {
               </div>
             </div>
           </div>
+
+          {/* Destination Additional Gallery Images Carousel / Grid */}
+          <div className="pt-3 border-t border-border/70 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Images className="size-3.5 text-orange-400" />
+                <span>Additional Scenic Photos & Panorama ({formData.galleryImages.length})</span>
+              </label>
+              <label className="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 cursor-pointer">
+                <Plus className="size-3" />
+                <span>{uploadingGallery ? 'Uploading Photo...' : 'Add Extra Photo'}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploadingGallery}
+                  onChange={(e) => handleGalleryUpload(e.target.files?.[0])}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
+              {formData.galleryImages.map((imgUrl, idx) => (
+                <div key={idx} className="relative h-20 rounded-lg overflow-hidden border border-border group">
+                  <img src={imgUrl} alt={`Scenic ${idx + 1}`} className="size-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveGalleryImage(idx)}
+                    className="absolute top-1 right-1 p-1 rounded bg-black/70 text-rose-400 hover:bg-black opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    title="Remove image"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* SECTION 2: Traveler Practical Essentials */}
@@ -516,7 +622,7 @@ export default function AdminDestinationEditor() {
 
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-zinc-300 flex items-center gap-1">
-                <Bus className="size-3 text-orange-400" /> Transit / Transit Pass
+                <Bus className="size-3 text-orange-400" /> Transit / Pass
               </label>
               <input
                 type="text"
@@ -588,7 +694,7 @@ export default function AdminDestinationEditor() {
                   ...formData,
                   touristPlaces: [
                     ...formData.touristPlaces,
-                    { name: '', imageUrl: '', description: '', ticketPrice: 'Free', duration: '2 hours' }
+                    { name: '', imageUrl: '', images: [], description: '', ticketPrice: 'Free', duration: '2 hours' }
                   ]
                 })
               }
@@ -619,13 +725,13 @@ export default function AdminDestinationEditor() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                   <div className="sm:col-span-5 space-y-1">
-                    <label className="text-[10px] font-bold text-zinc-300">Spot Photo (Direct Upload)</label>
+                    <label className="text-[10px] font-bold text-zinc-300">Spot Photos (Multiple Upload)</label>
                     <div className="relative h-24 w-full rounded-lg border border-dashed border-border overflow-hidden bg-zinc-900 flex items-center justify-center">
                       {spot.imageUrl ? (
                         <div className="relative size-full group/img">
                           <img src={spot.imageUrl} alt={spot.name} className="size-full object-cover" />
                           <label className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-[10px] text-white font-bold cursor-pointer">
-                            Change
+                            + Add Photo
                             <input
                               type="file"
                               accept="image/*"
@@ -653,6 +759,23 @@ export default function AdminDestinationEditor() {
                         </label>
                       )}
                     </div>
+
+                    {spot.images && spot.images.length > 0 && (
+                      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-1">
+                        {spot.images.map((img, imgIdx) => (
+                          <div key={imgIdx} className="relative size-8 shrink-0 rounded border border-border overflow-hidden group/thumb">
+                            <img src={img} alt={`Thumb ${imgIdx}`} className="size-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSpotImage(i, imgIdx)}
+                              className="absolute inset-0 bg-rose-950/80 text-rose-300 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center cursor-pointer"
+                            >
+                              <X className="size-2.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="sm:col-span-7 space-y-2">
@@ -723,7 +846,7 @@ export default function AdminDestinationEditor() {
           </div>
         </div>
 
-        {/* SECTION 4: Hotels & Accommodations (Nightly Rates, Photos & Ratings) */}
+        {/* SECTION 4: Hotels & Accommodations (Nightly Rates, Multiple Photos & Ratings) */}
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
           <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
             <div className="flex items-center gap-2">
@@ -739,7 +862,7 @@ export default function AdminDestinationEditor() {
                   ...formData,
                   hotels: [
                     ...formData.hotels,
-                    { name: '', imageUrl: '', rating: 4.8, priceRange: '$$$', pricePerNight: '$180/night', amenities: ['Free WiFi'] }
+                    { name: '', imageUrl: '', images: [], rating: 4.8, priceRange: '$$$', pricePerNight: '$180/night', amenities: ['Free WiFi'] }
                   ]
                 })
               }
@@ -770,13 +893,13 @@ export default function AdminDestinationEditor() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                   <div className="sm:col-span-5 space-y-1">
-                    <label className="text-[10px] font-bold text-zinc-300">Hotel Photo</label>
+                    <label className="text-[10px] font-bold text-zinc-300">Hotel Photos (Multiple Upload)</label>
                     <div className="relative h-24 w-full rounded-lg border border-dashed border-border overflow-hidden bg-zinc-900 flex items-center justify-center">
                       {hotel.imageUrl ? (
                         <div className="relative size-full group/himg">
                           <img src={hotel.imageUrl} alt={hotel.name} className="size-full object-cover" />
                           <label className="absolute inset-0 bg-black/60 opacity-0 group-hover/himg:opacity-100 flex items-center justify-center text-[10px] text-white font-bold cursor-pointer">
-                            Change
+                            + Add Photo
                             <input
                               type="file"
                               accept="image/*"
@@ -804,6 +927,23 @@ export default function AdminDestinationEditor() {
                         </label>
                       )}
                     </div>
+
+                    {hotel.images && hotel.images.length > 0 && (
+                      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-1">
+                        {hotel.images.map((img, imgIdx) => (
+                          <div key={imgIdx} className="relative size-8 shrink-0 rounded border border-border overflow-hidden group/hthumb">
+                            <img src={img} alt={`Hotel ${imgIdx}`} className="size-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveHotelImage(i, imgIdx)}
+                              className="absolute inset-0 bg-rose-950/80 text-rose-300 opacity-0 group-hover/hthumb:opacity-100 flex items-center justify-center cursor-pointer"
+                            >
+                              <X className="size-2.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="sm:col-span-7 space-y-2">

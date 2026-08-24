@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const touristPlaceSchema = new mongoose.Schema({
   name: { type: String, trim: true },
   imageUrl: { type: String, trim: true },
+  images: { type: [String], default: [] },
   description: { type: String, trim: true },
   ticketPrice: { type: String, default: 'Free', trim: true },
   duration: { type: String, default: '2-3 hours', trim: true }
@@ -11,6 +12,7 @@ const touristPlaceSchema = new mongoose.Schema({
 const hotelSchema = new mongoose.Schema({
   name: { type: String, trim: true },
   imageUrl: { type: String, trim: true },
+  images: { type: [String], default: [] },
   rating: { type: Number, default: 4.8 },
   priceRange: { type: String, default: '$$$' },
   pricePerNight: { type: String, default: '$180/night', trim: true },
@@ -32,6 +34,7 @@ const gallerySchema = new mongoose.Schema({
   category: { type: String, default: 'Landscape', trim: true },
   imageUrl: { type: String, required: true },
   publicId: { type: String, default: '' },
+  galleryImages: { type: [String], default: [] },
   bestTimeToVisit: { type: String, default: 'Year-round', trim: true },
   idealDuration: { type: String, default: '5-7 Days', trim: true },
   estimatedBudget: { type: String, default: '$120-$200/day', trim: true },

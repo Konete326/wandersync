@@ -56,6 +56,7 @@ export const createGalleryItem = async (req, res) => {
       category: category || 'Landscape',
       imageUrl,
       publicId,
+      galleryImages: parseField(req.body.galleryImages),
       bestTimeToVisit: bestTimeToVisit || 'Year-round',
       idealDuration: idealDuration || '5-7 Days',
       estimatedBudget: estimatedBudget || '$120-$200/day',
@@ -89,6 +90,7 @@ export const updateGalleryItem = async (req, res) => {
       item.publicId = uploadResult.publicId;
     } else if (req.body.imageUrl) item.imageUrl = req.body.imageUrl;
     const parseField = (val) => (typeof val === 'string' ? JSON.parse(val) : val);
+    if (req.body.galleryImages) item.galleryImages = parseField(req.body.galleryImages);
     if (req.body.touristPlaces) item.touristPlaces = parseField(req.body.touristPlaces);
     if (req.body.hotels) item.hotels = parseField(req.body.hotels);
     if (req.body.localFoods) item.localFoods = parseField(req.body.localFoods);
