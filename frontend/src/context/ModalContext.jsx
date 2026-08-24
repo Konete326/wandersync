@@ -3,6 +3,7 @@ import CustomModal from '../components/common/CustomModal';
 import Toast from '../components/common/Toast';
 
 const ModalContext = createContext(null);
+const MAX_TOASTS = 3;
 
 export const ModalProvider = ({ children }) => {
   const [modalState, setModalState] = useState({
@@ -46,9 +47,12 @@ export const ModalProvider = ({ children }) => {
     setModalState((prev) => ({ ...prev, isOpen: false }));
   }, []);
 
-  const showToast = useCallback((message, type = 'info', duration = 3500) => {
+  const showToast = useCallback((message, type = 'info', duration = 3000) => {
     const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => {
+      const next = [...prev, { id, message, type }];
+      return next.slice(-MAX_TOASTS);
+    });
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, duration);
@@ -62,7 +66,7 @@ export const ModalProvider = ({ children }) => {
     <ModalContext.Provider value={{ showModal, closeModal, showToast }}>
       {children}
       <CustomModal {...modalState} onClose={closeModal} />
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none">
+      <div className="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4 sm:px-0">
         {toasts.map((toast) => (
           <Toast
             key={toast.id}

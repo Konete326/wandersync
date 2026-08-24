@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, MapPin, Calendar, DollarSign, Users, Compass, Tag } from 'lucide-react';
+import { Sparkles, MapPin, Calendar, DollarSign, Users, Tag, Clock } from 'lucide-react';
 import { generateItineraryWithAi, saveTrip } from '../services/tripService';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
@@ -20,6 +20,7 @@ const CreateTrip = () => {
   const [interests, setInterests] = useState('Sightseeing, Culture, Food');
   const [customPrompt, setCustomPrompt] = useState('');
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
     if (location.state?.initialPrompt) {
@@ -31,8 +32,17 @@ const CreateTrip = () => {
     }
   }, [location.state]);
 
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
+
   const handleGenerate = async (e) => {
     e.preventDefault();
+    if (cooldown > 0) return;
+
     if (!destination.trim() && !customPrompt.trim()) {
       showModal({
         title: 'Missing Details',
@@ -55,7 +65,6 @@ const CreateTrip = () => {
 
     setLoading(true);
     try {
-      const promptToUse = destination ? `${durationDays}-day itinerary for ${destination}` : customPrompt;
       const res = await generateItineraryWithAi({
         destination: destination || customPrompt,
         durationDays,
@@ -70,6 +79,7 @@ const CreateTrip = () => {
       showToast('Itinerary generated and saved!', 'success');
       navigate(`/trips/${savedTrip.data._id}`);
     } catch (error) {
+      setCooldown(5);
       showModal({
         title: 'Generation Failed',
         message: error.response?.data?.message || error.message || 'Failed to generate itinerary. Please try again.',
@@ -194,10 +204,24 @@ const CreateTrip = () => {
 
         <button
           type="submit"
-          className="w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+          disabled={cooldown > 0}
+          className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
+            cooldown > 0
+              ? 'bg-secondary text-muted-foreground border border-border cursor-not-allowed opacity-75'
+              : 'bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 cursor-pointer'
+          }`}
         >
-          <Sparkles className="w-5 h-5" />
-          <span>Generate Bespoke Itinerary</span>
+          {cooldown > 0 ? (
+            <>
+              <Clock className="w-5 h-5 animate-spin" />
+              <span>AI Cooldown Active ({cooldown}s)</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-5 h-5" />
+              <span>Generate Bespoke Itinerary</span>
+            </>
+          )}
         </button>
       </form>
     </div>

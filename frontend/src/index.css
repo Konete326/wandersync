@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./styles/glass.css";
+@import "./styles/loader.css";
 
 @theme inline {
   --color-background: var(--background);

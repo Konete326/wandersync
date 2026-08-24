@@ -4,8 +4,15 @@ import { loginUser, registerUser, fetchUserProfile } from '../services/authServi
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('wandersync_token') || '');
+  const [user, setUser] = useState(() => {
+    try {
+      const cached = localStorage.getItem('wandersync_user');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,8 +21,11 @@ export const AuthProvider = ({ children }) => {
         try {
           const res = await fetchUserProfile();
           setUser(res.data);
+          localStorage.setItem('wandersync_user', JSON.stringify(res.data));
         } catch (error) {
-          logout();
+          if (error.response?.status === 401) {
+            logout();
+          }
         }
       }
       setLoading(false);
@@ -26,6 +36,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     const res = await loginUser(credentials);
     localStorage.setItem('wandersync_token', res.data.token);
+    localStorage.setItem('wandersync_user', JSON.stringify(res.data.user));
     setToken(res.data.token);
     setUser(res.data.user);
     return res;
@@ -34,6 +45,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     const res = await registerUser(userData);
     localStorage.setItem('wandersync_token', res.data.token);
+    localStorage.setItem('wandersync_user', JSON.stringify(res.data.user));
     setToken(res.data.token);
     setUser(res.data.user);
     return res;
@@ -41,6 +53,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('wandersync_token');
+    localStorage.removeItem('wandersync_user');
     setToken('');
     setUser(null);
   };

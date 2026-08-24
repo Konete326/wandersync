@@ -1,0 +1,122 @@
+.car-loader-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.car-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.car-loader-svg {
+  overflow: visible;
+}
+
+.road {
+  stroke: #52525b;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.road-lines {
+  stroke: #a1a1aa;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 10 18;
+  animation: roadMove 0.8s linear infinite;
+}
+
+.car {
+  animation: carMove 1.8s ease-in-out infinite;
+}
+
+.car-body {
+  fill: none;
+  stroke: #06b6d4;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.window {
+  fill: #272730;
+  stroke: #06b6d4;
+  stroke-width: 1.5;
+}
+
+.light {
+  fill: #38bdf8;
+  animation: lightBlink 1s ease-in-out infinite;
+}
+
+.wheel {
+  fill: #18181b;
+  stroke: #06b6d4;
+  stroke-width: 2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wheelSpin 0.6s linear infinite;
+}
+
+.hub {
+  fill: #fafafa;
+  stroke: none;
+}
+
+.speed-lines {
+  stroke: #06b6d4;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 8 12;
+  animation: speedMove 0.7s linear infinite;
+}
+
+@keyframes roadMove {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+@keyframes carMove {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes wheelSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes lightBlink {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes speedMove {
+  from {
+    stroke-dashoffset: 0;
+    opacity: 0.3;
+  }
+  to {
+    stroke-dashoffset: -20;
+    opacity: 1;
+  }
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Compass, PlusCircle, Map, User as UserIcon, LogOut, Menu, X, Sparkles } from 'lucide-react';
+import { Compass, Map, LogOut, Menu, X, Sparkles, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 
@@ -71,6 +71,17 @@ const Navbar = () => {
               My Trips
             </Link>
           )}
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin"
+              className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-all ${
+                location.pathname.startsWith('/admin') ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Shield className="w-4 h-4 text-cyan-400" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
@@ -89,7 +100,7 @@ const Navbar = () => {
               </Link>
               <button
                 onClick={handleLogout}
-                className="p-2 text-slate-400 hover:text-rose-400 rounded-xl hover:bg-rose-500/10 transition-colors"
+                className="p-2 text-slate-400 hover:text-rose-400 rounded-xl hover:bg-rose-500/10 transition-colors cursor-pointer"
                 title="Sign Out"
               >
                 <LogOut className="w-4 h-4" />
@@ -146,6 +157,15 @@ const Navbar = () => {
               My Trips
             </Link>
           )}
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-base font-medium text-cyan-400 hover:bg-slate-800"
+            >
+              Admin Dashboard
+            </Link>
+          )}
           {user ? (
             <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
               <Link
@@ -154,7 +174,7 @@ const Navbar = () => {
                 className="flex items-center gap-3"
               >
                 <img
-                  src={user.avatar?.url}
+                  src={user.avatar?.url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
                   alt={user.name}
                   className="w-9 h-9 rounded-full object-cover border border-cyan-400"
                 />
@@ -168,7 +188,7 @@ const Navbar = () => {
                   setMobileMenuOpen(false);
                   handleLogout();
                 }}
-                className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg"
+                className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg cursor-pointer"
               >
                 <LogOut className="w-5 h-5" />
               </button>

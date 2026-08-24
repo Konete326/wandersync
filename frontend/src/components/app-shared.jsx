@@ -1,100 +1,88 @@
-import { LayoutGridIcon, BarChart3Icon, BriefcaseIcon, UsersIcon, PlugIcon, KeyRoundIcon, SettingsIcon, CreditCardIcon, HelpCircleIcon, BookOpenIcon } from "lucide-react";
+import {
+  LayoutGrid,
+  Compass,
+  Users,
+  Sparkles,
+  Receipt,
+  Image,
+  Bell,
+  History,
+  Settings,
+  User
+} from 'lucide-react';
 
 export const navGroups = [
-	{
-		label: "Product",
-		items: [
-			{
-				title: "Dashboard",
-				path: "#/dashboard",
-				icon: (
-					<LayoutGridIcon />
-				),
-				isActive: true,
-			},
-			{
-				title: "Analytics",
-				path: "#/analytics",
-				icon: (
-					<BarChart3Icon />
-				),
-			},
-			{
-				title: "Projects",
-				path: "#/projects",
-				icon: (
-					<BriefcaseIcon />
-				),
-			},
-		],
-	},
-	{
-		label: "Workspace",
-		items: [
-			{
-				title: "Team",
-				path: "#/team",
-				icon: (
-					<UsersIcon />
-				),
-			},
-			{
-				title: "Integrations",
-				path: "#/integrations",
-				icon: (
-					<PlugIcon />
-				),
-			},
-			{
-				title: "API Keys",
-				path: "#/api-keys",
-				icon: (
-					<KeyRoundIcon />
-				),
-			},
-		],
-	},
-	{
-		label: "Administration",
-		items: [
-			{
-				title: "Settings",
-				path: "#/settings",
-				icon: (
-					<SettingsIcon />
-				),
-			},
-			{
-				title: "Billing",
-				path: "#/billing",
-				icon: (
-					<CreditCardIcon />
-				),
-			},
-		],
-	},
+  {
+    label: 'Core Operations',
+    items: [
+      {
+        title: 'Dashboard',
+        path: '/admin',
+        icon: <LayoutGrid className="size-4" />
+      },
+      {
+        title: 'Trips Maestro',
+        path: '/admin/trips',
+        icon: <Compass className="size-4" />
+      },
+      {
+        title: 'Travelers',
+        path: '/admin/users',
+        icon: <Users className="size-4" />
+      }
+    ]
+  },
+  {
+    label: 'AI & Intelligence',
+    items: [
+      {
+        title: 'Gemini Analytics',
+        path: '/admin/ai-analytics',
+        icon: <Sparkles className="size-4" />
+      },
+      {
+        title: 'Platform Expenses',
+        path: '/admin/expenses',
+        icon: <Receipt className="size-4" />
+      },
+      {
+        title: 'Media CDN',
+        path: '/admin/media',
+        icon: <Image className="size-4" />
+      }
+    ]
+  },
+  {
+    label: 'System & Control',
+    items: [
+      {
+        title: 'Notifications',
+        path: '/admin/notifications',
+        icon: <Bell className="size-4" />
+      },
+      {
+        title: 'Changelog',
+        path: '/admin/changelog',
+        icon: <History className="size-4" />
+      },
+      {
+        title: 'Settings',
+        path: '/admin/settings',
+        icon: <Settings className="size-4" />
+      },
+      {
+        title: 'Admin Profile',
+        path: '/admin/profile',
+        icon: <User className="size-4" />
+      }
+    ]
+  }
 ];
 
-export const footerNavLinks = [
-	{
-		title: "Help Center",
-		path: "#/help",
-		icon: (
-			<HelpCircleIcon />
-		),
-	},
-	{
-		title: "Documentation",
-		path: "#/documentation",
-		icon: (
-			<BookOpenIcon />
-		),
-	},
-];
+export const footerNavLinks = [];
 
-export const navLinks = [
-	...navGroups.flatMap((group) =>
-		group.items.flatMap((item) =>
-			item.subItems?.length ? [item, ...item.subItems] : [item])),
-	...footerNavLinks,
-];
+export const navLinks = navGroups.flatMap((group) =>
+  group.items.flatMap((item) =>
+    item.subItems?.length ? [item, ...item.subItems] : [item]
+  )
+);
