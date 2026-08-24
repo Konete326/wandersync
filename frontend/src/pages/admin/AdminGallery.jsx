@@ -7,7 +7,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Sparkles
 } from 'lucide-react';
 import { fetchGalleryItems, uploadGalleryItem, deleteGalleryItem } from '@/services/galleryService';
 import { useModal } from '@/context/ModalContext';
@@ -25,6 +26,7 @@ export default function AdminGallery() {
 
   const [title, setTitle] = useState('');
   const [locationName, setLocationName] = useState('');
+  const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Landscape');
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
@@ -33,7 +35,7 @@ export default function AdminGallery() {
   const loadItems = async (pageNum = 1) => {
     setLoading(true);
     try {
-      const res = await fetchGalleryItems(pageNum, 8);
+      const res = await fetchGalleryItems(pageNum, 6);
       if (res.data?.items) {
         setItems(res.data.items);
         setPage(res.data.page || pageNum);
@@ -74,6 +76,7 @@ export default function AdminGallery() {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('location', locationName);
+    formData.append('description', description);
     formData.append('category', category);
     formData.append('image', selectedFile);
 
@@ -83,6 +86,7 @@ export default function AdminGallery() {
       setUploadModalOpen(false);
       setTitle('');
       setLocationName('');
+      setDescription('');
       setSelectedFile(null);
       setPreviewUrl('');
       loadItems(1);
@@ -156,35 +160,61 @@ export default function AdminGallery() {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {items.map((item) => (
               <div
                 key={item._id}
-                className="group relative rounded-2xl overflow-hidden border border-border bg-card flex flex-col justify-between"
+                className="uiverse-card group"
               >
-                <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                  <span className="absolute top-2.5 left-2.5 text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-black/60 backdrop-blur-md text-white border border-white/10">
-                    {item.category}
-                  </span>
-                  <button
-                    onClick={() => handleDelete(item._id)}
-                    className="absolute top-2.5 right-2.5 p-1.5 rounded-lg bg-black/70 hover:bg-rose-600 text-white transition-colors cursor-pointer"
-                    title="Delete photo"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
+                <div
+                  className="uiverse-card-header"
+                  style={{ backgroundImage: `url(${item.imageUrl})` }}
+                >
+                  <div className="uiverse-card-header-bar">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white border border-white/10 font-sans">
+                      {item.category || 'Landscape'}
+                    </span>
+                    <button
+                      onClick={() => handleDelete(item._id)}
+                      className="p-1.5 rounded-lg bg-black/70 hover:bg-rose-600 text-white transition-colors cursor-pointer"
+                      title="Delete photo"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="p-3.5 space-y-1 bg-card">
-                  <h4 className="text-xs font-semibold text-foreground truncate">{item.title}</h4>
-                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+
+                <div className="uiverse-card-body font-sans">
+                  <span className="uiverse-card-name group-hover:text-cyan-400 transition-colors truncate">
+                    {item.title}
+                  </span>
+                  <div className="uiverse-card-job flex items-center justify-center gap-1">
                     <MapPin className="size-3 text-cyan-400 shrink-0" />
                     <span className="truncate">{item.location}</span>
+                  </div>
+                  <div className="uiverse-card-bio">
+                    {item.description || `Destination visual uploaded to WanderSync Atlas & Cloudinary archive.`}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 pt-1 text-muted-foreground">
+                    <Sparkles className="size-3 text-cyan-400" />
+                    <span className="text-[11px] text-muted-foreground font-medium">Cloudinary Synced</span>
+                  </div>
+                </div>
+
+                <div className="uiverse-card-footer font-sans">
+                  <div className="uiverse-stats">
+                    <div className="uiverse-stat">
+                      <span className="label">Category</span>
+                      <span className="value text-xs">{item.category?.split(' ')[0] || 'Travel'}</span>
+                    </div>
+                    <div className="uiverse-stat">
+                      <span className="label">Storage</span>
+                      <span className="value text-xs">Cloud</span>
+                    </div>
+                    <div className="uiverse-stat">
+                      <span className="label">Format</span>
+                      <span className="value text-xs">WebP</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -250,6 +280,17 @@ export default function AdminGallery() {
                   onChange={(e) => setLocationName(e.target.value)}
                   placeholder="e.g. Santorini, Greece"
                   className="w-full px-3 py-2 rounded-xl bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-muted-foreground font-medium">Description (Optional)</label>
+                <textarea
+                  rows="2"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="e.g. White-washed cliffside architecture..."
+                  className="w-full px-3 py-2 rounded-xl bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
                 />
               </div>
 

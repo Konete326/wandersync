@@ -7,7 +7,9 @@ import {
   ChevronRight,
   X,
   Plus,
-  Compass
+  Compass,
+  Eye,
+  Sparkles
 } from 'lucide-react';
 import { fetchGalleryItems, uploadGalleryItem, deleteGalleryItem } from '../services/galleryService';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +23,7 @@ const fallbackPhotos = [
     title: 'Fushimi Inari Torii Gates',
     location: 'Kyoto, Japan',
     category: 'Cultural Heritage',
+    description: 'Iconic vermilion torii paths weaving through the sacred mountain forest of Inari.',
     imageUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80'
   },
   {
@@ -28,6 +31,7 @@ const fallbackPhotos = [
     title: 'Amalfi Coastal Vista',
     location: 'Positano, Italy',
     category: 'Coastal',
+    description: 'Pastel cliffside villas cascading into the azure Mediterranean waters.',
     imageUrl: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80'
   },
   {
@@ -35,13 +39,15 @@ const fallbackPhotos = [
     title: 'Matterhorn Alpine Peak',
     location: 'Zermatt, Switzerland',
     category: 'Mountains',
+    description: 'Glacial horizons and towering pyramid peaks in the Swiss Alps.',
     imageUrl: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?auto=format&fit=crop&w=800&q=80'
   },
   {
     _id: 'sample-4',
-    title: 'Santorini Sunset Over Caldera',
+    title: 'Santorini Sunset Caldera',
     location: 'Oia, Greece',
     category: 'Architecture',
+    description: 'White-washed domes bathed in evening golden Aegean light.',
     imageUrl: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=800&q=80'
   },
   {
@@ -49,6 +55,7 @@ const fallbackPhotos = [
     title: 'Moraine Lake Reflections',
     location: 'Banff, Canada',
     category: 'Nature',
+    description: 'Crystalline turquoise waters cradled by the Valley of the Ten Peaks.',
     imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80'
   },
   {
@@ -56,21 +63,8 @@ const fallbackPhotos = [
     title: 'Tegallalang Rice Terraces',
     location: 'Ubud, Bali',
     category: 'Tropical',
+    description: 'Lush emerald valley stepped with traditional Balinese irrigation systems.',
     imageUrl: 'https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    _id: 'sample-7',
-    title: 'Eiffel Tower at Twilight',
-    location: 'Paris, France',
-    category: 'Cityscapes',
-    imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    _id: 'sample-8',
-    title: 'Reykjavik Northern Lights',
-    location: 'Thingvellir, Iceland',
-    category: 'Night Sky',
-    imageUrl: 'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&w=800&q=80'
   }
 ];
 
@@ -87,6 +81,7 @@ export default function Gallery() {
 
   const [title, setTitle] = useState('');
   const [locationName, setLocationName] = useState('');
+  const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Landscape');
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
@@ -95,7 +90,7 @@ export default function Gallery() {
   const loadGallery = async (pageNum = 1) => {
     setLoading(true);
     try {
-      const res = await fetchGalleryItems(pageNum, 8);
+      const res = await fetchGalleryItems(pageNum, 6);
       if (res.data?.items && res.data.items.length > 0) {
         setItems(res.data.items);
         setPage(res.data.page || pageNum);
@@ -142,6 +137,7 @@ export default function Gallery() {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('location', locationName);
+    formData.append('description', description);
     formData.append('category', category);
     formData.append('image', selectedFile);
 
@@ -151,6 +147,7 @@ export default function Gallery() {
       setUploadModalOpen(false);
       setTitle('');
       setLocationName('');
+      setDescription('');
       setSelectedFile(null);
       setPreviewUrl('');
       loadGallery(1);
@@ -220,43 +217,70 @@ export default function Gallery() {
           </div>
         ) : (
           <div className="space-y-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {items.map((item) => (
                 <div
                   key={item._id}
                   onClick={() => setSelectedPhoto(item)}
-                  className="group relative rounded-2xl overflow-hidden border border-border/80 bg-card hover:border-cyan-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                  className="uiverse-card cursor-pointer group"
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <span className="absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white border border-white/10 font-sans">
-                      {item.category}
-                    </span>
-
-                    {user?.role === 'admin' && (
-                      <button
-                        onClick={(e) => handleDelete(item._id, e)}
-                        className="absolute top-3 right-3 p-1.5 rounded-lg bg-black/70 hover:bg-rose-600 text-white transition-colors cursor-pointer"
-                        title="Delete photo"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    )}
+                  <div
+                    className="uiverse-card-header"
+                    style={{ backgroundImage: `url(${item.imageUrl})` }}
+                  >
+                    <div className="uiverse-card-header-bar">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white border border-white/10 font-sans">
+                        {item.category || 'Landscape'}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {user?.role === 'admin' && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleDelete(item._id, e)}
+                            className="p-1.5 rounded-lg bg-black/70 hover:bg-rose-600 text-white transition-colors cursor-pointer"
+                            title="Delete photo"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        )}
+                        <div className="size-6 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white">
+                          <Eye className="size-3" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="p-4 space-y-1 bg-card">
-                    <h3 className="text-sm font-semibold text-foreground font-heading group-hover:text-cyan-400 transition-colors truncate">
+                  <div className="uiverse-card-body font-sans">
+                    <span className="uiverse-card-name group-hover:text-cyan-400 transition-colors truncate">
                       {item.title}
-                    </h3>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-sans">
+                    </span>
+                    <div className="uiverse-card-job flex items-center justify-center gap-1">
                       <MapPin className="size-3 text-cyan-400 shrink-0" />
                       <span className="truncate">{item.location}</span>
+                    </div>
+                    <div className="uiverse-card-bio">
+                      {item.description || `Explore the breathtaking essence of ${item.location} curated for WanderSync adventurers.`}
+                    </div>
+                    <div className="flex items-center justify-center gap-2 pt-1 text-muted-foreground">
+                      <Sparkles className="size-3 text-cyan-400" />
+                      <span className="text-[11px] text-muted-foreground font-medium">Curated Expedition</span>
+                    </div>
+                  </div>
+
+                  <div className="uiverse-card-footer font-sans">
+                    <div className="uiverse-stats">
+                      <div className="uiverse-stat">
+                        <span className="label">Category</span>
+                        <span className="value text-xs">{item.category?.split(' ')[0] || 'Travel'}</span>
+                      </div>
+                      <div className="uiverse-stat">
+                        <span className="label">Rating</span>
+                        <span className="value text-xs">4.9 ★</span>
+                      </div>
+                      <div className="uiverse-stat">
+                        <span className="label">Quality</span>
+                        <span className="value text-xs">HD</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -323,6 +347,11 @@ export default function Gallery() {
                     <MapPin className="size-3.5 text-cyan-400" />
                     <span>{selectedPhoto.location}</span>
                   </div>
+                  {selectedPhoto.description && (
+                    <p className="text-xs text-muted-foreground font-sans mt-1">
+                      {selectedPhoto.description}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -365,6 +394,17 @@ export default function Gallery() {
                     onChange={(e) => setLocationName(e.target.value)}
                     placeholder="e.g. Kyoto, Japan"
                     className="w-full px-4 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block font-medium text-muted-foreground">Description (Optional)</label>
+                  <textarea
+                    rows="2"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="e.g. Iconic vermilion torii gates stretching along mount forest..."
+                    className="w-full px-4 py-2 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
                   />
                 </div>
 
