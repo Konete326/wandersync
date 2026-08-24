@@ -27,6 +27,7 @@ import { fetchCountries } from '@/services/countryService';
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
+import ValidatedInput from '@/components/common/ValidatedInput';
 
 const vehicleTypes = ['SUV', 'Luxury Sedan', 'Van & Minibus', '4x4 Off-Road', 'Convertible', 'Electric'];
 const defaultFeaturesList = ['Air Conditioning', 'GPS Navigation System', 'Luggage Roof Rack', 'Bluetooth & USB Charging', 'Child Safety Seat', 'All-Wheel Drive (AWD)', 'Tinted Windows', 'Comprehensive Insurance'];
@@ -257,16 +258,15 @@ export default function AdminVehicleEditor() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-8 space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300">Country *</label>
-                  <input
-                    type="text"
+                <div>
+                  <ValidatedInput
+                    label="Country"
                     required
+                    validationType="name"
                     list="veh-country-options"
                     value={formData.country}
                     onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                     placeholder="e.g. Japan"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                   />
                   <datalist id="veh-country-options">
                     {countriesList.map((c) => (
@@ -275,17 +275,14 @@ export default function AdminVehicleEditor() {
                   </datalist>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300">City *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    placeholder="e.g. Kyoto"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                  />
-                </div>
+                <ValidatedInput
+                  label="City"
+                  required
+                  validationType="name"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="e.g. Kyoto"
+                />
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-zinc-300">Vehicle Type</label>
@@ -302,43 +299,30 @@ export default function AdminVehicleEditor() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1 sm:col-span-1">
-                  <label className="text-[11px] font-bold text-zinc-300">Model Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g. Toyota Land Cruiser Prado"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                  />
-                </div>
+                <ValidatedInput
+                  label="Model Name"
+                  required
+                  validationType="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g. Toyota Land Cruiser Prado"
+                />
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1">
-                    <DollarSign className="size-3 text-orange-400" /> Price Per Day
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.pricePerDay}
-                    onChange={(e) => setFormData({ ...formData, pricePerDay: e.target.value })}
-                    placeholder="e.g. $95/day"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
-                  />
-                </div>
+                <ValidatedInput
+                  label="Price Per Day"
+                  validationType="price"
+                  value={formData.pricePerDay}
+                  onChange={(e) => setFormData({ ...formData, pricePerDay: e.target.value })}
+                  placeholder="e.g. $95/day"
+                />
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1">
-                    <DollarSign className="size-3 text-orange-400" /> Hourly Rate
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.pricePerHour}
-                    onChange={(e) => setFormData({ ...formData, pricePerHour: e.target.value })}
-                    placeholder="e.g. $20/hr"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
-                  />
-                </div>
+                <ValidatedInput
+                  label="Hourly Rate"
+                  validationType="price"
+                  value={formData.pricePerHour}
+                  onChange={(e) => setFormData({ ...formData, pricePerHour: e.target.value })}
+                  placeholder="e.g. $20/hr"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">

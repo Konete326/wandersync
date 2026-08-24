@@ -28,6 +28,7 @@ import {
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
+import ValidatedInput from '@/components/common/ValidatedInput';
 
 const categories = [
   'All',
@@ -515,44 +516,36 @@ export default function AdminExpenses() {
             </div>
 
             <form onSubmit={handleFormSubmit} className="space-y-3.5 text-xs">
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-zinc-300">Expense Title / Service Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. Google Gemini 2.5 Flash API Quota Tier"
-                  className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                />
-              </div>
+              <ValidatedInput
+                label="Expense Title / Service Name"
+                required
+                validationType="name"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="e.g. Google Gemini 2.5 Flash API Quota Tier"
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300">Vendor / Provider *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.vendor}
-                    onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
-                    placeholder="e.g. Google Cloud Platform"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                  />
-                </div>
+                <ValidatedInput
+                  label="Vendor / Provider"
+                  required
+                  validationType="name"
+                  value={formData.vendor}
+                  onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
+                  placeholder="e.g. Google Cloud Platform"
+                />
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300">Amount (USD $) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    required
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    placeholder="e.g. 45.00"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50 font-mono"
-                  />
-                </div>
+                <ValidatedInput
+                  label="Amount (USD $)"
+                  required
+                  validationType="price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  placeholder="e.g. 150.00"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">

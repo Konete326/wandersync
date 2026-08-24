@@ -24,6 +24,7 @@ import {
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
+import ValidatedInput from '@/components/common/ValidatedInput';
 
 const continents = ['Asia', 'Europe', 'North America', 'South America', 'Africa', 'Oceania'];
 
@@ -219,28 +220,23 @@ export default function AdminCountryEditor() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-8 space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300">Country Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g. Japan"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                  />
-                </div>
+                <ValidatedInput
+                  label="Country Name"
+                  required
+                  validationType="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g. Japan"
+                />
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300">ISO Code</label>
-                  <input
-                    type="text"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    placeholder="e.g. JP, IT, FR"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground uppercase focus:outline-none focus:ring-1 focus:ring-orange-500/50 font-mono"
-                  />
-                </div>
+                <ValidatedInput
+                  label="ISO Code"
+                  validationType="countryCode"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                  placeholder="e.g. JP, IT, FR"
+                  className="uppercase font-mono"
+                />
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-zinc-300">Continent</label>

@@ -28,6 +28,7 @@ import { fetchCountries } from '@/services/countryService';
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
+import ValidatedInput from '@/components/common/ValidatedInput';
 
 const priceRanges = ['$', '$$', '$$$', '$$$$'];
 const defaultAmenitiesList = ['Free High-Speed WiFi', 'Breakfast Included', 'Infinity Pool', 'Spa & Wellness', 'Airport Shuttle', 'Fitness Center', 'Ocean / Skyline View', 'Concierge Service'];
@@ -258,16 +259,15 @@ export default function AdminHotelEditor() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-8 space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300">Country *</label>
-                  <input
-                    type="text"
+                <div>
+                  <ValidatedInput
+                    label="Country"
                     required
+                    validationType="name"
                     list="hotel-country-options"
                     value={formData.country}
                     onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                     placeholder="e.g. Japan"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                   />
                   <datalist id="hotel-country-options">
                     {countriesList.map((c) => (
@@ -276,55 +276,41 @@ export default function AdminHotelEditor() {
                   </datalist>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300">City *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    placeholder="e.g. Kyoto"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                  />
-                </div>
+                <ValidatedInput
+                  label="City"
+                  required
+                  validationType="name"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="e.g. Kyoto"
+                />
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300">Area / Neighborhood</label>
-                  <input
-                    type="text"
-                    value={formData.area}
-                    onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                    placeholder="e.g. Arashiyama Riverfront"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
-                  />
-                </div>
+                <ValidatedInput
+                  label="Area / Neighborhood"
+                  value={formData.area}
+                  onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                  placeholder="e.g. Arashiyama Riverfront"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1 sm:col-span-1">
-                  <label className="text-[11px] font-bold text-zinc-300">Hotel Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g. Hoshinoya Kyoto"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                  />
-                </div>
+                <ValidatedInput
+                  label="Hotel Name"
+                  required
+                  validationType="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g. Hoshinoya Kyoto"
+                />
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1">
-                    <DollarSign className="size-3 text-orange-400" /> Nightly Rate *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.pricePerNight}
-                    onChange={(e) => setFormData({ ...formData, pricePerNight: e.target.value })}
-                    placeholder="e.g. $180/night"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
-                  />
-                </div>
+                <ValidatedInput
+                  label="Nightly Rate"
+                  required
+                  validationType="price"
+                  value={formData.pricePerNight}
+                  onChange={(e) => setFormData({ ...formData, pricePerNight: e.target.value })}
+                  placeholder="e.g. $180/night"
+                />
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-zinc-300">Price Tier</label>
@@ -341,31 +327,25 @@ export default function AdminHotelEditor() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1">
-                    <Star className="size-3 text-amber-400" /> Star Rating
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="1"
-                    max="5"
-                    value={formData.rating}
-                    onChange={(e) => setFormData({ ...formData, rating: parseFloat(e.target.value) })}
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
-                  />
-                </div>
+                <ValidatedInput
+                  label="Star Rating (1-5)"
+                  validationType="rating"
+                  type="number"
+                  step="0.1"
+                  min="1"
+                  max="5"
+                  value={formData.rating}
+                  onChange={(e) => setFormData({ ...formData, rating: parseFloat(e.target.value) || '' })}
+                />
 
-                <div className="space-y-1 sm:col-span-2">
-                  <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1">
-                    <LinkIcon className="size-3 text-orange-400" /> Booking / Website Link
-                  </label>
-                  <input
-                    type="url"
+                <div className="sm:col-span-2">
+                  <ValidatedInput
+                    label="Booking / Website Link"
+                    validationType="url"
                     value={formData.bookingUrl}
                     onChange={(e) => setFormData({ ...formData, bookingUrl: e.target.value })}
                     placeholder="https://..."
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none font-mono"
+                    className="font-mono"
                   />
                 </div>
               </div>

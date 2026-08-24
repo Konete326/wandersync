@@ -25,6 +25,7 @@ import { fetchCountries } from '@/services/countryService';
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
+import ValidatedInput from '@/components/common/ValidatedInput';
 
 const spotCategories = ['Landmark', 'Temple & Shrine', 'Nature & Park', 'Museum', 'Beach', 'Historical Site', 'Viewpoint'];
 
@@ -236,16 +237,15 @@ export default function AdminSpotEditor() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-8 space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300">Country *</label>
-                  <input
-                    type="text"
+                <div>
+                  <ValidatedInput
+                    label="Country"
                     required
+                    validationType="name"
                     list="country-options"
                     value={formData.country}
                     onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                     placeholder="e.g. Japan"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                   />
                   <datalist id="country-options">
                     {countriesList.map((c) => (
@@ -254,17 +254,14 @@ export default function AdminSpotEditor() {
                   </datalist>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300">City / Area *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    placeholder="e.g. Kyoto"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                  />
-                </div>
+                <ValidatedInput
+                  label="City / Area"
+                  required
+                  validationType="name"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="e.g. Kyoto"
+                />
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-zinc-300">Category</label>
@@ -281,30 +278,21 @@ export default function AdminSpotEditor() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300">Attraction Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g. Fushimi Inari-taisha"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                  />
-                </div>
+                <ValidatedInput
+                  label="Attraction Name"
+                  required
+                  validationType="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g. Fushimi Inari-taisha"
+                />
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1">
-                    <DollarSign className="size-3 text-orange-400" /> Ticket / Admission
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.ticketPrice}
-                    onChange={(e) => setFormData({ ...formData, ticketPrice: e.target.value })}
-                    placeholder="e.g. Free / $15 / ¥1000"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
-                  />
-                </div>
+                <ValidatedInput
+                  label="Ticket / Admission"
+                  value={formData.ticketPrice}
+                  onChange={(e) => setFormData({ ...formData, ticketPrice: e.target.value })}
+                  placeholder="e.g. Free / $15 / ¥1000"
+                />
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1">
