@@ -13,7 +13,8 @@ import {
   Navigation,
   Building,
   Car,
-  Plane
+  Plane,
+  MessageSquare
 } from 'lucide-react';
 
 export const navGroups = [
@@ -34,6 +35,11 @@ export const navGroups = [
         title: 'Travelers',
         path: '/admin/users',
         icon: <Users className="size-4" />
+      },
+      {
+        title: 'Community Lounge',
+        path: '/admin/community',
+        icon: <MessageSquare className="size-4" />
       }
     ]
   },

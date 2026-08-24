@@ -7,6 +7,7 @@ import { useAdminLiveAlerts } from '@/hooks/useAdminLiveAlerts';
 const Dashboard = lazy(() => import('@/components/dashboard').then((m) => ({ default: m.Dashboard })));
 const AdminTrips = lazy(() => import('@/pages/admin/AdminTrips'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
+const AdminCommunity = lazy(() => import('@/pages/admin/AdminCommunity'));
 const AdminCountries = lazy(() => import('@/pages/admin/AdminCountries'));
 const AdminCountryEditor = lazy(() => import('@/pages/admin/AdminCountryEditor'));
 const AdminSpots = lazy(() => import('@/pages/admin/AdminSpots'));
@@ -43,6 +44,7 @@ export default function AdminDashboard() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/trips" element={<AdminTrips />} />
           <Route path="/users" element={<AdminUsers />} />
+          <Route path="/community" element={<AdminCommunity />} />
 
           {/* Travel Catalog & Fleet Suite */}
           <Route path="/countries" element={<AdminCountries />} />

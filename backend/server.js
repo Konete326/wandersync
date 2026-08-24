@@ -16,6 +16,7 @@ import spotRoutes from './routes/spotRoutes.js';
 import hotelRoutes from './routes/hotelRoutes.js';
 import vehicleRoutes from './routes/vehicleRoutes.js';
 import flightRoutes from './routes/flightRoutes.js';
+import communityRoutes from './routes/communityRoutes.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 
 dotenv.config();
@@ -66,6 +67,7 @@ app.use('/api/spots', spotRoutes);
 app.use('/api/hotels', hotelRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/flights', flightRoutes);
+app.use('/api/community', communityRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
