@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, MapPin, Calendar, DollarSign, Users, Tag, Clock, Wand2, ArrowRight } from 'lucide-react';
+import { Sparkles, MapPin, Calendar, DollarSign, Users, Tag, Clock, Wand2, ArrowRight, Check } from 'lucide-react';
 import { generateItineraryWithAi, saveTrip } from '../services/tripService';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
@@ -244,21 +244,32 @@ const CreateTrip = () => {
                   <MapPin className="size-3.5 text-cyan-400" />
                   <span>Destination / City</span>
                 </label>
-                {!isDestinationValid && destination && (
+                {!isDestinationValid && destination ? (
                   <span className="text-[10px] text-rose-400">Min 2 characters</span>
+                ) : isDestinationValid && destination ? (
+                  <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                    <Check className="size-3" /> Valid
+                  </span>
+                ) : null}
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  placeholder="e.g. Kyoto, Japan"
+                  className={`w-full px-4 pr-9 py-2.5 rounded-xl bg-secondary/60 border text-sm text-foreground placeholder-muted-foreground/60 focus:outline-none transition-colors ${
+                    !isDestinationValid && destination
+                      ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
+                      : isDestinationValid && destination
+                      ? 'border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 bg-emerald-950/10'
+                      : 'border-border focus:ring-1 focus:ring-cyan-500/50'
+                  }`}
+                />
+                {isDestinationValid && destination && (
+                  <Check className="size-4 text-emerald-400 absolute right-3 top-1/2 -translate-y-1/2" />
                 )}
               </div>
-              <input
-                type="text"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                placeholder="e.g. Kyoto, Japan"
-                className={`w-full px-4 py-2.5 rounded-xl bg-secondary/60 border text-sm text-foreground placeholder-muted-foreground/60 focus:outline-none transition-colors ${
-                  !isDestinationValid && destination
-                    ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
-                    : 'border-border focus:ring-1 focus:ring-cyan-500/50'
-                }`}
-              />
             </div>
 
             <div className="space-y-1.5">
@@ -282,22 +293,31 @@ const CreateTrip = () => {
                   <Clock className="size-3.5 text-cyan-400" />
                   <span>Duration ({durationDays} Days)</span>
                 </label>
-                {!isDurationValid && (
+                {!isDurationValid ? (
                   <span className="text-[10px] text-rose-400">1-14 days</span>
+                ) : (
+                  <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                    <Check className="size-3" /> Valid
+                  </span>
                 )}
               </div>
-              <input
-                type="number"
-                min="1"
-                max="14"
-                value={durationDays}
-                onChange={(e) => setDurationDays(Number(e.target.value))}
-                className={`w-full px-4 py-2.5 rounded-xl bg-secondary/60 border text-sm text-foreground focus:outline-none transition-colors ${
-                  !isDurationValid
-                    ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
-                    : 'border-border focus:ring-1 focus:ring-cyan-500/50'
-                }`}
-              />
+              <div className="relative">
+                <input
+                  type="number"
+                  min="1"
+                  max="14"
+                  value={durationDays}
+                  onChange={(e) => setDurationDays(Number(e.target.value))}
+                  className={`w-full px-4 pr-9 py-2.5 rounded-xl bg-secondary/60 border text-sm text-foreground focus:outline-none transition-colors ${
+                    !isDurationValid
+                      ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
+                      : 'border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 bg-emerald-950/10'
+                  }`}
+                />
+                {isDurationValid && (
+                  <Check className="size-4 text-emerald-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                )}
+              </div>
             </div>
 
             <div className="space-y-1.5">

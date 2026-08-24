@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, MapPin, Globe } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, MapPin, Globe, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import GlowingButton from '../components/common/GlowingButton';
@@ -148,9 +148,13 @@ const Login = () => {
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <label className="block text-[11px] font-medium text-muted-foreground">Email Address</label>
-                  {!isEmailValid && email && (
+                  {!isEmailValid && email ? (
                     <span className="text-[10px] text-rose-400 font-medium">Invalid email format</span>
-                  )}
+                  ) : isEmailValid && email ? (
+                    <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                      <Check className="size-3" /> Valid email
+                    </span>
+                  ) : null}
                 </div>
                 <div className="relative">
                   <Mail className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
@@ -160,21 +164,30 @@ const Login = () => {
                     onBlur={() => setTouched((p) => ({ ...p, email: true }))}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="traveler@example.com"
-                    className={`w-full pl-9 pr-3 py-2 rounded-lg bg-secondary/50 border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none transition-colors ${
+                    className={`w-full pl-9 pr-9 py-2 rounded-lg bg-secondary/50 border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none transition-colors ${
                       !isEmailValid && email
                         ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
+                        : isEmailValid && email
+                        ? 'border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 bg-emerald-950/10'
                         : 'border-border focus:ring-1 focus:ring-cyan-500/50'
                     }`}
                   />
+                  {isEmailValid && email && (
+                    <Check className="size-3.5 text-emerald-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                  )}
                 </div>
               </div>
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <label className="block text-[11px] font-medium text-muted-foreground">Password</label>
-                  {!isPasswordValid && password && (
+                  {!isPasswordValid && password ? (
                     <span className="text-[10px] text-rose-400 font-medium">Min 6 characters</span>
-                  )}
+                  ) : isPasswordValid && password ? (
+                    <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                      <Check className="size-3" /> Valid
+                    </span>
+                  ) : null}
                 </div>
                 <div className="relative">
                   <Lock className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
@@ -184,20 +197,27 @@ const Login = () => {
                     onBlur={() => setTouched((p) => ({ ...p, password: true }))}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className={`w-full pl-9 pr-9 py-2 rounded-lg bg-secondary/50 border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none transition-colors ${
+                    className={`w-full pl-9 pr-14 py-2 rounded-lg bg-secondary/50 border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none transition-colors ${
                       !isPasswordValid && password
                         ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
+                        : isPasswordValid && password
+                        ? 'border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 bg-emerald-950/10'
                         : 'border-border focus:ring-1 focus:ring-cyan-500/50'
                     }`}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((p) => !p)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
-                    title={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                  </button>
+                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                    {isPasswordValid && password && (
+                      <Check className="size-3.5 text-emerald-400" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((p) => !p)}
+                      className="text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
+                      title={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

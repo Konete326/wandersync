@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Camera, Save, Shield } from 'lucide-react';
+import { Camera, Save, Shield, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import { updateUserProfile } from '../services/authService';
@@ -95,20 +95,31 @@ const Profile = () => {
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-medium text-muted-foreground">Display Name</label>
-              {!isNameValid && name && (
+              {!isNameValid && name ? (
                 <span className="text-[10px] text-rose-400">Min 2 characters</span>
+              ) : isNameValid && name ? (
+                <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                  <Check className="size-3" /> Valid
+                </span>
+              ) : null}
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={`w-full px-3.5 pr-9 py-2.5 rounded-xl bg-secondary/50 border text-xs text-foreground focus:outline-none transition-colors ${
+                  !isNameValid && name
+                    ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
+                    : isNameValid && name
+                    ? 'border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 bg-emerald-950/10'
+                    : 'border-border focus:ring-1 focus:ring-cyan-500/50'
+                }`}
+              />
+              {isNameValid && name && (
+                <Check className="size-3.5 text-emerald-400 absolute right-3 top-1/2 -translate-y-1/2" />
               )}
             </div>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={`w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border text-xs text-foreground focus:outline-none transition-colors ${
-                !isNameValid && name
-                  ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
-                  : 'border-border focus:ring-1 focus:ring-cyan-500/50'
-              }`}
-            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
