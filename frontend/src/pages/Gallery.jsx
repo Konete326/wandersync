@@ -7,7 +7,6 @@ import {
   ChevronRight,
   X,
   Plus,
-  Compass,
   Eye,
   Sparkles
 } from 'lucide-react';
@@ -16,6 +15,17 @@ import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import Loader from '../components/common/Loader';
 import GlowingButton from '../components/common/GlowingButton';
+
+const categories = [
+  'All',
+  'Landscape',
+  'Cultural Heritage',
+  'Coastal',
+  'Mountains',
+  'Nature',
+  'Cityscapes',
+  'Tropical'
+];
 
 const fallbackPhotos = [
   {
@@ -72,9 +82,9 @@ export default function Gallery() {
   const { user } = useAuth();
   const { showModal, showToast } = useModal();
   const [items, setItems] = useState([]);
+  const [activeCategory, setActiveCategory] = useState('All');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
@@ -95,16 +105,13 @@ export default function Gallery() {
         setItems(res.data.items);
         setPage(res.data.page || pageNum);
         setTotalPages(res.data.pages || 1);
-        setTotalItems(res.data.total || res.data.items.length);
       } else {
         setItems(fallbackPhotos);
         setTotalPages(1);
-        setTotalItems(fallbackPhotos.length);
       }
     } catch {
       setItems(fallbackPhotos);
       setTotalPages(1);
-      setTotalItems(fallbackPhotos.length);
     } finally {
       setLoading(false);
     }
@@ -182,30 +189,42 @@ export default function Gallery() {
     });
   };
 
+  const displayedItems = activeCategory === 'All'
+    ? items
+    : items.filter(
+        (it) => it.category?.toLowerCase() === activeCategory.toLowerCase()
+      );
+
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#fafafa] py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-10">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-border/80">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/80 border border-border text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-2">
-              <Compass className="size-3.5" />
-              Global Visual Archive
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-normal font-['Instrument_Serif'] tracking-tight">
-              WanderSync Travel Gallery
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-sans mt-1">
-              Curated high-resolution perspectives captured across global destinations.
-            </p>
+    <div className="min-h-screen bg-[#09090b] text-[#fafafa] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 border-b border-border/80">
+          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto py-1 no-scrollbar">
+            {categories.map((cat) => {
+              const isActive = activeCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+                    isActive
+                      ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/50 shadow-sm shadow-cyan-500/10'
+                      : 'bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border'
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
           </div>
 
           {user?.role === 'admin' && (
             <GlowingButton
               onClick={() => setUploadModalOpen(true)}
               size="sm"
-              innerClassName="font-bold flex items-center gap-2"
+              innerClassName="font-bold flex items-center gap-1.5 py-1.5 px-4 text-xs"
             >
-              <Plus className="size-4" />
+              <Plus className="size-3.5" />
               <span>Add Photo</span>
             </GlowingButton>
           )}
@@ -215,10 +234,20 @@ export default function Gallery() {
           <div className="min-h-[50vh] flex items-center justify-center">
             <Loader text="Loading visual gallery..." />
           </div>
+        ) : displayedItems.length === 0 ? (
+          <div className="min-h-[40vh] flex flex-col items-center justify-center text-center space-y-3 bg-card/30 rounded-3xl border border-border p-8">
+            <p className="text-sm text-muted-foreground">No photos found for category "{activeCategory}".</p>
+            <button
+              onClick={() => setActiveCategory('All')}
+              className="px-4 py-1.5 rounded-full bg-secondary text-cyan-400 text-xs font-semibold border border-border hover:bg-secondary/80 cursor-pointer"
+            >
+              View All Photos
+            </button>
+          </div>
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {items.map((item) => (
+              {displayedItems.map((item) => (
                 <div
                   key={item._id}
                   onClick={() => setSelectedPhoto(item)}
@@ -421,6 +450,7 @@ export default function Gallery() {
                     <option value="Coastal" className="bg-card text-foreground">Coastal & Beach</option>
                     <option value="Mountains" className="bg-card text-foreground">Mountains</option>
                     <option value="Nature" className="bg-card text-foreground">Nature & Wildlife</option>
+                    <option value="Tropical" className="bg-card text-foreground">Tropical</option>
                   </select>
                 </div>
 
