@@ -13,6 +13,8 @@ import {
   Building,
   Star,
   Car,
+  Plane,
+  Luggage,
   Navigation,
   Utensils,
   Lightbulb,
@@ -24,12 +26,14 @@ import {
   Users,
   Images,
   Calculator,
-  Plus
+  Plus,
+  Bell
 } from 'lucide-react';
 import { fetchGalleryItemById } from '@/services/galleryService';
 import { fetchHotels } from '@/services/hotelService';
 import { fetchSpots } from '@/services/spotService';
 import { fetchVehicles } from '@/services/vehicleService';
+import { fetchFlights } from '@/services/flightService';
 import { fetchCountries } from '@/services/countryService';
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
@@ -38,16 +42,17 @@ import GlowingButton from '@/components/common/GlowingButton';
 export default function DestinationExplorer() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { showToast } = useModal();
+  const { showModal, showToast } = useModal();
 
   const [loading, setLoading] = useState(true);
   const [destination, setDestination] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview'); // overview, hotels, spots, vehicles, calculator
+  const [activeTab, setActiveTab] = useState('overview');
 
   // Live related collections
   const [hotels, setHotels] = useState([]);
   const [spots, setSpots] = useState([]);
   const [vehicles, setVehicles] = useState([]);
+  const [flights, setFlights] = useState([]);
   const [countryInfo, setCountryInfo] = useState(null);
 
   // Selected city filter within country
@@ -57,6 +62,7 @@ export default function DestinationExplorer() {
   const [tripDays, setTripDays] = useState(5);
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [selectedFlight, setSelectedFlight] = useState(null);
   const [selectedSpotIds, setSelectedSpotIds] = useState([]);
   const [dailyFoodBudget, setDailyFoodBudget] = useState(40);
   const [travelersCount, setTravelersCount] = useState(2);
@@ -84,7 +90,7 @@ export default function DestinationExplorer() {
     loadDestinationData();
   }, [id]);
 
-  // Load Live Connected Catalog (Hotels, Spots, Vehicles, Country)
+  // Load Live Connected Catalog (Hotels, Spots, Vehicles, Flights, Country)
   useEffect(() => {
     if (!destination?.country) return;
 
@@ -93,10 +99,11 @@ export default function DestinationExplorer() {
         const targetCity = selectedCity || destination.city || '';
         
         // Parallel queries to live database
-        const [hotelsRes, spotsRes, vehiclesRes, countriesRes] = await Promise.allSettled([
+        const [hotelsRes, spotsRes, vehiclesRes, flightsRes, countriesRes] = await Promise.allSettled([
           fetchHotels(1, 20, '', destination.country, targetCity),
           fetchSpots(1, 30, '', destination.country, targetCity),
           fetchVehicles(1, 20, '', destination.country, targetCity),
+          fetchFlights(1, 20, '', destination.country, targetCity),
           fetchCountries(1, 50, destination.country)
         ]);
 
@@ -124,6 +131,14 @@ export default function DestinationExplorer() {
           }
         }
 
+        if (flightsRes.status === 'fulfilled' && flightsRes.value.data?.flights) {
+          const liveFlights = flightsRes.value.data.flights;
+          setFlights(liveFlights);
+          if (liveFlights.length > 0 && !selectedFlight) {
+            setSelectedFlight(liveFlights[0]);
+          }
+        }
+
         if (countriesRes.status === 'fulfilled' && countriesRes.value.data?.countries) {
           const found = countriesRes.value.data.countries.find(
             (c) => c.name?.toLowerCase() === destination.country?.toLowerCase()
@@ -131,7 +146,6 @@ export default function DestinationExplorer() {
           if (found) setCountryInfo(found);
         }
       } catch {
-        // Fallback silently if any sub-query encounters empty records
       }
     };
 
@@ -158,6 +172,10 @@ export default function DestinationExplorer() {
     const vehicleDaily = selectedVehicle ? parseRate(selectedVehicle.pricePerDay, 70) : 0;
     const totalVehicle = vehicleDaily * tripDays;
 
+    // Flight calculation
+    const flightSeatRate = selectedFlight ? parseRate(selectedFlight.price, 450) : 0;
+    const totalFlight = flightSeatRate * travelersCount;
+
     // Spots Ticket calculation
     const selectedSpotsList = spots.filter((s) => selectedSpotIds.includes(s._id));
     const totalTicketsPerPerson = selectedSpotsList.reduce((acc, spot) => {
@@ -170,7 +188,7 @@ export default function DestinationExplorer() {
     const totalFood = dailyFoodBudget * tripDays * travelersCount;
 
     // Grand total
-    const grandTotal = totalHotel + totalVehicle + totalTickets + totalFood;
+    const grandTotal = totalHotel + totalVehicle + totalFlight + totalTickets + totalFood;
 
     return {
       nights,
@@ -178,17 +196,31 @@ export default function DestinationExplorer() {
       totalHotel,
       vehicleDaily,
       totalVehicle,
+      flightSeatRate,
+      totalFlight,
       totalTickets,
       totalFood,
       grandTotal,
       selectedSpotsCount: selectedSpotIds.length
     };
-  }, [tripDays, selectedHotel, selectedVehicle, selectedSpotIds, spots, dailyFoodBudget, travelersCount]);
+  }, [tripDays, selectedHotel, selectedVehicle, selectedFlight, selectedSpotIds, spots, dailyFoodBudget, travelersCount]);
 
   const handleToggleSpotSelection = (spotId) => {
     setSelectedSpotIds((prev) =>
       prev.includes(spotId) ? prev.filter((id) => id !== spotId) : [...prev, spotId]
     );
+  };
+
+  const handleBookFlightModal = (flight) => {
+    showModal({
+      title: `Reserve Flight: ${flight.airline} (${flight.flightNumber})`,
+      message: `Direct Route: ${flight.originAirport} (${flight.originCity}) ➔ ${flight.destinationAirport} (${flight.destinationCity}). Cabin Class: ${flight.cabinClass}. Ticket: ${flight.price}/seat for ${travelersCount} traveler(s). Would you like to confirm this flight reservation alert?`,
+      type: 'info',
+      onConfirm: () => {
+        setSelectedFlight(flight);
+        showToast(`Flight ${flight.flightNumber} seat reservation requested! Real-time alert dispatched.`, 'success');
+      }
+    });
   };
 
   const handlePlanWithCustomConfig = () => {
@@ -232,7 +264,7 @@ export default function DestinationExplorer() {
               className="px-3 py-1.5 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Calculator className="size-3.5" />
-              <span>Live Expense Calculator (${calculatedExpenses.grandTotal})</span>
+              <span>Live Expense Calculator (${calculatedExpenses.grandTotal.toLocaleString()})</span>
             </button>
 
             <GlowingButton
@@ -334,14 +366,15 @@ export default function DestinationExplorer() {
           </div>
         )}
 
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs (5-Tier Unified Suite) */}
         <div className="flex items-center gap-2 border-b border-border/80 pb-2 overflow-x-auto no-scrollbar">
           {[
-            { id: 'overview', label: '1. Destination Overview & Photos', icon: Images, count: allPhotos.length },
+            { id: 'overview', label: '1. Overview & Photos', icon: Images, count: allPhotos.length },
             { id: 'hotels', label: '2. Hotels & Stays', icon: Building, count: hotels.length },
-            { id: 'spots', label: '3. Tourist Spots & Tickets', icon: Navigation, count: spots.length },
-            { id: 'vehicles', label: '4. Transport & Rental Fleet', icon: Car, count: vehicles.length },
-            { id: 'calculator', label: '5. Trip Cost & Budget Wizard', icon: Calculator, highlight: true }
+            { id: 'spots', label: '3. Tourist Attractions', icon: Navigation, count: spots.length },
+            { id: 'vehicles', label: '4. Rental Vehicles', icon: Car, count: vehicles.length },
+            { id: 'flights', label: '5. Flights & Airlines', icon: Plane, count: flights.length },
+            { id: 'calculator', label: '6. Trip Cost Wizard', icon: Calculator, highlight: true }
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -374,7 +407,6 @@ export default function DestinationExplorer() {
         {/* TAB 1: OVERVIEW & SCENIC GALLERY */}
         {activeTab === 'overview' && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Scenic Photos Strip */}
             <div className="space-y-2">
               <h2 className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
                 <Images className="size-3.5 text-orange-400" />
@@ -384,9 +416,6 @@ export default function DestinationExplorer() {
                 {allPhotos.map((photoUrl, idx) => (
                   <div key={idx} className="relative h-32 rounded-xl overflow-hidden border border-border group cursor-pointer shadow-sm">
                     <img src={photoUrl} alt={`Landscape ${idx + 1}`} className="size-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-black/70 text-white">View Photo</span>
-                    </div>
                   </div>
                 ))}
               </div>
@@ -394,7 +423,6 @@ export default function DestinationExplorer() {
 
             {/* Travel Essentials & Logistics 3-Column Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Practical Logistics */}
               <div className="p-4 rounded-2xl bg-[#121215] border border-border space-y-3 shadow-md">
                 <div className="flex items-center gap-2 border-b border-border/70 pb-2">
                   <Lightbulb className="size-4 text-orange-400" />
@@ -420,7 +448,6 @@ export default function DestinationExplorer() {
                 </div>
               </div>
 
-              {/* Local Dishes */}
               <div className="p-4 rounded-2xl bg-[#121215] border border-border space-y-3 shadow-md">
                 <div className="flex items-center gap-2 border-b border-border/70 pb-2">
                   <Utensils className="size-4 text-orange-400" />
@@ -443,7 +470,6 @@ export default function DestinationExplorer() {
                 )}
               </div>
 
-              {/* Travel Tips */}
               <div className="p-4 rounded-2xl bg-[#121215] border border-border space-y-3 shadow-md">
                 <div className="flex items-center gap-2 border-b border-border/70 pb-2">
                   <ShieldCheck className="size-4 text-orange-400" />
@@ -758,7 +784,129 @@ export default function DestinationExplorer() {
           </div>
         )}
 
-        {/* TAB 5: INTERACTIVE LIVE EXPENSE & BUDGET CALCULATOR */}
+        {/* TAB 5: LIVE SCHEDULED FLIGHTS & AIRLINES */}
+        {activeTab === 'flights' && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                  <Plane className="size-4 text-orange-400" />
+                  <span>Scheduled Flights to {selectedCity || destination.country} ({flights.length})</span>
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Compare airline schedules, cabin classes, and live seat ticket prices
+                </p>
+              </div>
+            </div>
+
+            {flights.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-[#121215] border border-border text-center space-y-2">
+                <Plane className="size-8 text-muted-foreground/40 mx-auto" />
+                <p className="text-xs text-muted-foreground">No specific flight routes scheduled for this destination yet.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {flights.map((flt) => {
+                  const isSelected = selectedFlight?._id === flt._id;
+                  return (
+                    <div
+                      key={flt._id}
+                      className={`rounded-2xl border transition-all overflow-hidden flex flex-col justify-between shadow-md ${
+                        isSelected
+                          ? 'border-orange-500 bg-[#151210] ring-1 ring-orange-500/50'
+                          : 'border-border bg-[#121215] hover:border-orange-500/40'
+                      }`}
+                    >
+                      <div>
+                        <div className="relative h-40 w-full overflow-hidden bg-secondary/30">
+                          <img
+                            src={flt.coverImage || flt.images?.[0] || destination.imageUrl}
+                            alt={flt.airline}
+                            className="size-full object-cover"
+                          />
+                          <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-orange-400 text-[10px] font-bold border border-orange-500/30">
+                            {flt.flightNumber}
+                          </div>
+                          <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-foreground text-[10px] font-bold border border-white/10">
+                            {flt.cabinClass || 'Economy'}
+                          </div>
+                        </div>
+
+                        <div className="p-4 space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h3 className="text-sm font-bold text-foreground leading-tight">{flt.airline}</h3>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">{flt.aircraft}</p>
+                            </div>
+                            <span className="text-xs font-extrabold text-orange-400 shrink-0 bg-orange-500/10 px-2 py-1 rounded-lg border border-orange-500/20">
+                              {flt.price}
+                            </span>
+                          </div>
+
+                          {/* Airport Flight Path */}
+                          <div className="p-3 rounded-xl bg-secondary/30 border border-border flex items-center justify-between text-xs">
+                            <div className="space-y-0.5 text-left">
+                              <span className="text-base font-extrabold text-foreground font-mono">{flt.originAirport}</span>
+                              <span className="text-[10px] text-muted-foreground block truncate max-w-[80px]">{flt.originCity}</span>
+                              <span className="text-[9px] text-orange-400 font-medium block">{flt.departureTime}</span>
+                            </div>
+
+                            <div className="flex flex-col items-center px-2">
+                              <span className="text-[9px] text-muted-foreground font-mono">{flt.duration}</span>
+                              <div className="w-16 h-0.5 bg-border relative my-1 flex items-center justify-center">
+                                <Plane className="size-2.5 text-orange-400 absolute" />
+                              </div>
+                              <span className="text-[9px] text-emerald-400 font-bold">{flt.status}</span>
+                            </div>
+
+                            <div className="space-y-0.5 text-right">
+                              <span className="text-base font-extrabold text-foreground font-mono">{flt.destinationAirport}</span>
+                              <span className="text-[10px] text-muted-foreground block truncate max-w-[80px]">{flt.destinationCity}</span>
+                              <span className="text-[9px] text-orange-400 font-medium block">{flt.arrivalTime}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground pt-0.5">
+                            <Luggage className="size-3 text-orange-400 shrink-0" />
+                            <span className="truncate">{flt.baggage}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 pt-0 flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedFlight(flt);
+                            showToast(`${flt.airline} (${flt.flightNumber}) synced to trip calculation`, 'success');
+                          }}
+                          className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                            isSelected
+                              ? 'bg-orange-500 text-zinc-950 font-extrabold'
+                              : 'bg-secondary/60 hover:bg-secondary text-foreground border border-border'
+                          }`}
+                        >
+                          <CheckCircle2 className="size-3.5" />
+                          <span>{isSelected ? 'Selected in Wizard' : 'Select Flight'}</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleBookFlightModal(flt)}
+                          className="px-3 py-1.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                          title="Instant Flight Inquiry"
+                        >
+                          <Bell className="size-3.5" />
+                          <span>Book Seat</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 6: INTERACTIVE LIVE EXPENSE & BUDGET CALCULATOR */}
         {activeTab === 'calculator' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div className="p-6 rounded-2xl bg-[#121215] border border-orange-500/30 shadow-2xl space-y-6">
@@ -824,7 +972,7 @@ export default function DestinationExplorer() {
                       </button>
                     ))}
                   </div>
-                  <span className="text-[10px] text-muted-foreground block">Affects tickets & dining calculation</span>
+                  <span className="text-[10px] text-muted-foreground block">Affects flights, tickets & dining calculation</span>
                 </div>
 
                 {/* Daily Meals / Food Budget */}
@@ -857,29 +1005,29 @@ export default function DestinationExplorer() {
                 </div>
               </div>
 
-              {/* Selected Config Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Selected Config Cards (Hotels + Transport + Flights) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Stay Summary */}
                 <div className="p-4 rounded-xl bg-secondary/30 border border-border space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                      <Building className="size-3.5 text-orange-400" /> Selected Hotel / Accommodation
+                      <Building className="size-3.5 text-orange-400" /> Hotel / Stay
                     </span>
                     <button
                       onClick={() => setActiveTab('hotels')}
                       className="text-[11px] font-bold text-orange-400 hover:underline cursor-pointer"
                     >
-                      Change Hotel
+                      Change
                     </button>
                   </div>
                   {selectedHotel ? (
                     <div className="flex items-center justify-between text-xs pt-1">
                       <div>
-                        <span className="font-bold text-foreground block">{selectedHotel.name}</span>
-                        <span className="text-[10px] text-muted-foreground">{selectedHotel.priceRange || '$$$'} • {selectedHotel.area || selectedHotel.city}</span>
+                        <span className="font-bold text-foreground block truncate max-w-[120px]">{selectedHotel.name}</span>
+                        <span className="text-[10px] text-muted-foreground">{selectedHotel.priceRange || '$$$'}</span>
                       </div>
                       <div className="text-right">
-                        <span className="font-extrabold text-orange-400">${calculatedExpenses.hotelNightly} × {calculatedExpenses.nights} nights</span>
+                        <span className="font-extrabold text-orange-400">${calculatedExpenses.hotelNightly} × {calculatedExpenses.nights}n</span>
                         <span className="text-xs font-bold text-foreground block">${calculatedExpenses.totalHotel} USD</span>
                       </div>
                     </div>
@@ -892,28 +1040,57 @@ export default function DestinationExplorer() {
                 <div className="p-4 rounded-xl bg-secondary/30 border border-border space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                      <Car className="size-3.5 text-orange-400" /> Selected Transport / Rental
+                      <Car className="size-3.5 text-orange-400" /> Rental Vehicle
                     </span>
                     <button
                       onClick={() => setActiveTab('vehicles')}
                       className="text-[11px] font-bold text-orange-400 hover:underline cursor-pointer"
                     >
-                      Change Vehicle
+                      Change
                     </button>
                   </div>
                   {selectedVehicle ? (
                     <div className="flex items-center justify-between text-xs pt-1">
                       <div>
-                        <span className="font-bold text-foreground block">{selectedVehicle.name}</span>
-                        <span className="text-[10px] text-muted-foreground">{selectedVehicle.vehicleType} • {selectedVehicle.capacity}</span>
+                        <span className="font-bold text-foreground block truncate max-w-[120px]">{selectedVehicle.name}</span>
+                        <span className="text-[10px] text-muted-foreground">{selectedVehicle.vehicleType}</span>
                       </div>
                       <div className="text-right">
-                        <span className="font-extrabold text-orange-400">${calculatedExpenses.vehicleDaily} × {tripDays} days</span>
+                        <span className="font-extrabold text-orange-400">${calculatedExpenses.vehicleDaily} × {tripDays}d</span>
                         <span className="text-xs font-bold text-foreground block">${calculatedExpenses.totalVehicle} USD</span>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground">Public transit / local taxi estimate (${40 * tripDays} USD)</p>
+                    <p className="text-xs text-muted-foreground">Public transit / taxi (${40 * tripDays} USD)</p>
+                  )}
+                </div>
+
+                {/* Flight Summary */}
+                <div className="p-4 rounded-xl bg-secondary/30 border border-border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+                      <Plane className="size-3.5 text-orange-400" /> Flight Route
+                    </span>
+                    <button
+                      onClick={() => setActiveTab('flights')}
+                      className="text-[11px] font-bold text-orange-400 hover:underline cursor-pointer"
+                    >
+                      Change
+                    </button>
+                  </div>
+                  {selectedFlight ? (
+                    <div className="flex items-center justify-between text-xs pt-1">
+                      <div>
+                        <span className="font-bold text-foreground block truncate max-w-[120px]">{selectedFlight.airline}</span>
+                        <span className="text-[10px] text-muted-foreground">{selectedFlight.flightNumber} • {selectedFlight.originAirport}➔{selectedFlight.destinationAirport}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-extrabold text-orange-400">${calculatedExpenses.flightSeatRate} × {travelersCount} ppl</span>
+                        <span className="text-xs font-bold text-foreground block">${calculatedExpenses.totalFlight} USD</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Standard international flight (${450 * travelersCount} USD)</p>
                   )}
                 </div>
               </div>
@@ -923,7 +1100,7 @@ export default function DestinationExplorer() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
                   <div>
                     <h3 className="text-base font-bold text-foreground">Estimated Total Journey Expense</h3>
-                    <p className="text-[11px] text-muted-foreground">Includes lodging, vehicle transit, attraction passes, and meals</p>
+                    <p className="text-[11px] text-muted-foreground">Includes lodging, vehicle transit, airline tickets, attraction passes, and meals</p>
                   </div>
                   <div className="text-right">
                     <span className="text-2xl sm:text-3xl font-extrabold text-orange-400 font-['Instrument_Serif']">
@@ -935,7 +1112,7 @@ export default function DestinationExplorer() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
                   <div className="p-3 rounded-xl bg-black/40 border border-border/70">
                     <span className="text-[10px] text-muted-foreground block">1. Stays & Lodging</span>
                     <span className="text-sm font-bold text-foreground">${calculatedExpenses.totalHotel}</span>
@@ -947,20 +1124,25 @@ export default function DestinationExplorer() {
                     <span className="text-[9px] text-muted-foreground block">{tripDays} rental days</span>
                   </div>
                   <div className="p-3 rounded-xl bg-black/40 border border-border/70">
-                    <span className="text-[10px] text-muted-foreground block">3. Sightseeing Tickets</span>
-                    <span className="text-sm font-bold text-foreground">${calculatedExpenses.totalTickets}</span>
-                    <span className="text-[9px] text-muted-foreground block">{calculatedExpenses.selectedSpotsCount} selected spots</span>
+                    <span className="text-[10px] text-muted-foreground block">3. Flight Seats</span>
+                    <span className="text-sm font-bold text-foreground">${calculatedExpenses.totalFlight}</span>
+                    <span className="text-[9px] text-muted-foreground block">{travelersCount} traveler(s)</span>
                   </div>
                   <div className="p-3 rounded-xl bg-black/40 border border-border/70">
-                    <span className="text-[10px] text-muted-foreground block">4. Dining & Living</span>
+                    <span className="text-[10px] text-muted-foreground block">4. Sightseeing Tickets</span>
+                    <span className="text-sm font-bold text-foreground">${calculatedExpenses.totalTickets}</span>
+                    <span className="text-[9px] text-muted-foreground block">{calculatedExpenses.selectedSpotsCount} spots</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-black/40 border border-border/70">
+                    <span className="text-[10px] text-muted-foreground block">5. Dining & Living</span>
                     <span className="text-sm font-bold text-foreground">${calculatedExpenses.totalFood}</span>
-                    <span className="text-[9px] text-muted-foreground block">${dailyFoodBudget}/day × {travelersCount} ppl</span>
+                    <span className="text-[9px] text-muted-foreground block">${dailyFoodBudget}/d × {travelersCount}ppl</span>
                   </div>
                 </div>
 
                 <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <p className="text-[11px] text-muted-foreground">
-                    ⚡ Instant Sync: Ready to generate a day-by-day itinerary incorporating these exact accommodations and attractions.
+                    ⚡ Instant Sync: Ready to generate a day-by-day itinerary incorporating these exact flights, accommodations, and attractions.
                   </p>
                   <GlowingButton
                     onClick={handlePlanWithCustomConfig}

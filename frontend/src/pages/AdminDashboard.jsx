@@ -4,11 +4,7 @@ import { AppShell } from '@/components/app-shell';
 import Loader from '@/components/common/Loader';
 import { useAdminLiveAlerts } from '@/hooks/useAdminLiveAlerts';
 
-const Dashboard = lazy(() =>
-  import('@/components/dashboard').then((m) => ({ default: m.Dashboard }))
-);
-const AdminGallery = lazy(() => import('@/pages/admin/AdminGallery'));
-const AdminDestinationEditor = lazy(() => import('@/pages/admin/AdminDestinationEditor'));
+const Dashboard = lazy(() => import('@/components/dashboard').then((m) => ({ default: m.Dashboard })));
 const AdminCountries = lazy(() => import('@/pages/admin/AdminCountries'));
 const AdminCountryEditor = lazy(() => import('@/pages/admin/AdminCountryEditor'));
 const AdminSpots = lazy(() => import('@/pages/admin/AdminSpots'));
@@ -17,6 +13,10 @@ const AdminHotels = lazy(() => import('@/pages/admin/AdminHotels'));
 const AdminHotelEditor = lazy(() => import('@/pages/admin/AdminHotelEditor'));
 const AdminVehicles = lazy(() => import('@/pages/admin/AdminVehicles'));
 const AdminVehicleEditor = lazy(() => import('@/pages/admin/AdminVehicleEditor'));
+const AdminFlights = lazy(() => import('@/pages/admin/AdminFlights'));
+const AdminFlightEditor = lazy(() => import('@/pages/admin/AdminFlightEditor'));
+const AdminGallery = lazy(() => import('@/pages/admin/AdminGallery'));
+const AdminDestinationEditor = lazy(() => import('@/pages/admin/AdminDestinationEditor'));
 const AdminExpenses = lazy(() => import('@/pages/admin/AdminExpenses'));
 const AdminProfile = lazy(() => import('@/pages/admin/AdminProfile'));
 const AdminNotifications = lazy(() => import('@/pages/admin/AdminNotifications'));
@@ -58,6 +58,10 @@ export default function AdminDashboard() {
           <Route path="/vehicles" element={<AdminVehicles />} />
           <Route path="/vehicles/new" element={<AdminVehicleEditor />} />
           <Route path="/vehicles/edit/:id" element={<AdminVehicleEditor />} />
+
+          <Route path="/flights" element={<AdminFlights />} />
+          <Route path="/flights/new" element={<AdminFlightEditor />} />
+          <Route path="/flights/edit/:id" element={<AdminFlightEditor />} />
 
           <Route path="/media" element={<AdminGallery />} />
           <Route path="/media/new" element={<AdminDestinationEditor />} />

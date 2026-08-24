@@ -12,7 +12,8 @@ import {
   Globe,
   Navigation,
   Building,
-  Car
+  Car,
+  Plane
 } from 'lucide-react';
 
 export const navGroups = [
@@ -58,6 +59,11 @@ export const navGroups = [
         title: 'Vehicles & Fleet',
         path: '/admin/vehicles',
         icon: <Car className="size-4" />
+      },
+      {
+        title: 'Flights & Airlines',
+        path: '/admin/flights',
+        icon: <Plane className="size-4" />
       },
       {
         title: 'Destinations & Media',
