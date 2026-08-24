@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X, ArrowRight, Sparkles } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
+import GlowingButton from '../components/common/GlowingButton';
 
 const videos = [
   {
@@ -134,12 +135,13 @@ const Home = () => {
                 {link.label}
               </button>
             ))}
-            <button
+            <GlowingButton
               onClick={() => navigate('/create')}
-              className="bg-white text-zinc-950 font-sans font-bold text-xs px-4 py-2 rounded-full hover:bg-white/90 transition-all cursor-pointer shadow-sm"
+              size="sm"
+              innerClassName="py-1.5 px-4 text-xs font-bold font-sans"
             >
-              Get Started
-            </button>
+              <span>Get Started</span>
+            </GlowingButton>
           </nav>
 
           <div className="md:hidden flex items-center">
@@ -192,15 +194,16 @@ const Home = () => {
                 {link.label}
               </button>
             ))}
-            <button
+            <GlowingButton
               onClick={() => {
                 setMobileMenuOpen(false);
                 navigate('/create');
               }}
-              className="mt-4 w-full max-w-xs py-3.5 bg-white text-zinc-950 font-sans font-bold text-sm rounded-full hover:bg-zinc-100 transition-all cursor-pointer shadow-lg"
+              className="w-full max-w-xs mt-4"
+              innerClassName="py-3 font-sans font-bold text-sm"
             >
-              Get Started
-            </button>
+              <span>Get Started</span>
+            </GlowingButton>
           </div>
         )}
 
@@ -227,7 +230,7 @@ const Home = () => {
 
           <form
             onSubmit={handleStartPlanning}
-            className="liquid-glass rounded-full p-1 sm:p-1.5 flex items-center max-w-[300px] sm:max-w-md w-full mt-5 sm:mt-8 shadow-2xl"
+            className="liquid-glass rounded-full p-1 sm:p-1.5 flex items-center max-w-[320px] sm:max-w-lg w-full mt-5 sm:mt-8 shadow-2xl gap-1"
           >
             <input
               type="text"
@@ -240,13 +243,15 @@ const Home = () => {
                   : 'text-white placeholder-white/60'
               }`}
             />
-            <button
+            <GlowingButton
               type="submit"
-              className="bg-white text-zinc-950 font-sans font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-full hover:bg-zinc-100 transition-all shrink-0 cursor-pointer shadow-md flex items-center gap-1.5"
+              size="sm"
+              className="shrink-0"
+              innerClassName="py-2 px-4 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap"
             >
               <span>Build Journey</span>
               <ArrowRight className="size-3.5" />
-            </button>
+            </GlowingButton>
           </form>
 
           <div

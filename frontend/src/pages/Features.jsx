@@ -10,6 +10,7 @@ import {
   Smartphone,
   ArrowRight
 } from 'lucide-react';
+import GlowingButton from '../components/common/GlowingButton';
 
 const featureList = [
   {
@@ -116,13 +117,14 @@ export default function Features() {
           <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto font-sans">
             Join thousands of travelers who plan smarter, faster, and with complete clarity.
           </p>
-          <button
+          <GlowingButton
             onClick={() => navigate('/create')}
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-sm rounded-full transition-all cursor-pointer shadow-lg shadow-cyan-500/20"
+            size="lg"
+            innerClassName="font-bold flex items-center gap-2"
           >
             <span>Create Your First Trip</span>
             <ArrowRight className="size-4" />
-          </button>
+          </GlowingButton>
         </div>
       </div>
     </div>

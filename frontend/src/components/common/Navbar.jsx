@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, Menu, X, Sparkles, Shield, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
+import GlowingButton from './GlowingButton';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -153,12 +154,13 @@ const Navbar = () => {
               >
                 Sign In
               </Link>
-              <Link
-                to="/register"
-                className="px-3.5 py-1.5 text-xs font-bold text-zinc-950 bg-white hover:bg-zinc-200 rounded-full shadow-sm transition-all"
+              <GlowingButton
+                onClick={() => navigate('/register')}
+                size="sm"
+                innerClassName="py-1 px-3.5 text-xs font-bold font-sans"
               >
-                Get Started
-              </Link>
+                <span>Get Started</span>
+              </GlowingButton>
             </div>
           )}
         </div>
@@ -270,13 +272,16 @@ const Navbar = () => {
               >
                 Sign In
               </Link>
-              <Link
-                to="/register"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-2 text-xs font-bold text-zinc-950 bg-white hover:bg-zinc-200 rounded-full"
+              <GlowingButton
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate('/register');
+                }}
+                className="w-full"
+                innerClassName="py-2.5 text-xs font-bold"
               >
-                Get Started
-              </Link>
+                <span>Get Started</span>
+              </GlowingButton>
             </div>
           )}
         </div>

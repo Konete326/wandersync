@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, MapPin, Compass, Share2, ArrowRight } from 'lucide-react';
+import GlowingButton from '../components/common/GlowingButton';
 
 const steps = [
   {
@@ -80,13 +81,14 @@ export default function HowItWorks() {
           <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto font-sans">
             Start free without credit card requirements and experience AI-driven travel design.
           </p>
-          <button
+          <GlowingButton
             onClick={() => navigate('/create')}
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-sm rounded-full transition-all cursor-pointer shadow-lg shadow-cyan-500/20"
+            size="lg"
+            innerClassName="font-bold flex items-center gap-2"
           >
             <span>Start Building Now</span>
             <ArrowRight className="size-4" />
-          </button>
+          </GlowingButton>
         </div>
       </div>
     </div>

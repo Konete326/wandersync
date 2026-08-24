@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Check, ArrowRight } from 'lucide-react';
+import GlowingButton from '../components/common/GlowingButton';
 
 const plans = [
   {
@@ -111,17 +112,14 @@ export default function Pricing() {
                 </div>
               </div>
 
-              <button
+              <GlowingButton
                 onClick={() => navigate('/create')}
-                className={`w-full py-3 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                  p.highlighted
-                    ? 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 shadow-md shadow-cyan-500/25'
-                    : 'bg-white hover:bg-zinc-200 text-zinc-950 shadow-sm'
-                }`}
+                className="w-full"
+                innerClassName="py-3 text-xs font-bold flex items-center justify-center gap-2"
               >
                 <span>{p.cta}</span>
                 <ArrowRight className="size-3.5" />
-              </button>
+              </GlowingButton>
             </div>
           ))}
         </div>

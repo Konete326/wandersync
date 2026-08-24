@@ -5,6 +5,7 @@ import { generateItineraryWithAi, saveTrip } from '../services/tripService';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import Loader from '../components/common/Loader';
+import GlowingButton from '../components/common/GlowingButton';
 
 const quickInspirations = [
   '5 Days in Kyoto for cherry blossoms & matcha tasting',
@@ -347,14 +348,11 @@ const CreateTrip = () => {
             />
           </div>
 
-          <button
+          <GlowingButton
             type="submit"
             disabled={cooldown > 0}
-            className={`w-full py-3.5 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
-              cooldown > 0
-                ? 'bg-secondary text-muted-foreground border border-border cursor-not-allowed opacity-75'
-                : 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 shadow-lg shadow-cyan-500/20 cursor-pointer'
-            }`}
+            className="w-full"
+            innerClassName="py-3.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2"
           >
             {cooldown > 0 ? (
               <>
@@ -368,7 +366,7 @@ const CreateTrip = () => {
                 <ArrowRight className="size-4" />
               </>
             )}
-          </button>
+          </GlowingButton>
         </form>
       </div>
     </div>

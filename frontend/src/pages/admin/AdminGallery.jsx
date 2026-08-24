@@ -12,6 +12,7 @@ import {
 import { fetchGalleryItems, uploadGalleryItem, deleteGalleryItem } from '@/services/galleryService';
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
+import GlowingButton from '@/components/common/GlowingButton';
 
 export default function AdminGallery() {
   const { showModal, showToast } = useModal();
@@ -124,13 +125,14 @@ export default function AdminGallery() {
             Manage compressed destination photos synced with Cloudinary & MongoDB Atlas ({total} Total)
           </p>
         </div>
-        <button
+        <GlowingButton
           onClick={() => setUploadModalOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded-xl shadow-md shadow-cyan-500/20 transition-all cursor-pointer"
+          size="sm"
+          innerClassName="font-bold flex items-center gap-2"
         >
           <Plus className="size-4" />
           <span>Upload New Photo</span>
-        </button>
+        </GlowingButton>
       </div>
 
       {loading ? (
@@ -284,14 +286,15 @@ export default function AdminGallery() {
                 )}
               </div>
 
-              <button
+              <GlowingButton
                 type="submit"
                 disabled={submitting}
-                className="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
+                className="w-full mt-2"
+                innerClassName="py-2.5 text-xs font-bold flex items-center justify-center gap-2"
               >
                 <UploadCloud className="size-4" />
                 <span>{submitting ? 'Uploading to Cloudinary...' : 'Upload & Sync'}</span>
-              </button>
+              </GlowingButton>
             </form>
           </div>
         </div>

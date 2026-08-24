@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, ShieldCheck, MapPin, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
+import GlowingButton from '../components/common/GlowingButton';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -172,14 +173,15 @@ const Register = () => {
                 </div>
               </div>
 
-              <button
+              <GlowingButton
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded-lg shadow-md shadow-cyan-500/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer mt-2 disabled:opacity-50"
+                className="w-full mt-2"
+                innerClassName="py-2.5 text-xs font-bold"
               >
                 <span>{loading ? 'Creating...' : 'Create Account'}</span>
                 <ArrowRight className="size-3.5" />
-              </button>
+              </GlowingButton>
             </form>
           </div>
 

@@ -13,6 +13,7 @@ import { fetchGalleryItems, uploadGalleryItem, deleteGalleryItem } from '../serv
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import Loader from '../components/common/Loader';
+import GlowingButton from '../components/common/GlowingButton';
 
 const fallbackPhotos = [
   {
@@ -202,13 +203,14 @@ export default function Gallery() {
           </div>
 
           {user?.role === 'admin' && (
-            <button
+            <GlowingButton
               onClick={() => setUploadModalOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all cursor-pointer shrink-0"
+              size="sm"
+              innerClassName="font-bold flex items-center gap-2"
             >
               <Plus className="size-4" />
               <span>Add Photo</span>
-            </button>
+            </GlowingButton>
           )}
         </div>
 
@@ -399,14 +401,15 @@ export default function Gallery() {
                   )}
                 </div>
 
-                <button
+                <GlowingButton
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 mt-2"
+                  className="w-full mt-2"
+                  innerClassName="py-3 text-xs sm:text-sm font-bold flex items-center justify-center gap-2"
                 >
                   <UploadCloud className="size-4" />
                   <span>{submitting ? 'Uploading to Cloudinary...' : 'Publish to Gallery'}</span>
-                </button>
+                </GlowingButton>
               </form>
             </div>
           </div>
