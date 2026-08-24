@@ -8,7 +8,11 @@ import {
   Bell,
   History,
   Settings,
-  User
+  User,
+  Globe,
+  Navigation,
+  Building,
+  Car
 } from 'lucide-react';
 
 export const navGroups = [
@@ -33,6 +37,36 @@ export const navGroups = [
     ]
   },
   {
+    label: 'Travel Catalog & Fleet',
+    items: [
+      {
+        title: 'Countries & Cities',
+        path: '/admin/countries',
+        icon: <Globe className="size-4" />
+      },
+      {
+        title: 'Tourist Spots',
+        path: '/admin/spots',
+        icon: <Navigation className="size-4" />
+      },
+      {
+        title: 'Hotels & Stays',
+        path: '/admin/hotels',
+        icon: <Building className="size-4" />
+      },
+      {
+        title: 'Vehicles & Fleet',
+        path: '/admin/vehicles',
+        icon: <Car className="size-4" />
+      },
+      {
+        title: 'Destinations & Media',
+        path: '/admin/media',
+        icon: <Image className="size-4" />
+      }
+    ]
+  },
+  {
     label: 'AI & Intelligence',
     items: [
       {
@@ -44,11 +78,6 @@ export const navGroups = [
         title: 'Platform Expenses',
         path: '/admin/expenses',
         icon: <Receipt className="size-4" />
-      },
-      {
-        title: 'Destinations & Photos',
-        path: '/admin/media',
-        icon: <Image className="size-4" />
       }
     ]
   },

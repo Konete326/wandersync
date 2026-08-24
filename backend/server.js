@@ -11,6 +11,10 @@ import galleryRoutes from './routes/galleryRoutes.js';
 import expenseRoutes from './routes/expenseRoutes.js';
 import weatherRoutes from './routes/weatherRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import countryRoutes from './routes/countryRoutes.js';
+import spotRoutes from './routes/spotRoutes.js';
+import hotelRoutes from './routes/hotelRoutes.js';
+import vehicleRoutes from './routes/vehicleRoutes.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 
 dotenv.config();
@@ -56,6 +60,10 @@ app.use('/api/gallery', galleryRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/countries', countryRoutes);
+app.use('/api/spots', spotRoutes);
+app.use('/api/hotels', hotelRoutes);
+app.use('/api/vehicles', vehicleRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
