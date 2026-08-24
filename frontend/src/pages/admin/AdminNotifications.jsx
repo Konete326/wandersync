@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Bell,
   Sparkles,
@@ -10,73 +10,35 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import { getAdminNotifications } from '@/services/adminService';
 import { useModal } from '@/context/ModalContext';
-
-const initialNotifications = [
-  {
-    id: 1,
-    title: 'Gemini 2.5 Flash Itinerary Surge',
-    message: 'High traffic detected: 48 itineraries generated in the last 15 minutes with 100% JSON parsing accuracy.',
-    type: 'ai',
-    time: '4 mins ago',
-    read: false
-  },
-  {
-    id: 2,
-    title: 'New Admin Session Established',
-    message: 'Secure root login detected from IP 192.168.1.45 (San Francisco, US).',
-    type: 'security',
-    time: '25 mins ago',
-    read: false
-  },
-  {
-    id: 3,
-    title: 'Featured Trip Exported to PDF',
-    message: 'Traveler "Sarah M." successfully downloaded 7-Day Tokyo Cultural Odyssey in PDF format.',
-    type: 'trip',
-    time: '1 hour ago',
-    read: false
-  },
-  {
-    id: 4,
-    title: 'Cloudinary CDN Asset Sync',
-    message: 'Storage optimization completed: 142 trip cover photos compressed and cached across global edges.',
-    type: 'system',
-    time: '3 hours ago',
-    read: true
-  },
-  {
-    id: 5,
-    title: 'Open-Meteo Weather API Health Check',
-    message: 'Live weather telemetry running at 99.98% uptime with zero request timeouts.',
-    type: 'system',
-    time: '5 hours ago',
-    read: true
-  },
-  {
-    id: 6,
-    title: 'New Destination Published: Kyoto',
-    message: 'Cultural heritage landmark and 4 tourist spots successfully indexed in global catalog.',
-    type: 'trip',
-    time: '8 hours ago',
-    read: true
-  },
-  {
-    id: 7,
-    title: 'Database Auto-Backup Verified',
-    message: 'Atlas cluster snapshot completed with zero replica lag.',
-    type: 'system',
-    time: '12 hours ago',
-    read: true
-  }
-];
+import Loader from '@/components/common/Loader';
 
 export default function AdminNotifications() {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
   const { showModal, showToast } = useModal();
+
+  const loadNotifications = async () => {
+    setLoading(true);
+    try {
+      const res = await getAdminNotifications();
+      if (res.data) {
+        setNotifications(res.data);
+      }
+    } catch {
+      showToast('Could not load notifications', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
 
   const filtered = notifications.filter((n) => {
     if (filter === 'unread') return !n.read;
@@ -218,7 +180,11 @@ export default function AdminNotifications() {
       </div>
 
       <div className="space-y-2 w-full">
-        {paginated.length === 0 ? (
+        {loading ? (
+          <div className="py-12 flex items-center justify-center">
+            <Loader text="Loading live notifications..." />
+          </div>
+        ) : paginated.length === 0 ? (
           <div className="bg-[#121215] border border-border rounded-xl p-8 text-center space-y-2">
             <CheckCircle2 className="size-8 text-muted-foreground mx-auto" />
             <h3 className="text-sm font-bold text-foreground">All Clear</h3>

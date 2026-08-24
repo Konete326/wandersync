@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Bar, BarChart, XAxis } from 'recharts';
 import {
   CardContent,
@@ -8,20 +9,7 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Delta, DeltaIcon, DeltaValue } from '@/components/delta';
 import { DashboardCard } from '@/components/dashboard-card';
-
-const dailyGenerations = [
-  { day: 'Mon', count: 320 },
-  { day: 'Tue', count: 410 },
-  { day: 'Wed', count: 490 },
-  { day: 'Thu', count: 530 },
-  { day: 'Fri', count: 680 },
-  { day: 'Sat', count: 820 },
-  { day: 'Sun', count: 910 }
-];
-
-const firstDay = dailyGenerations[0].count;
-const lastDay = dailyGenerations.at(-1)?.count ?? firstDay;
-const growthPct = (((lastDay - firstDay) / firstDay) * 100).toFixed(1);
+import { getAdminStats } from '@/services/adminService';
 
 const chartConfig = {
   count: {
@@ -32,7 +20,7 @@ const chartConfig = {
 
 function CustomGradientBar(props) {
   const {
-    fill,
+    fill = '#f97316',
     x = 0,
     y = 0,
     width = 0,
@@ -55,8 +43,8 @@ function CustomGradientBar(props) {
       <rect fill={fill} height={2} stroke="none" width={width} x={x} y={y} />
       <defs>
         <linearGradient id={gid} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor={fill} stopOpacity={0.5} />
-          <stop offset="100%" stopColor={fill} stopOpacity={0} />
+          <stop offset="0%" stopColor="#f97316" stopOpacity={0.8} />
+          <stop offset="100%" stopColor="#ea580c" stopOpacity={0.1} />
         </linearGradient>
       </defs>
     </>
@@ -64,6 +52,35 @@ function CustomGradientBar(props) {
 }
 
 export function NetRevenueChart() {
+  const [chartData, setChartData] = useState([
+    { day: 'Mon', count: 0 },
+    { day: 'Tue', count: 0 },
+    { day: 'Wed', count: 0 },
+    { day: 'Thu', count: 0 },
+    { day: 'Fri', count: 0 },
+    { day: 'Sat', count: 0 },
+    { day: 'Sun', count: 0 }
+  ]);
+  const [growthPct, setGrowthPct] = useState(15.4);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const res = await getAdminStats();
+        if (res.data?.dailyGenerations) {
+          setChartData(res.data.dailyGenerations);
+          const first = res.data.dailyGenerations[0]?.count || 1;
+          const last = res.data.dailyGenerations.at(-1)?.count || first;
+          setGrowthPct(Number((((last - first) / Math.max(first, 1)) * 100).toFixed(1)));
+        }
+      } catch {
+      }
+    };
+    loadData();
+    const interval = setInterval(loadData, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <DashboardCard className="gap-0 md:col-span-2">
       <CardHeader className="gap-2">
@@ -78,7 +95,7 @@ export function NetRevenueChart() {
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-auto h-60 w-full md:h-80" config={chartConfig}>
-          <BarChart accessibilityLayer data={dailyGenerations}>
+          <BarChart accessibilityLayer data={chartData}>
             <XAxis
               axisLine={false}
               dataKey="day"
@@ -88,7 +105,7 @@ export function NetRevenueChart() {
               tickMargin={10}
             />
             <ChartTooltip content={<ChartTooltipContent hideLabel />} cursor={false} />
-            <Bar dataKey="count" fill="var(--color-sales)" shape={<CustomGradientBar />} />
+            <Bar dataKey="count" fill="#f97316" shape={<CustomGradientBar />} />
           </BarChart>
         </ChartContainer>
       </CardContent>

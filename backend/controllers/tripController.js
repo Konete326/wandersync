@@ -27,6 +27,15 @@ export const getTripById = async (req, res) => {
   }
 };
 
+export const getPublicTrips = async (req, res) => {
+  try {
+    const trips = await Trip.find({ isPublic: true }).populate('user', 'name avatar').sort({ createdAt: -1 }).limit(12);
+    return sendSuccess(res, 'Public community trips retrieved', trips);
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
 export const getSharedTrip = async (req, res) => {
   try {
     const trip = await Trip.findOne({ shareSlug: req.params.shareSlug, isPublic: true }).populate('user', 'name avatar');

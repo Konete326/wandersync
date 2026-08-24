@@ -11,10 +11,10 @@ import { getAdminStats } from '@/services/adminService';
 
 export function DashboardStats() {
   const [statsData, setStatsData] = useState([
-    { label: 'Total AI Itineraries', value: '3,842', delta: 14.8 },
-    { label: 'Gemini Inferences', value: '29,480', delta: 22.3 },
-    { label: 'Registered Travelers', value: '1,640', delta: 9.5 },
-    { label: 'Destinations Mapped', value: '142', delta: 5.2 }
+    { label: 'Total AI Itineraries', value: '0', delta: 12.5 },
+    { label: 'Gemini Inferences', value: '0', delta: 18.2 },
+    { label: 'Registered Travelers', value: '0', delta: 8.0 },
+    { label: 'Destinations Mapped', value: '0', delta: 4.5 }
   ]);
 
   useEffect(() => {
@@ -26,22 +26,22 @@ export function DashboardStats() {
             {
               label: 'Total AI Itineraries',
               value: res.data.totalTrips?.toLocaleString() || '0',
-              delta: 14.8
+              delta: 12.5
             },
             {
               label: 'Gemini Inferences',
               value: res.data.geminiInferences?.toLocaleString() || '0',
-              delta: 22.3
+              delta: 18.2
             },
             {
               label: 'Registered Travelers',
               value: res.data.totalUsers?.toLocaleString() || '0',
-              delta: 9.5
+              delta: 8.0
             },
             {
               label: 'Destinations Mapped',
               value: res.data.totalDestinations?.toLocaleString() || '0',
-              delta: 5.2
+              delta: 4.5
             }
           ]);
         }
@@ -56,7 +56,7 @@ export function DashboardStats() {
   return (
     <>
       {statsData.map((s) => (
-        <DashboardCard className="" key={s.label}>
+        <DashboardCard key={s.label}>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="font-normal text-xs tracking-wide text-muted-foreground">
               {s.label}

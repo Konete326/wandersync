@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getUserTrips,
   getTripById,
+  getPublicTrips,
   getSharedTrip,
   createTrip,
   updateTrip,
@@ -11,6 +12,7 @@ import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
+router.get('/public', getPublicTrips);
 router.get('/share/:shareSlug', getSharedTrip);
 router.get('/', protect, getUserTrips);
 router.post('/', protect, createTrip);

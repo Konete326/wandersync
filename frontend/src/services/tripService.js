@@ -5,6 +5,11 @@ export const getMyTrips = async () => {
   return response.data;
 };
 
+export const getPublicCommunityTrips = async () => {
+  const response = await api.get('/trips/public');
+  return response.data;
+};
+
 export const getTripDetails = async (id) => {
   const response = await api.get(`/trips/${id}`);
   return response.data;

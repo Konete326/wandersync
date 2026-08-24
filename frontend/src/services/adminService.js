@@ -19,3 +19,8 @@ export const getAdminActivity = async () => {
   const response = await api.get('/admin/activity');
   return response.data;
 };
+
+export const getAdminNotifications = async () => {
+  const response = await api.get('/admin/notifications');
+  return response.data;
+};

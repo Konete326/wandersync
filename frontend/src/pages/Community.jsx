@@ -1,45 +1,35 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Users, Compass, Star, ArrowRight } from 'lucide-react';
+import { Users, Star, ArrowRight, MapPin, Compass, Calendar, Sparkles } from 'lucide-react';
 import GlowingButton from '../components/common/GlowingButton';
-
-const stories = [
-  {
-    author: 'Elena Vance',
-    role: 'Solo Adventurer',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-    title: '7 Days in Tokyo & Hakone',
-    quote: 'WanderSync mapped out off-the-beaten-path matcha tea houses and scenic cable car routes that I would have never found alone.',
-    rating: 5,
-    likes: '1.2k'
-  },
-  {
-    author: 'Marcus Sterling',
-    role: 'Digital Nomad',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
-    title: '14 Days Along the Amalfi Coast',
-    quote: 'The live weather telemetry and offline PDF export kept our group perfectly on schedule even when coastal cell reception dropped.',
-    rating: 5,
-    likes: '980'
-  },
-  {
-    author: 'Aria Takahashi',
-    role: 'Photographer',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80',
-    title: '5 Days in Iceland Glacier Lagoons',
-    quote: 'The AI tailored morning golden-hour photo spots with zero tourist crowds. Absolute game changer.',
-    rating: 5,
-    likes: '2.4k'
-  }
-];
+import Loader from '../components/common/Loader';
+import { getPublicCommunityTrips } from '../services/tripService';
 
 export default function Community() {
   const navigate = useNavigate();
+  const [publicTrips, setPublicTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCommunityTrips = async () => {
+      try {
+        const res = await getPublicCommunityTrips();
+        if (res.data) {
+          setPublicTrips(res.data);
+        }
+      } catch {
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCommunityTrips();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#fafafa] py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#09090b] text-[#fafafa] py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-6xl mx-auto space-y-16">
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full liquid-glass border border-cyan-500/30 text-cyan-400 text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full liquid-glass border border-orange-500/30 text-orange-400 text-xs font-semibold uppercase tracking-wider">
             <Users className="size-3.5" />
             Global Creators & Explorers
           </div>
@@ -51,42 +41,84 @@ export default function Community() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {stories.map((s) => (
-            <div
-              key={s.author}
-              className="p-6 rounded-2xl liquid-glass-card border border-border/80 flex flex-col justify-between space-y-6 hover:border-cyan-500/40 transition-all group"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center gap-1 text-amber-400">
-                  {[...Array(s.rating)].map((_, i) => (
-                    <Star key={i} className="size-3.5 fill-amber-400" />
-                  ))}
-                </div>
-                <h3 className="text-lg font-bold font-heading text-foreground">
-                  {s.title}
-                </h3>
-                <p className="text-xs text-muted-foreground italic leading-relaxed font-sans">
-                  "{s.quote}"
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 pt-4 border-t border-border/60">
-                <img
-                  src={s.avatar}
-                  alt={s.author}
-                  className="size-9 rounded-full object-cover border border-border"
-                />
-                <div>
-                  <h4 className="text-xs font-semibold text-foreground">{s.author}</h4>
-                  <span className="text-[11px] text-muted-foreground">{s.role}</span>
-                </div>
-              </div>
+        {loading ? (
+          <div className="py-20 flex items-center justify-center">
+            <Loader text="Loading community journeys..." />
+          </div>
+        ) : publicTrips.length === 0 ? (
+          <div className="p-12 rounded-3xl bg-[#121215] border border-border/80 text-center space-y-4 max-w-md mx-auto">
+            <div className="size-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mx-auto">
+              <Compass className="size-6" />
             </div>
-          ))}
-        </div>
+            <h3 className="text-base font-bold text-foreground">Be the First to Publish</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Generate an itinerary with Gemini AI and publish it publicly to inspire travelers across the globe.
+            </p>
+            <div className="pt-2">
+              <GlowingButton
+                onClick={() => navigate('/create')}
+                size="sm"
+                innerClassName="font-bold flex items-center gap-2"
+              >
+                <span>Create & Publish Itinerary</span>
+                <ArrowRight className="size-3.5" />
+              </GlowingButton>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {publicTrips.map((trip) => (
+              <div
+                key={trip._id}
+                onClick={() => navigate(`/shared/${trip.shareSlug}`)}
+                className="p-6 rounded-2xl bg-[#121215] border border-border/80 flex flex-col justify-between space-y-6 hover:border-orange-500/40 transition-all group cursor-pointer"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="inline-flex items-center gap-1 text-orange-400 font-bold">
+                      <Sparkles className="size-3" />
+                      {trip.durationDays || 3} Days
+                    </span>
+                    <span className="text-zinc-400 font-medium">
+                      Est. ${trip.estimatedTotalCost || 1200}
+                    </span>
+                  </div>
 
-        <div className="p-8 sm:p-12 rounded-3xl liquid-glass border border-cyan-500/30 text-center space-y-6">
+                  <h3 className="text-lg font-bold font-heading text-foreground group-hover:text-orange-400 transition-colors">
+                    {trip.title || `Trip to ${trip.destination?.city || 'Destination'}`}
+                  </h3>
+
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <MapPin className="size-3.5 text-orange-400 shrink-0" />
+                    <span>{trip.destination?.city}, {trip.destination?.country}</span>
+                  </div>
+
+                  {trip.days && trip.days.length > 0 && (
+                    <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
+                      {trip.days[0]?.activities?.[0]?.description || 'AI crafted cultural landmarks and excursions.'}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-border/60">
+                  <div className="flex items-center gap-2.5">
+                    <div className="size-8 rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-xs text-foreground">
+                      {trip.user?.name ? trip.user.name.charAt(0).toUpperCase() : 'T'}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-semibold text-foreground">{trip.user?.name || 'Traveler'}</h4>
+                      <span className="text-[10px] text-muted-foreground">Explorer</span>
+                    </div>
+                  </div>
+
+                  <ArrowRight className="size-4 text-muted-foreground group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="p-8 sm:p-12 rounded-3xl bg-[#121215] border border-orange-500/30 text-center space-y-6">
           <h2 className="text-3xl sm:text-4xl font-['Instrument_Serif']">
             Share your journeys with the world
           </h2>
