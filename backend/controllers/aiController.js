@@ -1,4 +1,4 @@
-import { generateAiItinerary, refineAiItinerary, chatWithGemini } from '../services/geminiService.js';
+import { generateAiItinerary, refineAiItinerary, chatWithGemini, autofillDestinationData } from '../services/geminiService.js';
 import { sendSuccess, sendError } from '../utils/apiResponse.js';
 
 export const generateItinerary = async (req, res) => {
@@ -62,5 +62,19 @@ export const chatAssistant = async (req, res) => {
     return sendSuccess(res, 'Assistant response generated', { reply });
   } catch (error) {
     return sendError(res, error.message || 'Failed to chat with AI assistant', 500);
+  }
+};
+
+export const autofillDestination = async (req, res) => {
+  try {
+    const { country, city } = req.body;
+    if (!country || !city) {
+      return sendError(res, 'Country and City are required for AI autofill', 400);
+    }
+
+    const data = await autofillDestinationData(country, city);
+    return sendSuccess(res, 'Destination AI telemetry retrieved', data);
+  } catch (error) {
+    return sendError(res, error.message || 'Failed to autofill destination', 500);
   }
 };

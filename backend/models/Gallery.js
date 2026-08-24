@@ -1,5 +1,18 @@
 import mongoose from 'mongoose';
 
+const touristPlaceSchema = new mongoose.Schema({
+  name: { type: String, trim: true },
+  imageUrl: { type: String, trim: true },
+  description: { type: String, trim: true }
+}, { _id: false });
+
+const hotelSchema = new mongoose.Schema({
+  name: { type: String, trim: true },
+  imageUrl: { type: String, trim: true },
+  rating: { type: Number, default: 4.8 },
+  priceRange: { type: String, default: '$$$' }
+}, { _id: false });
+
 const gallerySchema = new mongoose.Schema({
   title: {
     type: String,
@@ -8,12 +21,17 @@ const gallerySchema = new mongoose.Schema({
   },
   country: {
     type: String,
-    default: 'Global',
+    required: true,
+    trim: true
+  },
+  city: {
+    type: String,
+    required: true,
     trim: true
   },
   location: {
     type: String,
-    required: true,
+    default: '',
     trim: true
   },
   description: {
@@ -34,6 +52,8 @@ const gallerySchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  touristPlaces: [touristPlaceSchema],
+  hotels: [hotelSchema],
   featured: {
     type: Boolean,
     default: false

@@ -1,17 +1,20 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   MapPin,
-  UploadCloud,
-  Trash2,
   ChevronLeft,
   ChevronRight,
   X,
-  Plus,
-  Eye,
   Sparkles,
-  Globe
+  Globe,
+  Navigation,
+  Building,
+  Star,
+  ArrowRight,
+  Compass,
+  Search
 } from 'lucide-react';
-import { fetchGalleryItems, uploadGalleryItem, deleteGalleryItem } from '../services/galleryService';
+import { fetchGalleryItems } from '../services/galleryService';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import Loader from '../components/common/Loader';
@@ -29,278 +32,153 @@ const defaultCountries = [
   'Iceland'
 ];
 
-const fallbackPhotos = [
-  {
-    _id: 'sample-1',
-    title: 'Fushimi Inari Torii Gates',
-    country: 'Japan',
-    location: 'Kyoto, Japan',
-    category: 'Cultural Heritage',
-    description: 'Iconic vermilion torii paths weaving through the sacred mountain forest of Inari.',
-    imageUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    _id: 'sample-2',
-    title: 'Amalfi Coastal Vista',
-    country: 'Italy',
-    location: 'Positano, Italy',
-    category: 'Coastal',
-    description: 'Pastel cliffside villas cascading into the azure Mediterranean waters.',
-    imageUrl: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    _id: 'sample-3',
-    title: 'Matterhorn Alpine Peak',
-    country: 'Switzerland',
-    location: 'Zermatt, Switzerland',
-    category: 'Mountains',
-    description: 'Glacial horizons and towering pyramid peaks in the Swiss Alps.',
-    imageUrl: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    _id: 'sample-4',
-    title: 'Santorini Sunset Caldera',
-    country: 'Greece',
-    location: 'Oia, Greece',
-    category: 'Architecture',
-    description: 'White-washed domes bathed in evening golden Aegean light.',
-    imageUrl: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    _id: 'sample-5',
-    title: 'Moraine Lake Reflections',
-    country: 'Canada',
-    location: 'Banff, Canada',
-    category: 'Nature',
-    description: 'Crystalline turquoise waters cradled by the Valley of the Ten Peaks.',
-    imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    _id: 'sample-6',
-    title: 'Tegallalang Rice Terraces',
-    country: 'Indonesia',
-    location: 'Ubud, Bali',
-    category: 'Tropical',
-    description: 'Lush emerald valley stepped with traditional Balinese irrigation systems.',
-    imageUrl: 'https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80'
-  }
-];
-
 export default function Gallery() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { showModal, showToast } = useModal();
+
   const [items, setItems] = useState([]);
   const [activeCountry, setActiveCountry] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [selectedDestination, setSelectedDestination] = useState(null);
 
-  const [title, setTitle] = useState('');
-  const [country, setCountry] = useState('Japan');
-  const [locationName, setLocationName] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('Landscape');
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  const loadGallery = async (pageNum = 1) => {
+  const loadGallery = async (pageNum = 1, country = 'All') => {
     setLoading(true);
     try {
-      const res = await fetchGalleryItems(pageNum, 9);
-      if (res.data?.items && res.data.items.length > 0) {
+      const res = await fetchGalleryItems(pageNum, 12, country === 'All' ? '' : country);
+      if (res.data?.items) {
         setItems(res.data.items);
         setPage(res.data.page || pageNum);
         setTotalPages(res.data.pages || 1);
+        setTotal(res.data.total || 0);
       } else {
-        setItems(fallbackPhotos);
-        setTotalPages(1);
+        setItems([]);
       }
     } catch {
-      setItems(fallbackPhotos);
-      setTotalPages(1);
+      showToast('Could not load gallery destinations', 'error');
+      setItems([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadGallery(page);
-  }, [page]);
+    loadGallery(page, activeCountry);
+  }, [page, activeCountry]);
 
-  const countryList = useMemo(() => {
-    const set = new Set(defaultCountries);
-    items.forEach((it) => {
-      if (it.country && it.country !== 'Global') set.add(it.country);
+  const uniqueCountries = useMemo(() => {
+    const list = new Set(defaultCountries);
+    items.forEach((item) => {
+      if (item.country) list.add(item.country);
     });
-    return Array.from(set);
+    return Array.from(list);
   }, [items]);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return items;
+    const q = searchQuery.toLowerCase();
+    return items.filter(
+      (item) =>
+        item.title?.toLowerCase().includes(q) ||
+        item.country?.toLowerCase().includes(q) ||
+        item.city?.toLowerCase().includes(q) ||
+        item.location?.toLowerCase().includes(q)
+    );
+  }, [items, searchQuery]);
+
+  const handlePlanTripHere = (item) => {
+    navigate(`/create?destination=${encodeURIComponent(`${item.city || item.title}, ${item.country}`)}`);
   };
-
-  const handleUploadSubmit = async (e) => {
-    e.preventDefault();
-    if (!title.trim() || !locationName.trim() || !selectedFile) {
-      showModal({
-        title: 'Missing Fields',
-        message: 'Please provide a title, country, location, and select an image file.',
-        type: 'warning'
-      });
-      return;
-    }
-
-    setSubmitting(true);
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('country', country);
-    formData.append('location', locationName);
-    formData.append('description', description);
-    formData.append('category', category);
-    formData.append('image', selectedFile);
-
-    try {
-      await uploadGalleryItem(formData);
-      showToast('Photo published country-wise to Gallery!', 'success');
-      setUploadModalOpen(false);
-      setTitle('');
-      setCountry('Japan');
-      setLocationName('');
-      setDescription('');
-      setSelectedFile(null);
-      setPreviewUrl('');
-      loadGallery(1);
-    } catch (error) {
-      showModal({
-        title: 'Upload Failed',
-        message: error.response?.data?.message || 'Could not upload photo to Cloudinary.',
-        type: 'danger'
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDelete = (id, e) => {
-    e.stopPropagation();
-    showModal({
-      title: 'Delete Photo',
-      message: 'Are you sure you want to delete this photo from the gallery?',
-      type: 'danger',
-      isConfirm: true,
-      confirmText: 'Delete',
-      onConfirm: async () => {
-        try {
-          await deleteGalleryItem(id);
-          showToast('Photo deleted', 'info');
-          loadGallery(page);
-        } catch {
-          showToast('Failed to delete photo', 'error');
-        }
-      }
-    });
-  };
-
-  const displayedItems = activeCountry === 'All'
-    ? items
-    : items.filter(
-        (it) => it.country?.toLowerCase() === activeCountry.toLowerCase() ||
-                it.location?.toLowerCase().includes(activeCountry.toLowerCase())
-      );
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#fafafa] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 border-b border-border/80">
-          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto py-1 no-scrollbar">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mr-1 shrink-0">
-              <Globe className="size-3.5 text-cyan-400" />
-              <span className="font-semibold">Country:</span>
-            </div>
-            {countryList.map((c) => {
-              const isActive = activeCountry === c;
-              return (
-                <button
-                  key={c}
-                  onClick={() => setActiveCountry(c)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
-                    isActive
-                      ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/50 shadow-sm shadow-cyan-500/10 font-bold'
-                      : 'bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border'
-                  }`}
-                >
-                  {c}
-                </button>
-              );
-            })}
+    <div className="w-full min-h-screen bg-[#09090b] text-[#fafafa] font-sans pb-16">
+      <div className="border-b border-border/80 bg-[#121215]/80 backdrop-blur-xl sticky top-14 z-30 px-4 py-3">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full md:w-auto py-1">
+            {uniqueCountries.map((c) => (
+              <button
+                key={c}
+                onClick={() => {
+                  setActiveCountry(c);
+                  setPage(1);
+                }}
+                className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  activeCountry === c
+                    ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/50 font-bold'
+                    : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border/60 hover:bg-secondary'
+                }`}
+              >
+                {c === 'All' ? '🌍 All Countries' : c}
+              </button>
+            ))}
           </div>
 
-          {user?.role === 'admin' && (
-            <GlowingButton
-              onClick={() => setUploadModalOpen(true)}
-              size="sm"
-              innerClassName="font-bold flex items-center gap-1.5 py-1.5 px-4 text-xs shrink-0"
-            >
-              <Plus className="size-3.5" />
-              <span>Add Photo</span>
-            </GlowingButton>
-          )}
+          <div className="relative w-full md:w-64">
+            <Search className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search country, city, spot..."
+              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-secondary/50 border border-border/80 text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+            />
+          </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
         {loading ? (
-          <div className="min-h-[50vh] flex items-center justify-center">
-            <Loader text="Loading visual gallery..." />
+          <div className="py-28 flex items-center justify-center">
+            <Loader text="Loading live global destinations..." />
           </div>
-        ) : displayedItems.length === 0 ? (
-          <div className="min-h-[40vh] flex flex-col items-center justify-center text-center space-y-3 bg-card/30 rounded-3xl border border-border p-8">
-            <p className="text-sm text-muted-foreground">No photos found for "{activeCountry}".</p>
-            <button
-              onClick={() => setActiveCountry('All')}
-              className="px-4 py-1.5 rounded-full bg-secondary text-cyan-400 text-xs font-semibold border border-border hover:bg-secondary/80 cursor-pointer"
-            >
-              Explore All Countries
-            </button>
+        ) : filteredItems.length === 0 ? (
+          <div className="p-16 rounded-3xl border border-dashed border-border/80 text-center space-y-4 max-w-lg mx-auto bg-card/30">
+            <Globe className="size-12 text-cyan-400 mx-auto animate-pulse" />
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-foreground">No Destinations Found</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {activeCountry !== 'All'
+                  ? `No verified destinations in ${activeCountry} yet.`
+                  : 'The gallery is ready for real destinations. Admin can publish new country spots in the Command Center.'}
+              </p>
+            </div>
+            {user?.role === 'admin' && (
+              <button
+                onClick={() => navigate('/admin/media')}
+                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded-xl cursor-pointer inline-flex items-center gap-2"
+              >
+                <span>Upload in Admin Media</span>
+                <ArrowRight className="size-3.5" />
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {displayedItems.map((item) => (
+              {filteredItems.map((item) => (
                 <div
                   key={item._id}
-                  onClick={() => setSelectedPhoto(item)}
-                  className="uiverse-card cursor-pointer group"
+                  className="uiverse-card group cursor-pointer"
+                  onClick={() => setSelectedDestination(item)}
                 >
                   <div
                     className="uiverse-card-header"
                     style={{ backgroundImage: `url(${item.imageUrl})` }}
                   >
                     <div className="uiverse-card-header-bar">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white border border-white/10 font-sans flex items-center gap-1">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-white border border-white/10 font-sans flex items-center gap-1">
                         <Globe className="size-2.5 text-cyan-400" />
-                        <span>{item.country || 'Global'}</span>
+                        <span>{item.country}</span>
                       </span>
-                      <div className="flex items-center gap-2">
-                        {user?.role === 'admin' && (
-                          <button
-                            type="button"
-                            onClick={(e) => handleDelete(item._id, e)}
-                            className="p-1.5 rounded-lg bg-black/70 hover:bg-rose-600 text-white transition-colors cursor-pointer"
-                            title="Delete photo"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        )}
-                        <div className="size-6 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white">
-                          <Eye className="size-3" />
-                        </div>
-                      </div>
+                      {item.city && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-cyan-950/80 backdrop-blur-md text-cyan-300 border border-cyan-500/30">
+                          {item.city}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -310,14 +188,14 @@ export default function Gallery() {
                     </span>
                     <div className="uiverse-card-job flex items-center justify-center gap-1">
                       <MapPin className="size-3 text-cyan-400 shrink-0" />
-                      <span className="truncate">{item.location}</span>
+                      <span className="truncate">{item.city ? `${item.city}, ${item.country}` : item.location}</span>
                     </div>
                     <div className="uiverse-card-bio">
-                      {item.description || `Explore the breathtaking essence of ${item.location} curated for WanderSync adventurers.`}
+                      {item.description || 'Curated global destination powered by WanderSync Atlas.'}
                     </div>
                     <div className="flex items-center justify-center gap-2 pt-1 text-muted-foreground">
                       <Sparkles className="size-3 text-cyan-400" />
-                      <span className="text-[11px] text-muted-foreground font-medium">{item.category || 'Curated'}</span>
+                      <span className="text-[11px] text-muted-foreground font-medium">{item.category || 'Curated Destination'}</span>
                     </div>
                   </div>
 
@@ -325,15 +203,15 @@ export default function Gallery() {
                     <div className="uiverse-stats">
                       <div className="uiverse-stat">
                         <span className="label">Country</span>
-                        <span className="value text-xs truncate max-w-[80px] mx-auto">{item.country || 'Global'}</span>
+                        <span className="value text-xs truncate max-w-[80px] mx-auto">{item.country}</span>
                       </div>
                       <div className="uiverse-stat">
-                        <span className="label">Rating</span>
-                        <span className="value text-xs">4.9 ★</span>
+                        <span className="label">City</span>
+                        <span className="value text-xs truncate max-w-[80px] mx-auto">{item.city || 'Region'}</span>
                       </div>
                       <div className="uiverse-stat">
-                        <span className="label">Quality</span>
-                        <span className="value text-xs">HD</span>
+                        <span className="label">Category</span>
+                        <span className="value text-xs truncate max-w-[80px] mx-auto">{item.category}</span>
                       </div>
                     </div>
                   </div>
@@ -342,192 +220,128 @@ export default function Gallery() {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-3 pt-6 border-t border-border/60 font-sans">
+              <div className="flex items-center justify-center gap-3 pt-6 border-t border-border/80">
                 <button
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                  className="px-3.5 py-2 rounded-xl bg-secondary/60 hover:bg-secondary border border-border text-xs text-foreground disabled:opacity-40 transition-all cursor-pointer flex items-center gap-1"
+                  className="px-3.5 py-2 rounded-xl bg-secondary/60 hover:bg-secondary border border-border text-xs text-foreground disabled:opacity-40 cursor-pointer flex items-center gap-1 font-semibold"
                 >
-                  <ChevronLeft className="size-4" />
-                  <span>Previous</span>
+                  <ChevronLeft className="size-3.5" />
+                  <span>Prev Page</span>
                 </button>
-                <span className="text-xs text-muted-foreground font-medium px-2">
+                <span className="text-xs text-muted-foreground px-3">
                   Page {page} of {totalPages}
                 </span>
                 <button
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                  className="px-3.5 py-2 rounded-xl bg-secondary/60 hover:bg-secondary border border-border text-xs text-foreground disabled:opacity-40 transition-all cursor-pointer flex items-center gap-1"
+                  className="px-3.5 py-2 rounded-xl bg-secondary/60 hover:bg-secondary border border-border text-xs text-foreground disabled:opacity-40 cursor-pointer flex items-center gap-1 font-semibold"
                 >
-                  <span>Next</span>
-                  <ChevronRight className="size-4" />
+                  <span>Next Page</span>
+                  <ChevronRight className="size-3.5" />
                 </button>
               </div>
             )}
           </div>
         )}
-
-        {selectedPhoto && (
-          <div
-            onClick={() => setSelectedPhoto(null)}
-            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="relative max-w-4xl w-full rounded-3xl overflow-hidden bg-card border border-border/80 shadow-2xl flex flex-col max-h-[90vh]"
-            >
-              <button
-                onClick={() => setSelectedPhoto(null)}
-                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/70 hover:bg-black text-white transition-all cursor-pointer"
-              >
-                <X className="size-5" />
-              </button>
-              <div className="flex-1 overflow-hidden bg-black flex items-center justify-center">
-                <img
-                  src={selectedPhoto.imageUrl}
-                  alt={selectedPhoto.title}
-                  className="max-h-[65vh] w-auto object-contain mx-auto"
-                />
-              </div>
-              <div className="p-6 bg-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase font-semibold text-cyan-400 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">
-                      {selectedPhoto.country || 'Global'}
-                    </span>
-                    <span className="text-[10px] uppercase font-semibold text-muted-foreground px-2 py-0.5 rounded bg-secondary border border-border">
-                      {selectedPhoto.category}
-                    </span>
-                  </div>
-                  <h2 className="text-xl font-bold font-heading text-foreground">
-                    {selectedPhoto.title}
-                  </h2>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-sans">
-                    <MapPin className="size-3.5 text-cyan-400" />
-                    <span>{selectedPhoto.location}</span>
-                  </div>
-                  {selectedPhoto.description && (
-                    <p className="text-xs text-muted-foreground font-sans mt-1">
-                      {selectedPhoto.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {uploadModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="relative max-w-lg w-full rounded-3xl p-6 sm:p-8 bg-card border border-border/80 shadow-2xl space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold font-heading text-foreground">Publish to Gallery</h3>
-                  <p className="text-xs text-muted-foreground font-sans">Tag photo country-wise and upload compressed image</p>
-                </div>
-                <button
-                  onClick={() => setUploadModalOpen(false)}
-                  className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary cursor-pointer"
-                >
-                  <X className="size-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleUploadSubmit} className="space-y-4 font-sans text-xs">
-                <div className="space-y-1.5">
-                  <label className="block font-medium text-muted-foreground">Photo Title</label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Fushimi Inari Shrine Gate"
-                    className="w-full px-4 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="block font-medium text-muted-foreground">Country</label>
-                    <input
-                      type="text"
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                      placeholder="e.g. Japan, Italy, Greece"
-                      className="w-full px-4 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="block font-medium text-muted-foreground">City / Location</label>
-                    <input
-                      type="text"
-                      value={locationName}
-                      onChange={(e) => setLocationName(e.target.value)}
-                      placeholder="e.g. Kyoto, Japan"
-                      className="w-full px-4 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block font-medium text-muted-foreground">Description (Optional)</label>
-                  <textarea
-                    rows="2"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="e.g. Iconic vermilion torii gates stretching along mountain forest..."
-                    className="w-full px-4 py-2 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block font-medium text-muted-foreground">Category</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
-                  >
-                    <option value="Landscape" className="bg-card text-foreground">Landscape</option>
-                    <option value="Cultural Heritage" className="bg-card text-foreground">Cultural Heritage</option>
-                    <option value="Cityscapes" className="bg-card text-foreground">Cityscapes</option>
-                    <option value="Coastal" className="bg-card text-foreground">Coastal & Beach</option>
-                    <option value="Mountains" className="bg-card text-foreground">Mountains</option>
-                    <option value="Nature" className="bg-card text-foreground">Nature & Wildlife</option>
-                    <option value="Tropical" className="bg-card text-foreground">Tropical</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block font-medium text-muted-foreground">Select Image (Compressed Cloudinary Upload)</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="w-full text-xs text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-foreground hover:file:bg-secondary/80 cursor-pointer"
-                  />
-                  {previewUrl && (
-                    <img
-                      src={previewUrl}
-                      alt="Preview"
-                      className="mt-2 h-28 w-full object-cover rounded-xl border border-border"
-                    />
-                  )}
-                </div>
-
-                <GlowingButton
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full mt-2"
-                  innerClassName="py-3 text-xs sm:text-sm font-bold flex items-center justify-center gap-2"
-                >
-                  <UploadCloud className="size-4" />
-                  <span>{submitting ? 'Uploading to Cloudinary...' : 'Publish to Gallery'}</span>
-                </GlowingButton>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
+
+      {selectedDestination && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 select-none">
+          <div className="max-w-3xl w-full rounded-3xl overflow-hidden bg-[#121215] border border-border/80 shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="relative h-64 sm:h-72 w-full bg-cover bg-center shrink-0" style={{ backgroundImage: `url(${selectedDestination.imageUrl})` }}>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#121215] via-black/40 to-transparent" />
+              <button
+                onClick={() => setSelectedDestination(null)}
+                className="absolute top-4 right-4 size-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-black transition-colors cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+              <div className="absolute bottom-4 left-6 right-6 space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-500 text-zinc-950">
+                    {selectedDestination.country}
+                  </span>
+                  <span className="text-xs text-zinc-300 font-semibold">
+                    {selectedDestination.city} • {selectedDestination.category}
+                  </span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-bold font-heading text-white">
+                  {selectedDestination.title}
+                </h2>
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+              <p className="text-muted-foreground leading-relaxed text-sm">
+                {selectedDestination.description || `Experience the captivating landmarks, culture, and architecture of ${selectedDestination.city || selectedDestination.title}, ${selectedDestination.country}.`}
+              </p>
+
+              {selectedDestination.touristPlaces && selectedDestination.touristPlaces.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Navigation className="size-4 text-cyan-400" />
+                    <span>Top Tourist Landmarks & Attractions</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {selectedDestination.touristPlaces.map((spot, i) => (
+                      <div key={i} className="p-3 rounded-2xl bg-secondary/40 border border-border/80 space-y-2">
+                        {spot.imageUrl && (
+                          <img src={spot.imageUrl} alt={spot.name} className="h-28 w-full object-cover rounded-xl" />
+                        )}
+                        <h5 className="font-bold text-foreground text-xs">{spot.name}</h5>
+                        <p className="text-[11px] text-muted-foreground">{spot.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedDestination.hotels && selectedDestination.hotels.length > 0 && (
+                <div className="space-y-3 pt-3 border-t border-border/70">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Building className="size-4 text-cyan-400" />
+                    <span>Recommended Stays & Luxury Accommodations</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {selectedDestination.hotels.map((hotel, i) => (
+                      <div key={i} className="p-3 rounded-2xl bg-secondary/40 border border-border/80 space-y-2">
+                        {hotel.imageUrl && (
+                          <img src={hotel.imageUrl} alt={hotel.name} className="h-28 w-full object-cover rounded-xl" />
+                        )}
+                        <div className="flex items-center justify-between">
+                          <h5 className="font-bold text-foreground text-xs">{hotel.name}</h5>
+                          <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1">
+                            <Star className="size-3 fill-amber-400" /> {hotel.rating || 4.8}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">{hotel.priceRange || '$$$'}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 sm:p-5 bg-secondary/30 border-t border-border/80 flex items-center justify-between gap-4">
+              <button
+                onClick={() => setSelectedDestination(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                Close
+              </button>
+              <GlowingButton
+                onClick={() => handlePlanTripHere(selectedDestination)}
+                size="sm"
+                innerClassName="font-bold flex items-center gap-2"
+              >
+                <Compass className="size-3.5" />
+                <span>Plan Trip to {selectedDestination.city || selectedDestination.title}</span>
+              </GlowingButton>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

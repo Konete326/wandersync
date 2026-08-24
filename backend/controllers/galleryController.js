@@ -5,7 +5,7 @@ import { sendSuccess, sendError } from '../utils/apiResponse.js';
 export const getGalleryItems = async (req, res) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 8;
+    const limit = parseInt(req.query.limit, 10) || 20;
     const skip = (page - 1) * limit;
     const filter = {};
 
@@ -37,9 +37,9 @@ export const getGalleryItems = async (req, res) => {
 
 export const createGalleryItem = async (req, res) => {
   try {
-    const { title, country, location, description, category, featured } = req.body;
-    if (!title || !location) {
-      return sendError(res, 'Title and location are required', 400);
+    const { title, country, city, location, description, category, featured } = req.body;
+    if (!title || !country || !city) {
+      return sendError(res, 'Title, country, and city are required', 400);
     }
 
     let imageUrl = req.body.imageUrl || '';
@@ -52,22 +52,39 @@ export const createGalleryItem = async (req, res) => {
     }
 
     if (!imageUrl) {
-      return sendError(res, 'Please provide an image file or URL', 400);
+      return sendError(res, 'Please provide a primary landmark image', 400);
+    }
+
+    let parsedTouristPlaces = [];
+    if (req.body.touristPlaces) {
+      parsedTouristPlaces = typeof req.body.touristPlaces === 'string'
+        ? JSON.parse(req.body.touristPlaces)
+        : req.body.touristPlaces;
+    }
+
+    let parsedHotels = [];
+    if (req.body.hotels) {
+      parsedHotels = typeof req.body.hotels === 'string'
+        ? JSON.parse(req.body.hotels)
+        : req.body.hotels;
     }
 
     const item = await Gallery.create({
       title,
-      country: country || 'Global',
-      location,
-      description: description || '',
+      country: country.trim(),
+      city: city.trim(),
+      location: location ? location.trim() : `${city}, ${country}`,
+      description: description ? description.trim() : '',
       category: category || 'Landscape',
       imageUrl,
       publicId,
+      touristPlaces: parsedTouristPlaces,
+      hotels: parsedHotels,
       featured: featured === 'true' || featured === true,
       createdBy: req.user ? req.user._id : null
     });
 
-    return sendSuccess(res, 'Gallery photo published successfully', item, 201);
+    return sendSuccess(res, 'Destination published to gallery', item, 201);
   } catch (error) {
     return sendError(res, error.message, 500);
   }

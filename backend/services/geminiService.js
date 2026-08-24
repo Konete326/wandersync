@@ -40,24 +40,34 @@ export const refineAiItinerary = async (currentItinerary, userMessage) => {
   return await executeWithFallback(prompt);
 };
 
+export const autofillDestinationData = async (country, city) => {
+  const prompt = `Return a JSON object for travel destination "${city}", "${country}".
+JSON schema:
+{
+  "title": "Title for ${city}",
+  "location": "${city}, ${country}",
+  "category": "Landscape",
+  "description": "2-sentence overview of ${city}",
+  "touristPlaces": [
+    { "name": "Top Landmark 1", "imageUrl": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80", "description": "Highlight description" },
+    { "name": "Top Landmark 2", "imageUrl": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=80", "description": "Highlight description" }
+  ],
+  "hotels": [
+    { "name": "Luxury Hotel 1", "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=80", "rating": 4.9, "priceRange": "$$$$" },
+    { "name": "Boutique Hotel 2", "imageUrl": "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&auto=format&fit=crop&q=80", "rating": 4.7, "priceRange": "$$$" }
+  ]
+}`;
+  return await executeWithFallback(prompt);
+};
+
 export const chatWithGemini = async (message, history = [], tripContext = null) => {
-  let prompt = `You are WanderSync AI Travel Concierge, an expert global travel advisor and itinerary assistant.
-You help travelers with destination recommendations, packing advice, local customs, weather insights, itinerary adjustments, and travel planning tips.
-Provide friendly, concise, well-structured, and helpful advice formatted in clean markdown (bullet points, bold highlights).\n`;
-
+  let prompt = `You are WanderSync AI Travel Concierge, an expert global travel advisor.\n`;
   if (tripContext) {
-    prompt += `\nACTIVE ITINERARY CONTEXT:
-Destination: ${tripContext.destination || 'N/A'}
-Duration: ${tripContext.durationDays || 'N/A'} Days
-Budget: ${tripContext.budgetLevel || 'N/A'}
-Travel Style: ${tripContext.travelStyle || 'N/A'}
-Title: ${tripContext.title || 'N/A'}\n`;
+    prompt += `\nACTIVE ITINERARY CONTEXT: ${tripContext.destination || 'N/A'}, ${tripContext.durationDays || 'N/A'} Days.\n`;
   }
-
   if (history && history.length > 0) {
-    prompt += `\nCONVERSATION HISTORY:\n` + history.slice(-6).map((h) => `${h.sender === 'user' ? 'User' : 'Assistant'}: ${h.text}`).join('\n') + `\n`;
+    prompt += `\nHISTORY:\n` + history.slice(-6).map((h) => `${h.sender === 'user' ? 'User' : 'Assistant'}: ${h.text}`).join('\n') + `\n`;
   }
-
   prompt += `\nUser's Message: ${message}\nAssistant:`;
 
   let lastError = null;
