@@ -39,3 +39,8 @@ export const refineItineraryWithAi = async (currentItinerary, message) => {
   const response = await api.post('/ai/chat-refine', { currentItinerary, message });
   return response.data;
 };
+
+export const chatWithAiAssistant = async (message, history = [], tripContext = null) => {
+  const response = await api.post('/ai/chat', { message, history, tripContext });
+  return response.data;
+};

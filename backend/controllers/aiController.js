@@ -1,4 +1,4 @@
-import { generateAiItinerary, refineAiItinerary } from '../services/geminiService.js';
+import { generateAiItinerary, refineAiItinerary, chatWithGemini } from '../services/geminiService.js';
 import { sendSuccess, sendError } from '../utils/apiResponse.js';
 
 export const generateItinerary = async (req, res) => {
@@ -48,5 +48,19 @@ export const refineItinerary = async (req, res) => {
     return sendSuccess(res, 'AI refinement processed', refinement);
   } catch (error) {
     return sendError(res, error.message || 'Failed to refine itinerary', 500);
+  }
+};
+
+export const chatAssistant = async (req, res) => {
+  try {
+    const { message, history, tripContext } = req.body;
+    if (!message) {
+      return sendError(res, 'Message is required', 400);
+    }
+
+    const reply = await chatWithGemini(message, history || [], tripContext || null);
+    return sendSuccess(res, 'Assistant response generated', { reply });
+  } catch (error) {
+    return sendError(res, error.message || 'Failed to chat with AI assistant', 500);
   }
 };

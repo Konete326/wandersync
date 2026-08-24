@@ -8,6 +8,7 @@ import Loader from './components/common/Loader';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import PublicRoute from './components/common/PublicRoute';
 import ClientRoute from './components/common/ClientRoute';
+import AiChatWidget from './components/common/AiChatWidget';
 
 const Home = lazy(() => import('./pages/Home'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
@@ -181,6 +182,7 @@ function App() {
             }
           >
             <AppLayout />
+            <AiChatWidget />
           </Suspense>
           {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
         </ModalProvider>
