@@ -1,25 +1,53 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, ShieldCheck, MapPin, Globe } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, ShieldCheck, MapPin, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [touched, setTouched] = useState({ name: false, email: false, password: false });
   const [loading, setLoading] = useState(false);
 
   const { register } = useAuth();
   const { showModal, showToast } = useModal();
   const navigate = useNavigate();
 
+  const isNameValid = !name || name.trim().length >= 2;
+  const isEmailValid = !email || emailRegex.test(email);
+  const isPasswordValid = !password || password.length >= 6;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setTouched({ name: true, email: true, password: true });
+
     if (!name.trim() || !email.trim() || !password) {
       showModal({
         title: 'Missing Information',
         message: 'Please provide your full name, email address, and password.',
+        type: 'warning'
+      });
+      return;
+    }
+
+    if (!emailRegex.test(email)) {
+      showModal({
+        title: 'Invalid Email',
+        message: 'Please provide a valid email address (e.g. name@domain.com).',
+        type: 'warning'
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      showModal({
+        title: 'Weak Password',
+        message: 'Password must be at least 6 characters long.',
         type: 'warning'
       });
       return;
@@ -65,44 +93,82 @@ const Register = () => {
 
             <form onSubmit={handleSubmit} className="space-y-3 font-sans">
               <div className="space-y-1">
-                <label className="block text-[11px] font-medium text-muted-foreground">Full Name</label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-medium text-muted-foreground">Full Name</label>
+                  {!isNameValid && name && (
+                    <span className="text-[10px] text-rose-400 font-medium">Min 2 characters</span>
+                  )}
+                </div>
                 <div className="relative">
                   <User className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={name}
+                    onBlur={() => setTouched((p) => ({ ...p, name: true }))}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Alex Mercer"
-                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                    className={`w-full pl-9 pr-3 py-2 rounded-lg bg-secondary/50 border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none transition-colors ${
+                      !isNameValid && name
+                        ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
+                        : 'border-border focus:ring-1 focus:ring-cyan-500/50'
+                    }`}
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[11px] font-medium text-muted-foreground">Email Address</label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-medium text-muted-foreground">Email Address</label>
+                  {!isEmailValid && email && (
+                    <span className="text-[10px] text-rose-400 font-medium">Invalid email format</span>
+                  )}
+                </div>
                 <div className="relative">
                   <Mail className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
                     value={email}
+                    onBlur={() => setTouched((p) => ({ ...p, email: true }))}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="traveler@example.com"
-                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                    className={`w-full pl-9 pr-3 py-2 rounded-lg bg-secondary/50 border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none transition-colors ${
+                      !isEmailValid && email
+                        ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
+                        : 'border-border focus:ring-1 focus:ring-cyan-500/50'
+                    }`}
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[11px] font-medium text-muted-foreground">Password</label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-medium text-muted-foreground">Password</label>
+                  {!isPasswordValid && password && (
+                    <span className="text-[10px] text-rose-400 font-medium">Min 6 characters</span>
+                  )}
+                </div>
                 <div className="relative">
                   <Lock className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
+                    onBlur={() => setTouched((p) => ({ ...p, password: true }))}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                    className={`w-full pl-9 pr-9 py-2 rounded-lg bg-secondary/50 border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none transition-colors ${
+                      !isPasswordValid && password
+                        ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
+                        : 'border-border focus:ring-1 focus:ring-cyan-500/50'
+                    }`}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((p) => !p)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                  </button>
                 </div>
               </div>
 

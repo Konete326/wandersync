@@ -30,6 +30,9 @@ const CreateTrip = () => {
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
+  const isDestinationValid = !destination || destination.trim().length >= 2;
+  const isDurationValid = durationDays >= 1 && durationDays <= 14;
+
   const parseNaturalLanguage = (text) => {
     if (!text.trim()) return;
     const lower = text.toLowerCase();
@@ -114,6 +117,15 @@ const CreateTrip = () => {
       showModal({
         title: 'Missing Destination',
         message: 'Please provide either a destination or type your travel vision in natural language.',
+        type: 'warning'
+      });
+      return;
+    }
+
+    if (!isDurationValid) {
+      showModal({
+        title: 'Invalid Duration',
+        message: 'Trip duration must be between 1 and 14 days.',
         type: 'warning'
       });
       return;
@@ -226,16 +238,25 @@ const CreateTrip = () => {
 
           <div className="pt-4 border-t border-border/60 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                <MapPin className="size-3.5 text-cyan-400" />
-                <span>Destination / City</span>
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                  <MapPin className="size-3.5 text-cyan-400" />
+                  <span>Destination / City</span>
+                </label>
+                {!isDestinationValid && destination && (
+                  <span className="text-[10px] text-rose-400">Min 2 characters</span>
+                )}
+              </div>
               <input
                 type="text"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 placeholder="e.g. Kyoto, Japan"
-                className="w-full px-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm text-foreground placeholder-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                className={`w-full px-4 py-2.5 rounded-xl bg-secondary/60 border text-sm text-foreground placeholder-muted-foreground/60 focus:outline-none transition-colors ${
+                  !isDestinationValid && destination
+                    ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
+                    : 'border-border focus:ring-1 focus:ring-cyan-500/50'
+                }`}
               />
             </div>
 
@@ -255,17 +276,26 @@ const CreateTrip = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                <Clock className="size-3.5 text-cyan-400" />
-                <span>Duration ({durationDays} Days)</span>
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                  <Clock className="size-3.5 text-cyan-400" />
+                  <span>Duration ({durationDays} Days)</span>
+                </label>
+                {!isDurationValid && (
+                  <span className="text-[10px] text-rose-400">1-14 days</span>
+                )}
+              </div>
               <input
                 type="number"
                 min="1"
                 max="14"
                 value={durationDays}
                 onChange={(e) => setDurationDays(Number(e.target.value))}
-                className="w-full px-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                className={`w-full px-4 py-2.5 rounded-xl bg-secondary/60 border text-sm text-foreground focus:outline-none transition-colors ${
+                  !isDurationValid
+                    ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
+                    : 'border-border focus:ring-1 focus:ring-cyan-500/50'
+                }`}
               />
             </div>
 
@@ -320,7 +350,7 @@ const CreateTrip = () => {
           <button
             type="submit"
             disabled={cooldown > 0}
-            className={`w-full py-4 rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+            className={`w-full py-3.5 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
               cooldown > 0
                 ? 'bg-secondary text-muted-foreground border border-border cursor-not-allowed opacity-75'
                 : 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 shadow-lg shadow-cyan-500/20 cursor-pointer'

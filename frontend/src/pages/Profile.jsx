@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User as UserIcon, Camera, Sparkles, Save, Shield } from 'lucide-react';
+import { Camera, Save, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import { updateUserProfile } from '../services/authService';
@@ -14,6 +14,8 @@ const Profile = () => {
   const [currency, setCurrency] = useState(user?.preferences?.currency || 'USD');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const isNameValid = !name || name.trim().length >= 2;
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
@@ -38,6 +40,15 @@ const Profile = () => {
 
   const handleSavePreferences = async (e) => {
     e.preventDefault();
+    if (!name.trim() || name.trim().length < 2) {
+      showModal({
+        title: 'Invalid Name',
+        message: 'Name must be at least 2 characters long.',
+        type: 'warning'
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const updated = await updateUserProfile({ name, travelStyle, currency });
@@ -53,71 +64,80 @@ const Profile = () => {
   if (!user) return null;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12 space-y-8">
+    <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12 space-y-8 font-sans">
       <div>
-        <h1 className="text-3xl font-extrabold text-white">Traveler Profile</h1>
-        <p className="text-sm text-slate-400 mt-1">Manage your account credentials and travel preferences</p>
+        <h1 className="text-2xl sm:text-3xl font-normal font-['Instrument_Serif'] text-foreground">Traveler Profile</h1>
+        <p className="text-xs text-muted-foreground mt-1">Manage your account credentials and travel preferences</p>
       </div>
 
-      <div className="liquid-glass-card rounded-3xl p-6 sm:p-8 border border-slate-800 space-y-8">
-        <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-slate-800 pb-8">
+      <div className="liquid-glass-card rounded-3xl p-6 sm:p-8 border border-border space-y-8">
+        <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-border pb-8">
           <div className="relative group">
             <img
               src={user.avatar?.url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
               alt={user.name}
-              className="w-24 h-24 rounded-full object-cover border-2 border-cyan-400/60 shadow-xl"
+              className="size-20 rounded-full object-cover border-2 border-cyan-400/60 shadow-xl"
             />
-            <label className="absolute inset-0 bg-slate-950/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-              <Camera className="w-6 h-6 text-white" />
+            <label className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <Camera className="size-5 text-white" />
               <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
             </label>
           </div>
 
           <div className="text-center sm:text-left space-y-1">
-            <h2 className="text-xl font-bold text-white">{user.name}</h2>
-            <p className="text-xs text-slate-400">{user.email}</p>
+            <h2 className="text-lg font-bold text-foreground font-heading">{user.name}</h2>
+            <p className="text-xs text-muted-foreground">{user.email}</p>
             {uploading && <p className="text-xs text-cyan-400 italic">Uploading new avatar...</p>}
           </div>
         </div>
 
-        <form onSubmit={handleSavePreferences} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Display Name</label>
+        <form onSubmit={handleSavePreferences} className="space-y-5">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-medium text-muted-foreground">Display Name</label>
+              {!isNameValid && name && (
+                <span className="text-[10px] text-rose-400">Min 2 characters</span>
+              )}
+            </div>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl glass-input text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+              className={`w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border text-xs text-foreground focus:outline-none transition-colors ${
+                !isNameValid && name
+                  ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
+                  : 'border-border focus:ring-1 focus:ring-cyan-500/50'
+              }`}
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Default Travel Style</label>
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-muted-foreground">Default Travel Style</label>
               <select
                 value={travelStyle}
                 onChange={(e) => setTravelStyle(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl glass-input text-white bg-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
               >
-                <option value="backpacker">Backpacker</option>
-                <option value="budget">Budget</option>
-                <option value="moderate">Moderate</option>
-                <option value="luxury">Luxury</option>
+                <option value="budget" className="bg-card text-foreground">Budget Explorer</option>
+                <option value="moderate" className="bg-card text-foreground">Moderate / Balanced</option>
+                <option value="luxury" className="bg-card text-foreground">Luxury & Comfort</option>
+                <option value="backpacker" className="bg-card text-foreground">Solo Backpacker</option>
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Preferred Currency</label>
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-muted-foreground">Preferred Currency</label>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl glass-input text-white bg-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
               >
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-                <option value="JPY">JPY (¥)</option>
-                <option value="PKR">PKR (₨)</option>
+                <option value="USD" className="bg-card text-foreground">USD ($)</option>
+                <option value="EUR" className="bg-card text-foreground">EUR (€)</option>
+                <option value="GBP" className="bg-card text-foreground">GBP (£)</option>
+                <option value="JPY" className="bg-card text-foreground">JPY (¥)</option>
+                <option value="PKR" className="bg-card text-foreground">PKR (Rs)</option>
               </select>
             </div>
           </div>
@@ -125,10 +145,10 @@ const Profile = () => {
           <button
             type="submit"
             disabled={saving}
-            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer"
+            className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
           >
-            <Save className="w-4 h-4" />
-            <span>{saving ? 'Saving...' : 'Update Profile'}</span>
+            <Save className="size-3.5" />
+            <span>{saving ? 'Saving Changes...' : 'Save Preferences'}</span>
           </button>
         </form>
       </div>
