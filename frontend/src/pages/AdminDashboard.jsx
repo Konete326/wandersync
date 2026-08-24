@@ -5,6 +5,9 @@ import Loader from '@/components/common/Loader';
 import { useAdminLiveAlerts } from '@/hooks/useAdminLiveAlerts';
 
 const Dashboard = lazy(() => import('@/components/dashboard').then((m) => ({ default: m.Dashboard })));
+const AdminGroupTours = lazy(() => import('@/pages/admin/AdminGroupTours'));
+const AdminGroupTourEditor = lazy(() => import('@/pages/admin/AdminGroupTourEditor'));
+const AdminTourPOSTerminal = lazy(() => import('@/pages/admin/AdminTourPOSTerminal'));
 const AdminTrips = lazy(() => import('@/pages/admin/AdminTrips'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
 const AdminCommunity = lazy(() => import('@/pages/admin/AdminCommunity'));
@@ -43,6 +46,10 @@ export default function AdminDashboard() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/group-tours" element={<AdminGroupTours />} />
+          <Route path="/group-tours/new" element={<AdminGroupTourEditor />} />
+          <Route path="/group-tours/edit/:id" element={<AdminGroupTourEditor />} />
+          <Route path="/tour-pos" element={<AdminTourPOSTerminal />} />
           <Route path="/trips" element={<AdminTrips />} />
           <Route path="/users" element={<AdminUsers />} />
           <Route path="/community" element={<AdminCommunity />} />

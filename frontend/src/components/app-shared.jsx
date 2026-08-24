@@ -14,7 +14,9 @@ import {
   Building,
   Car,
   Plane,
-  MessageSquare
+  MessageSquare,
+  CreditCard,
+  Luggage
 } from 'lucide-react';
 
 export const navGroups = [
@@ -25,6 +27,16 @@ export const navGroups = [
         title: 'Dashboard',
         path: '/admin',
         icon: <LayoutGrid className="size-4" />
+      },
+      {
+        title: 'Group Tours & Packages',
+        path: '/admin/group-tours',
+        icon: <Luggage className="size-4" />
+      },
+      {
+        title: 'Tour POS Terminal',
+        path: '/admin/tour-pos',
+        icon: <CreditCard className="size-4" />
       },
       {
         title: 'Trips Maestro',

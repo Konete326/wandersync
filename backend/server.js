@@ -17,6 +17,7 @@ import hotelRoutes from './routes/hotelRoutes.js';
 import vehicleRoutes from './routes/vehicleRoutes.js';
 import flightRoutes from './routes/flightRoutes.js';
 import communityRoutes from './routes/communityRoutes.js';
+import groupTourRoutes from './routes/groupTourRoutes.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 
 dotenv.config();
@@ -68,6 +69,7 @@ app.use('/api/hotels', hotelRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/flights', flightRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/group-tours', groupTourRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
