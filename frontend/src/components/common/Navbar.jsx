@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Compass, Map, LogOut, Menu, X, Sparkles, Shield } from 'lucide-react';
+import { LogOut, Menu, X, Sparkles, Shield, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 
@@ -14,7 +14,7 @@ const Navbar = () => {
   const handleLogout = () => {
     showModal({
       title: 'Sign Out',
-      message: 'Are you sure you want to log out of WanderSync?',
+      message: 'Are you sure you want to log out of Lumora?',
       type: 'warning',
       isConfirm: true,
       confirmText: 'Sign Out',
@@ -29,57 +29,85 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 liquid-glass">
+    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-indigo-600 p-0.5 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <Compass className="w-5 h-5 text-cyan-400 group-hover:rotate-45 transition-transform duration-300" />
-            </div>
-          </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-white via-slate-100 to-cyan-400 bg-clip-text text-transparent tracking-tight">
-            WanderSync
+        <Link to="/" className="flex items-center gap-2 group">
+          <span className="text-2xl sm:text-3xl italic tracking-tight font-['Instrument_Serif'] text-foreground group-hover:opacity-90 transition-opacity">
+            Lumora
           </span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
           <Link
-            to="/"
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-              isActive('/') ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+            to="/how-it-works"
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium font-sans transition-all ${
+              isActive('/how-it-works')
+                ? 'bg-secondary text-cyan-400 border border-border'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
             }`}
           >
-            Discover
+            How It Works
+          </Link>
+          <Link
+            to="/features"
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium font-sans transition-all ${
+              isActive('/features')
+                ? 'bg-secondary text-cyan-400 border border-border'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
+            }`}
+          >
+            Features
+          </Link>
+          <Link
+            to="/pricing"
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium font-sans transition-all ${
+              isActive('/pricing')
+                ? 'bg-secondary text-cyan-400 border border-border'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
+            }`}
+          >
+            Pricing
+          </Link>
+          <Link
+            to="/community"
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium font-sans transition-all ${
+              isActive('/community')
+                ? 'bg-secondary text-cyan-400 border border-border'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
+            }`}
+          >
+            Community
           </Link>
           <Link
             to="/create"
-            className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-all ${
-              isActive('/create') ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium font-sans flex items-center gap-1.5 transition-all ${
+              isActive('/create')
+                ? 'bg-secondary text-cyan-400 border border-border'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
             }`}
           >
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            AI Maestro
+            <Sparkles className="size-3.5 text-cyan-400" />
+            <span>Create</span>
           </Link>
           {user && (
             <Link
               to="/my-trips"
-              className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-all ${
-                isActive('/my-trips') ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium font-sans transition-all ${
+                isActive('/my-trips')
+                  ? 'bg-secondary text-cyan-400 border border-border'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
               }`}
             >
-              <Map className="w-4 h-4" />
-              My Trips
+              My Journeys
             </Link>
           )}
           {user?.role === 'admin' && (
             <Link
               to="/admin"
-              className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-all ${
-                location.pathname.startsWith('/admin') ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-              }`}
+              className="px-3.5 py-1.5 rounded-full text-xs font-medium font-sans flex items-center gap-1.5 text-cyan-400 hover:bg-secondary"
             >
-              <Shield className="w-4 h-4 text-cyan-400" />
-              Admin
+              <Shield className="size-3.5 text-cyan-400" />
+              <span>Admin</span>
             </Link>
           )}
         </nav>
@@ -89,34 +117,34 @@ const Navbar = () => {
             <div className="flex items-center gap-3">
               <Link
                 to="/profile"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700/60 bg-slate-900/60 hover:bg-slate-800 transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-secondary/40 hover:bg-secondary transition-colors"
               >
                 <img
                   src={user.avatar?.url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
                   alt={user.name}
-                  className="w-7 h-7 rounded-full object-cover border border-cyan-400/40"
+                  className="size-6 rounded-full object-cover border border-cyan-400/40"
                 />
-                <span className="text-xs font-medium text-slate-200">{user.name?.split(' ')[0]}</span>
+                <span className="text-xs font-medium text-foreground">{user.name?.split(' ')[0]}</span>
               </Link>
               <button
                 onClick={handleLogout}
-                className="p-2 text-slate-400 hover:text-rose-400 rounded-xl hover:bg-rose-500/10 transition-colors cursor-pointer"
+                className="p-1.5 text-muted-foreground hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
                 title="Sign Out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="size-4" />
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
-                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 rounded-xl shadow-lg shadow-cyan-500/25 transition-all"
+                className="px-4 py-2 text-xs font-bold text-zinc-950 bg-white hover:bg-zinc-200 rounded-full shadow-sm transition-all"
               >
                 Get Started
               </Link>
@@ -126,48 +154,70 @@ const Navbar = () => {
 
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+          className="md:hidden p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
         >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden px-4 pt-2 pb-6 border-t border-slate-800/80 liquid-glass space-y-3">
+        <div className="md:hidden px-4 pt-2 pb-6 border-t border-border bg-background/95 backdrop-blur-md space-y-2 font-sans">
           <Link
-            to="/"
+            to="/how-it-works"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-base font-medium text-slate-300 hover:bg-slate-800"
+            className="block px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
           >
-            Discover
+            How It Works
+          </Link>
+          <Link
+            to="/features"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
+          >
+            Features
+          </Link>
+          <Link
+            to="/pricing"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
+          >
+            Pricing
+          </Link>
+          <Link
+            to="/community"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
+          >
+            Community
           </Link>
           <Link
             to="/create"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg text-base font-medium text-slate-300 hover:bg-slate-800"
+            className="block px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
           >
-            AI Maestro
+            Create Journey
           </Link>
           {user && (
             <Link
               to="/my-trips"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-lg text-base font-medium text-slate-300 hover:bg-slate-800"
+              className="block px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
             >
-              My Trips
+              My Journeys
             </Link>
           )}
           {user?.role === 'admin' && (
             <Link
               to="/admin"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-lg text-base font-medium text-cyan-400 hover:bg-slate-800"
+              className="block px-3 py-2 rounded-xl text-sm font-medium text-cyan-400 hover:bg-secondary"
             >
               Admin Dashboard
             </Link>
           )}
+
           {user ? (
-            <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+            <div className="pt-4 border-t border-border flex items-center justify-between">
               <Link
                 to="/profile"
                 onClick={() => setMobileMenuOpen(false)}
@@ -176,11 +226,11 @@ const Navbar = () => {
                 <img
                   src={user.avatar?.url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
                   alt={user.name}
-                  className="w-9 h-9 rounded-full object-cover border border-cyan-400"
+                  className="size-8 rounded-full object-cover border border-cyan-400"
                 />
                 <div>
-                  <p className="text-sm font-semibold text-white">{user.name}</p>
-                  <p className="text-xs text-slate-400">{user.email}</p>
+                  <p className="text-xs font-semibold text-foreground">{user.name}</p>
+                  <p className="text-[11px] text-muted-foreground">{user.email}</p>
                 </div>
               </Link>
               <button
@@ -190,22 +240,22 @@ const Navbar = () => {
                 }}
                 className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg cursor-pointer"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="size-4" />
               </button>
             </div>
           ) : (
-            <div className="pt-4 border-t border-slate-800 flex flex-col gap-2">
+            <div className="pt-4 border-t border-border flex flex-col gap-2">
               <Link
                 to="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-2 text-sm font-medium text-slate-300 hover:text-white"
+                className="w-full text-center py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-2 text-sm font-medium text-white bg-cyan-500 hover:bg-cyan-400 rounded-xl"
+                className="w-full text-center py-2.5 text-xs font-bold text-zinc-950 bg-white hover:bg-zinc-200 rounded-full"
               >
                 Get Started
               </Link>

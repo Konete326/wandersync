@@ -11,6 +11,10 @@ import PublicRoute from './components/common/PublicRoute';
 import ClientRoute from './components/common/ClientRoute';
 
 const Home = lazy(() => import('./pages/Home'));
+const HowItWorks = lazy(() => import('./pages/HowItWorks'));
+const Features = lazy(() => import('./pages/Features'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const Community = lazy(() => import('./pages/Community'));
 const CreateTrip = lazy(() => import('./pages/CreateTrip'));
 const ItineraryDetails = lazy(() => import('./pages/ItineraryDetails'));
 const MyTrips = lazy(() => import('./pages/MyTrips'));
@@ -61,6 +65,38 @@ function AppLayout() {
       <Navbar />
       <main className="flex-1">
         <Routes>
+          <Route
+            path="/how-it-works"
+            element={
+              <ClientRoute>
+                <HowItWorks />
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/features"
+            element={
+              <ClientRoute>
+                <Features />
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/pricing"
+            element={
+              <ClientRoute>
+                <Pricing />
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/community"
+            element={
+              <ClientRoute>
+                <Community />
+              </ClientRoute>
+            }
+          />
           <Route
             path="/create"
             element={
