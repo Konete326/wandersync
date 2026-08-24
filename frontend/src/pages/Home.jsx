@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight, Sparkles } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
 
 const videos = [
@@ -29,20 +29,43 @@ const stats = [
   'Intentional-First Design'
 ];
 
-const navLinks = ['How It Works', 'Features', 'Pricing', 'Community'];
+const navLinks = [
+  { label: 'How It Works', path: '/how-it-works' },
+  { label: 'Features', path: '/features' },
+  { label: 'Pricing', path: '/pricing' },
+  { label: 'Community', path: '/community' }
+];
 
 const Home = () => {
   const [activeVideo, setActiveVideo] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [email, setEmail] = useState('');
+  const videoRefs = useRef([]);
   const navigate = useNavigate();
   const { showToast } = useModal();
   const transitionTimeout = useRef(null);
 
+  useEffect(() => {
+    videoRefs.current.forEach((vid, idx) => {
+      if (!vid) return;
+      if (idx === activeVideo) {
+        vid.play().catch(() => {});
+      } else {
+        vid.pause();
+      }
+    });
+  }, [activeVideo]);
+
   const handleVideoSwitch = (index) => {
     if (index === activeVideo || isTransitioning) return;
     setIsTransitioning(true);
+
+    const targetVid = videoRefs.current[index];
+    if (targetVid) {
+      targetVid.play().catch(() => {});
+    }
+
     setActiveVideo(index);
     if (transitionTimeout.current) clearTimeout(transitionTimeout.current);
     transitionTimeout.current = setTimeout(() => {
@@ -58,7 +81,7 @@ const Home = () => {
     }
     showToast(`Welcome! Invitation sent to ${email}`, 'success');
     setEmail('');
-    navigate('/create');
+    navigate('/create', { state: { initialPrompt: email } });
   };
 
   const isDarkContent = activeVideo === 2;
@@ -67,18 +90,21 @@ const Home = () => {
   const badgeBorderClass = isDarkContent ? 'border-[#182C41]/30' : 'border-white/20';
 
   return (
-    <section className="relative w-full h-screen overflow-hidden bg-black select-none">
+    <section className="relative w-full h-[100dvh] overflow-hidden bg-black select-none">
       <div className="absolute inset-0 z-0">
         {videos.map((video, idx) => (
           <video
             key={video.url}
+            ref={(el) => (videoRefs.current[idx] = el)}
             src={video.url}
-            autoPlay
             muted
             loop
             playsInline
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-              activeVideo === idx ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            disablePictureInPicture
+            disableRemotePlayback
+            preload={idx === 0 ? 'auto' : 'metadata'}
+            className={`absolute inset-0 w-full h-full object-cover transform-gpu will-change-transform will-change-opacity transition-opacity duration-1000 ease-in-out ${
+              activeVideo === idx ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
             }`}
           />
         ))}
@@ -87,10 +113,10 @@ const Home = () => {
       <img
         src="https://soft-zoom-63098134.figma.site/_assets/v11/0b4a435b2df2747593c43d7a1c9b4578f7d8d90c.png"
         alt="Atmospheric overlay"
-        className="pointer-events-none absolute inset-0 w-full h-full object-cover z-[1] animate-train-bob"
+        className="pointer-events-none absolute inset-0 w-full h-full object-cover z-20 animate-train-bob"
       />
 
-      <div className="relative z-[2] flex flex-col justify-between w-full h-full px-4 sm:px-8 md:px-12 py-6 sm:py-8">
+      <div className="relative z-30 flex flex-col justify-between w-full h-full px-4 sm:px-8 md:px-12 py-5 sm:py-8">
         <header className="flex items-center justify-between w-full max-w-7xl mx-auto">
           <div
             onClick={() => navigate('/')}
@@ -101,21 +127,17 @@ const Home = () => {
 
           <nav className="hidden md:flex items-center gap-6 liquid-glass rounded-full px-5 py-2">
             {navLinks.map((link) => (
-              <a
-                key={link}
-                href="#features"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate('/create');
-                }}
+              <button
+                key={link.label}
+                onClick={() => navigate(link.path)}
                 className="text-white/90 text-sm font-sans hover:text-white transition-colors cursor-pointer"
               >
-                {link}
-              </a>
+                {link.label}
+              </button>
             ))}
             <button
               onClick={() => navigate('/create')}
-              className="bg-white text-zinc-950 font-sans font-semibold text-xs px-4 py-2 rounded-full hover:bg-white/90 transition-all cursor-pointer shadow-sm"
+              className="bg-white text-zinc-950 font-sans font-bold text-xs px-4 py-2 rounded-full hover:bg-white/90 transition-all cursor-pointer shadow-sm"
             >
               Get Started
             </button>
@@ -146,29 +168,29 @@ const Home = () => {
         </header>
 
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex flex-col items-center justify-center gap-6 p-6 animate-in fade-in duration-300 md:hidden">
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-lg flex flex-col items-center justify-center gap-6 p-6 animate-in fade-in duration-300 md:hidden">
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="absolute top-6 right-6 p-2 text-white/80 hover:text-white rounded-full liquid-glass"
+              className="absolute top-6 right-6 p-2.5 text-white/80 hover:text-white rounded-full liquid-glass"
             >
               <X className="size-6" />
             </button>
-            <div className="text-white italic text-3xl font-['Instrument_Serif'] mb-4">
+            <div className="text-white italic text-4xl font-['Instrument_Serif'] mb-3">
               Lumora
             </div>
             {navLinks.map((link, i) => (
               <button
-                key={link}
+                key={link.label}
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  navigate('/create');
+                  navigate(link.path);
                 }}
                 style={{
-                  transitionDelay: `${100 + i * 50}ms`
+                  transitionDelay: `${80 + i * 40}ms`
                 }}
-                className="text-white text-2xl font-['Instrument_Serif'] hover:text-cyan-400 transition-all cursor-pointer animate-in slide-in-from-bottom-4 duration-300"
+                className="text-white text-2xl font-['Instrument_Serif'] hover:text-cyan-400 transition-all cursor-pointer animate-in slide-in-from-bottom-3 duration-300"
               >
-                {link}
+                {link.label}
               </button>
             ))}
             <button
@@ -176,7 +198,7 @@ const Home = () => {
                 setMobileMenuOpen(false);
                 navigate('/create');
               }}
-              className="mt-4 w-full max-w-xs py-3 bg-white text-zinc-950 font-sans font-bold text-sm rounded-full hover:bg-zinc-100 transition-all cursor-pointer shadow-lg"
+              className="mt-4 w-full max-w-xs py-3.5 bg-white text-zinc-950 font-sans font-bold text-sm rounded-full hover:bg-zinc-100 transition-all cursor-pointer shadow-lg"
             >
               Get Started
             </button>
@@ -185,20 +207,20 @@ const Home = () => {
 
         <main className="flex-1 flex flex-col items-center justify-center text-center max-w-4xl mx-auto my-auto px-2">
           <div
-            className={`liquid-glass rounded-full px-4 py-1.5 text-xs font-sans font-medium mb-5 sm:mb-6 transition-colors duration-700 border ${badgeBorderClass} ${contentColorClass}`}
+            className={`liquid-glass rounded-full px-4 py-1.5 text-[11px] sm:text-xs font-sans font-medium mb-4 sm:mb-6 transition-colors duration-700 border ${badgeBorderClass} ${contentColorClass}`}
           >
             Over 10,000 minds already finding their clarity
           </div>
 
           <h1
-            className={`font-['Instrument_Serif'] text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] leading-[1.08] tracking-tight max-w-4xl transition-colors duration-700 ${contentColorClass}`}
+            className={`font-['Instrument_Serif'] text-3xl sm:text-5xl md:text-7xl lg:text-[5.2rem] leading-[1.08] tracking-tight max-w-4xl transition-colors duration-700 ${contentColorClass}`}
           >
             Clarity in an Endlessly
             <br className="hidden sm:inline" /> Noisy Universe
           </h1>
 
           <p
-            className={`font-sans text-sm sm:text-base md:text-lg max-w-xl leading-relaxed mt-4 sm:mt-5 transition-colors duration-700 ${subtextColorClass}`}
+            className={`font-sans text-xs sm:text-base md:text-lg max-w-xl leading-relaxed mt-3 sm:mt-5 transition-colors duration-700 ${subtextColorClass}`}
           >
             Rise above the chaos of pings, infinite scrolling, and relentless demands.
             Discover how to protect your presence and create with intention.
@@ -206,14 +228,14 @@ const Home = () => {
 
           <form
             onSubmit={handleGetAccess}
-            className="liquid-glass rounded-full p-1.5 flex items-center max-w-[320px] sm:max-w-md w-full mt-6 sm:mt-8 shadow-2xl"
+            className="liquid-glass rounded-full p-1 sm:p-1.5 flex items-center max-w-[300px] sm:max-w-md w-full mt-5 sm:mt-8 shadow-2xl"
           >
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your Best Email"
-              className={`w-full bg-transparent px-4 py-2 font-sans text-xs sm:text-sm focus:outline-none placeholder:transition-colors placeholder:duration-700 ${
+              placeholder="e.g. 5 days in Kyoto for peace & culture"
+              className={`w-full bg-transparent px-3 sm:px-4 py-2 font-sans text-xs sm:text-sm focus:outline-none placeholder:transition-colors placeholder:duration-700 ${
                 isDarkContent
                   ? 'text-[#182C41] placeholder-[#182C41]/60'
                   : 'text-white placeholder-white/60'
@@ -221,15 +243,15 @@ const Home = () => {
             />
             <button
               type="submit"
-              className="bg-white text-zinc-950 font-sans font-bold text-xs sm:text-sm px-5 py-2.5 rounded-full hover:bg-zinc-100 transition-all shrink-0 cursor-pointer shadow-md flex items-center gap-1.5"
+              className="bg-white text-zinc-950 font-sans font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-full hover:bg-zinc-100 transition-all shrink-0 cursor-pointer shadow-md flex items-center gap-1.5"
             >
-              <span>Get Early Access</span>
+              <span>Build Journey</span>
               <ArrowRight className="size-3.5" />
             </button>
           </form>
 
           <div
-            className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-8 sm:mt-10 font-sans text-xs sm:text-sm transition-colors duration-700 ${contentColorClass}`}
+            className={`flex flex-wrap items-center justify-center gap-3 sm:gap-6 mt-6 sm:mt-10 font-sans text-xs sm:text-sm transition-colors duration-700 ${contentColorClass}`}
           >
             {videos.map((vid, idx) => {
               const isActive = activeVideo === idx;
@@ -254,9 +276,9 @@ const Home = () => {
         </main>
 
         <footer className="w-full max-w-7xl mx-auto flex items-center justify-center pt-2">
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-white/70 text-xs sm:text-sm font-sans tracking-wide">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-6 text-white/70 text-[11px] sm:text-xs font-sans tracking-wide">
             {stats.map((stat, idx) => (
-              <div key={stat} className="flex items-center gap-3 sm:gap-6">
+              <div key={stat} className="flex items-center gap-2 sm:gap-6">
                 <span>{stat}</span>
                 {idx < stats.length - 1 && (
                   <span className="hidden sm:inline text-white/30">|</span>
