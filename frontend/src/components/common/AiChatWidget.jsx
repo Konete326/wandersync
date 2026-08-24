@@ -4,22 +4,28 @@ import {
   X,
   Send,
   Sparkles,
-  Bot,
-  User,
   Minimize2,
   Trash2,
-  Compass
+  Brain,
+  Cpu,
+  Zap,
+  Bot
 } from 'lucide-react';
 import { chatWithAiAssistant } from '../../services/tripService';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
-import GlowingButton from './GlowingButton';
 
 const quickPrompts = [
   'Top local foods to try',
   'What should I pack?',
   'Best sunset viewpoints',
   'Safety & cultural tips'
+];
+
+const thinkingSteps = [
+  'Analyzing destination & context...',
+  'Querying live travel telemetry...',
+  'Synthesizing tailored recommendations...'
 ];
 
 export default function AiChatWidget({ tripContext = null }) {
@@ -30,13 +36,16 @@ export default function AiChatWidget({ tripContext = null }) {
     {
       id: 'welcome',
       sender: 'assistant',
-      text: "Hello! I'm your WanderSync AI Travel Concierge powered by Google Gemini. Ask me anything about destinations, packing advice, weather, or itinerary recommendations!",
+      text: "Hello! I'm your WanderSync AI Travel Concierge powered by Google Gemini. Ask me about itinerary updates, local food spots, packing tips, or travel recommendations!",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [thinkingStep, setThinkingStep] = useState(0);
+  const [thinkingSeconds, setThinkingSeconds] = useState(0);
   const messagesEndRef = useRef(null);
+  const thinkingTimerRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -46,7 +55,23 @@ export default function AiChatWidget({ tripContext = null }) {
     if (isOpen) {
       scrollToBottom();
     }
-  }, [messages, isOpen]);
+  }, [messages, isOpen, loading]);
+
+  useEffect(() => {
+    if (loading) {
+      setThinkingStep(0);
+      setThinkingSeconds(0);
+      thinkingTimerRef.current = setInterval(() => {
+        setThinkingSeconds((s) => s + 1);
+        setThinkingStep((step) => (step + 1) % thinkingSteps.length);
+      }, 1200);
+    } else {
+      if (thinkingTimerRef.current) clearInterval(thinkingTimerRef.current);
+    }
+    return () => {
+      if (thinkingTimerRef.current) clearInterval(thinkingTimerRef.current);
+    };
+  }, [loading]);
 
   const handleSendMessage = async (textToSend) => {
     const query = typeof textToSend === 'string' ? textToSend : input;
@@ -126,17 +151,18 @@ export default function AiChatWidget({ tripContext = null }) {
           <div className="px-4 py-3 border-b border-border/80 bg-secondary/40 flex justify-between items-center">
             <div className="flex items-center gap-2.5">
               <div className="size-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
-                <Sparkles className="size-4 text-cyan-400" />
+                <Brain className="size-4 text-cyan-400 animate-pulse" />
               </div>
               <div>
                 <h2 className="text-xs font-bold text-foreground flex items-center gap-2">
                   <span>WanderSync Concierge</span>
-                  <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] px-1.5 py-0.5 rounded-full font-semibold">
-                    Online
+                  <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                    <span className="size-1.5 bg-emerald-400 rounded-full animate-ping" />
+                    <span>Gemini 3.7</span>
                   </span>
                 </h2>
                 <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">
-                  {tripContext ? `Context: ${tripContext.destination || 'Itinerary'}` : 'Gemini 3.7 Assistant'}
+                  {tripContext ? `Context: ${tripContext.destination || 'Itinerary'}` : 'Thinking Travel Assistant'}
                 </p>
               </div>
             </div>
@@ -184,9 +210,21 @@ export default function AiChatWidget({ tripContext = null }) {
             })}
 
             {loading && (
-              <div className="flex items-center gap-2 text-xs text-cyan-400 bg-secondary/40 border border-border/60 rounded-2xl px-3 py-2 max-w-xs self-start animate-pulse">
-                <Sparkles className="size-3.5 animate-spin" />
-                <span className="text-[11px]">Gemini is crafting response...</span>
+              <div className="self-start max-w-[90%] rounded-2xl p-3 bg-secondary/40 border border-cyan-500/30 space-y-2 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 text-cyan-400">
+                  <Brain className="size-3.5 animate-spin" />
+                  <span className="text-[11px] font-bold">Thinking Process</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 font-mono border border-cyan-800/60 ml-auto">
+                    {thinkingSeconds}s
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Zap className="size-3 text-amber-400 shrink-0" />
+                  <span className="animate-pulse">{thinkingSteps[thinkingStep]}</span>
+                </div>
+                <div className="w-full bg-secondary/80 h-1 rounded-full overflow-hidden">
+                  <div className="bg-gradient-to-r from-cyan-500 to-emerald-400 h-full w-2/3 animate-pulse rounded-full" />
+                </div>
               </div>
             )}
             <div ref={messagesEndRef} />

@@ -63,7 +63,7 @@ Title: ${tripContext.title || 'N/A'}\n`;
   let lastError = null;
   for (const modelName of AVAILABLE_MODELS) {
     try {
-      const model = getGeminiModel(modelName);
+      const model = getGeminiModel(modelName, false);
       if (!model) throw new Error('Gemini API key is not configured in backend .env');
       const result = await model.generateContent(prompt);
       const response = await result.response;

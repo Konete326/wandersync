@@ -13,15 +13,13 @@ export const AVAILABLE_MODELS = [
   'gemini-2.5-flash-lite'
 ];
 
-export const getGeminiModel = (modelName = 'gemini-3.7-flash') => {
+export const getGeminiModel = (modelName = 'gemini-3.7-flash', isJson = true) => {
   if (!genAI) {
     return null;
   }
   return genAI.getGenerativeModel({
     model: modelName,
-    generationConfig: {
-      responseMimeType: 'application/json'
-    }
+    generationConfig: isJson ? { responseMimeType: 'application/json' } : undefined
   });
 };
 
