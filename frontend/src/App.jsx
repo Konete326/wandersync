@@ -24,102 +24,104 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 function AppLayout() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isHomePage = location.pathname === '/';
+
+  if (isAdminRoute) {
+    return (
+      <Routes>
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    );
+  }
+
+  if (isHomePage) {
+    return (
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <ClientRoute>
+              <Home />
+            </ClientRoute>
+          }
+        />
+      </Routes>
+    );
+  }
 
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <Loader text="Loading WanderSync..." />
-        </div>
-      }
-    >
-      {isAdminRoute ? (
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
+      <Navbar />
+      <main className="flex-1">
         <Routes>
           <Route
-            path="/admin/*"
+            path="/create"
             element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminDashboard />
+              <ProtectedRoute>
+                <CreateTrip />
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/trips/:id"
+            element={
+              <ProtectedRoute>
+                <ItineraryDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-trips"
+            element={
+              <ProtectedRoute>
+                <MyTrips />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/share/:shareSlug"
+            element={
+              <ClientRoute>
+                <SharedTrip />
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
         </Routes>
-      ) : (
-        <div className="min-h-screen flex flex-col bg-background text-foreground">
-          <Navbar />
-          <main className="flex-1">
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <ClientRoute>
-                    <Home />
-                  </ClientRoute>
-                }
-              />
-              <Route
-                path="/create"
-                element={
-                  <ProtectedRoute>
-                    <CreateTrip />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/trips/:id"
-                element={
-                  <ProtectedRoute>
-                    <ItineraryDetails />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/my-trips"
-                element={
-                  <ProtectedRoute>
-                    <MyTrips />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/share/:shareSlug"
-                element={
-                  <ClientRoute>
-                    <SharedTrip />
-                  </ClientRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/login"
-                element={
-                  <PublicRoute>
-                    <Login />
-                  </PublicRoute>
-                }
-              />
-              <Route
-                path="/register"
-                element={
-                  <PublicRoute>
-                    <Register />
-                  </PublicRoute>
-                }
-              />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      )}
-    </Suspense>
+      </main>
+      <Footer />
+    </div>
   );
 }
 
@@ -128,7 +130,15 @@ function App() {
     <Router>
       <AuthProvider>
         <ModalProvider>
-          <AppLayout />
+          <Suspense
+            fallback={
+              <div className="min-h-screen flex items-center justify-center bg-background">
+                <Loader text="Loading Lumora..." />
+              </div>
+            }
+          >
+            <AppLayout />
+          </Suspense>
           {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
         </ModalProvider>
       </AuthProvider>
