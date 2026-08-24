@@ -6,12 +6,11 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem
+  SidebarMenuButton
 } from '@/components/ui/sidebar';
 import { navGroups } from '@/components/app-shared';
 import { NavGroup } from '@/components/nav-group';
+import { NavUser } from '@/components/nav-user';
 
 export function AppSidebar() {
   return (
@@ -37,12 +36,8 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="gap-0 p-0 border-t">
-        <div className="px-4 py-3 transition-opacity group-data-[collapsible=icon]:pointer-events-none group-data-[collapsible=icon]:opacity-0">
-          <p className="text-nowrap text-[11px] font-medium text-muted-foreground">
-            © 2026 Elite Dev
-          </p>
-        </div>
+      <SidebarFooter className="p-2 border-t border-sidebar-border">
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );

@@ -12,21 +12,24 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
-  SidebarMenuSubItem
+  SidebarMenuSubItem,
+  useSidebar
 } from '@/components/ui/sidebar';
 import { ChevronDown, ChevronRightIcon } from 'lucide-react';
 
 export function NavGroup({ label, items, defaultOpen = true }) {
   const location = useLocation();
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
     <SidebarGroup className="py-1">
-      {label && (
+      {label && !isCollapsed && (
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className="flex items-center justify-between w-full px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors cursor-pointer group select-none rounded-lg hover:bg-secondary/40"
+          className="flex items-center justify-between w-full px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors cursor-pointer group select-none rounded-lg hover:bg-secondary/40"
         >
           <span>{label}</span>
           <ChevronDown
@@ -37,7 +40,7 @@ export function NavGroup({ label, items, defaultOpen = true }) {
         </button>
       )}
 
-      {isOpen && (
+      {(isOpen || isCollapsed) && (
         <SidebarMenu className="mt-0.5 space-y-0.5 animate-in fade-in duration-150">
           {items.map((item) => {
             const isItemActive =
@@ -49,7 +52,23 @@ export function NavGroup({ label, items, defaultOpen = true }) {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     isActive={isItemActive}
+                    tooltip={item.title}
                     render={<Link to={item.path} />}
+                  >
+                    {item.icon}
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            }
+
+            if (isCollapsed) {
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    isActive={isItemActive}
+                    tooltip={item.title}
+                    render={<Link to={item.path || item.subItems[0]?.path || '/admin'} />}
                   >
                     {item.icon}
                     <span>{item.title}</span>
@@ -64,7 +83,7 @@ export function NavGroup({ label, items, defaultOpen = true }) {
                 key={item.title}
                 render={<SidebarMenuItem />}
               >
-                <CollapsibleTrigger render={<SidebarMenuButton isActive={isItemActive} />}>
+                <CollapsibleTrigger render={<SidebarMenuButton isActive={isItemActive} tooltip={item.title} />}>
                   {item.icon}
                   <span>{item.title}</span>
                   <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
