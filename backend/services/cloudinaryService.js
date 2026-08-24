@@ -6,7 +6,9 @@ export const uploadImageBuffer = (buffer, folder = 'wandersync') => {
       {
         folder,
         resource_type: 'image',
-        transformation: [{ quality: 'auto', fetch_format: 'auto' }]
+        transformation: [
+          { width: 1400, crop: 'limit', quality: 'auto:good', fetch_format: 'auto' }
+        ]
       },
       (error, result) => {
         if (error) return reject(error);

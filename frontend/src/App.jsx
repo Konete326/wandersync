@@ -4,7 +4,6 @@ import { Agentation } from 'agentation';
 import { AuthProvider } from './context/AuthContext';
 import { ModalProvider } from './context/ModalContext';
 import Navbar from './components/common/Navbar';
-import Footer from './components/common/Footer';
 import Loader from './components/common/Loader';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import PublicRoute from './components/common/PublicRoute';
@@ -13,6 +12,7 @@ import ClientRoute from './components/common/ClientRoute';
 const Home = lazy(() => import('./pages/Home'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
 const Features = lazy(() => import('./pages/Features'));
+const Gallery = lazy(() => import('./pages/Gallery'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const Community = lazy(() => import('./pages/Community'));
 const CreateTrip = lazy(() => import('./pages/CreateTrip'));
@@ -78,6 +78,14 @@ function AppLayout() {
             element={
               <ClientRoute>
                 <Features />
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/gallery"
+            element={
+              <ClientRoute>
+                <Gallery />
               </ClientRoute>
             }
           />
@@ -156,7 +164,6 @@ function AppLayout() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      <Footer />
     </div>
   );
 }

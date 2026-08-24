@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Menu, X, Sparkles, Shield, User } from 'lucide-react';
+import { LogOut, Menu, X, Sparkles, Shield, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 
@@ -14,7 +14,7 @@ const Navbar = () => {
   const handleLogout = () => {
     showModal({
       title: 'Sign Out',
-      message: 'Are you sure you want to log out of Lumora?',
+      message: 'Are you sure you want to log out of WanderSync?',
       type: 'warning',
       isConfirm: true,
       confirmText: 'Sign Out',
@@ -30,17 +30,17 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/90 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 group">
-          <span className="text-2xl sm:text-3xl italic tracking-tight font-['Instrument_Serif'] text-foreground group-hover:opacity-90 transition-opacity">
-            Lumora
+          <span className="text-2xl italic tracking-tight font-['Instrument_Serif'] text-foreground group-hover:opacity-90 transition-opacity">
+            WanderSync
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-1 font-sans">
           <Link
             to="/how-it-works"
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium font-sans transition-all ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               isActive('/how-it-works')
                 ? 'bg-secondary text-cyan-400 border border-border'
                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
@@ -50,7 +50,7 @@ const Navbar = () => {
           </Link>
           <Link
             to="/features"
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium font-sans transition-all ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               isActive('/features')
                 ? 'bg-secondary text-cyan-400 border border-border'
                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
@@ -59,8 +59,19 @@ const Navbar = () => {
             Features
           </Link>
           <Link
+            to="/gallery"
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
+              isActive('/gallery')
+                ? 'bg-secondary text-cyan-400 border border-border'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
+            }`}
+          >
+            <ImageIcon className="size-3.5" />
+            <span>Gallery</span>
+          </Link>
+          <Link
             to="/pricing"
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium font-sans transition-all ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               isActive('/pricing')
                 ? 'bg-secondary text-cyan-400 border border-border'
                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
@@ -70,7 +81,7 @@ const Navbar = () => {
           </Link>
           <Link
             to="/community"
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium font-sans transition-all ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               isActive('/community')
                 ? 'bg-secondary text-cyan-400 border border-border'
                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
@@ -80,7 +91,7 @@ const Navbar = () => {
           </Link>
           <Link
             to="/create"
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium font-sans flex items-center gap-1.5 transition-all ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all ${
               isActive('/create')
                 ? 'bg-secondary text-cyan-400 border border-border'
                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
@@ -92,7 +103,7 @@ const Navbar = () => {
           {user && (
             <Link
               to="/my-trips"
-              className={`px-3.5 py-1.5 rounded-full text-xs font-medium font-sans transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 isActive('/my-trips')
                   ? 'bg-secondary text-cyan-400 border border-border'
                   : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
@@ -104,7 +115,7 @@ const Navbar = () => {
           {user?.role === 'admin' && (
             <Link
               to="/admin"
-              className="px-3.5 py-1.5 rounded-full text-xs font-medium font-sans flex items-center gap-1.5 text-cyan-400 hover:bg-secondary"
+              className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 text-cyan-400 hover:bg-secondary"
             >
               <Shield className="size-3.5 text-cyan-400" />
               <span>Admin</span>
@@ -117,12 +128,12 @@ const Navbar = () => {
             <div className="flex items-center gap-3">
               <Link
                 to="/profile"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-secondary/40 hover:bg-secondary transition-colors"
+                className="flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-secondary/40 hover:bg-secondary transition-colors"
               >
                 <img
                   src={user.avatar?.url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'}
                   alt={user.name}
-                  className="size-6 rounded-full object-cover border border-cyan-400/40"
+                  className="size-5 rounded-full object-cover border border-cyan-400/40"
                 />
                 <span className="text-xs font-medium text-foreground">{user.name?.split(' ')[0]}</span>
               </Link>
@@ -138,13 +149,13 @@ const Navbar = () => {
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                className="px-3.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
-                className="px-4 py-2 text-xs font-bold text-zinc-950 bg-white hover:bg-zinc-200 rounded-full shadow-sm transition-all"
+                className="px-3.5 py-1.5 text-xs font-bold text-zinc-950 bg-white hover:bg-zinc-200 rounded-full shadow-sm transition-all"
               >
                 Get Started
               </Link>
@@ -175,6 +186,13 @@ const Navbar = () => {
             className="block px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
           >
             Features
+          </Link>
+          <Link
+            to="/gallery"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
+          >
+            Gallery
           </Link>
           <Link
             to="/pricing"
@@ -248,14 +266,14 @@ const Navbar = () => {
               <Link
                 to="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                className="w-full text-center py-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-2.5 text-xs font-bold text-zinc-950 bg-white hover:bg-zinc-200 rounded-full"
+                className="w-full text-center py-2 text-xs font-bold text-zinc-950 bg-white hover:bg-zinc-200 rounded-full"
               >
                 Get Started
               </Link>
