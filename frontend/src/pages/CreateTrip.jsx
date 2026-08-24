@@ -4,8 +4,8 @@ import { Sparkles, MapPin, Calendar, DollarSign, Users, Tag, Clock, Wand2, Arrow
 import { generateItineraryWithAi, saveTrip } from '../services/tripService';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
-import Loader from '../components/common/Loader';
 import GlowingButton from '../components/common/GlowingButton';
+import AiGenerationLoader from '../components/trip/AiGenerationLoader';
 
 const quickInspirations = [
   '5 Days in Kyoto for cherry blossoms & matcha tasting',
@@ -59,47 +59,29 @@ const CreateTrip = () => {
       setCompanions('Couple');
     } else if (lower.includes('family') || lower.includes('kids')) {
       setCompanions('Family');
-    } else if (lower.includes('friends') || lower.includes('group')) {
+    } else if (lower.includes('friend') || lower.includes('group')) {
       setCompanions('Friends');
     } else {
       setCompanions('Solo');
     }
 
-    const destinationsList = [
-      'Kyoto', 'Tokyo', 'Japan', 'Paris', 'France', 'Rome', 'Florence',
-      'Italy', 'Bali', 'Indonesia', 'Switzerland', 'Zurich', 'London',
-      'New York', 'Dubai', 'Barcelona', 'Spain', 'Amsterdam', 'Cairo'
-    ];
-
-    for (const dest of destinationsList) {
-      if (lower.includes(dest.toLowerCase())) {
-        setDestination(dest);
-        break;
-      }
-    }
-
-    const detectedInterests = [];
-    if (lower.includes('food') || lower.includes('culinary') || lower.includes('ramen') || lower.includes('wine')) detectedInterests.push('Food & Dining');
-    if (lower.includes('culture') || lower.includes('temple') || lower.includes('art') || lower.includes('museum')) detectedInterests.push('Culture & History');
-    if (lower.includes('nature') || lower.includes('hike') || lower.includes('mountain') || lower.includes('alps')) detectedInterests.push('Nature & Adventure');
-    if (lower.includes('beach') || lower.includes('surf') || lower.includes('ocean')) detectedInterests.push('Beach & Relaxation');
-    if (lower.includes('photo') || lower.includes('sightsee')) detectedInterests.push('Photography');
-
-    if (detectedInterests.length > 0) {
-      setInterests(detectedInterests.join(', '));
+    for (const insp of quickInspirations) {
+      if (text.includes('Kyoto')) setDestination('Kyoto, Japan');
+      if (text.includes('Swiss Alps')) setDestination('Interlaken & Zermatt, Switzerland');
+      if (text.includes('Rome') || text.includes('Florence')) setDestination('Rome & Florence, Italy');
+      if (text.includes('Bali')) setDestination('Bali, Indonesia');
     }
   };
 
   useEffect(() => {
-    if (location.state?.initialPrompt) {
-      setNaturalPrompt(location.state.initialPrompt);
-      parseNaturalLanguage(location.state.initialPrompt);
+    if (location.state?.destination) {
+      setDestination(location.state.destination);
     }
   }, [location.state]);
 
   useEffect(() => {
     if (cooldown > 0) {
-      const timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
+      const timer = setTimeout(() => setCooldown((c) => c - 1), 1000);
       return () => clearTimeout(timer);
     }
   }, [cooldown]);
@@ -107,16 +89,19 @@ const CreateTrip = () => {
   const handleApplyPrompt = (promptText) => {
     setNaturalPrompt(promptText);
     parseNaturalLanguage(promptText);
-    showToast('Preferences auto-filled from natural text!', 'info');
   };
 
   const handleGenerate = async (e) => {
     e.preventDefault();
-    if (cooldown > 0) return;
 
-    if (!destination.trim() && !naturalPrompt.trim()) {
+    if (cooldown > 0) {
+      showToast(`Please wait ${cooldown}s before regenerating`, 'warning');
+      return;
+    }
+
+    if (!destination && !naturalPrompt) {
       showModal({
-        title: 'Missing Destination',
+        title: 'Destination Required',
         message: 'Please provide either a destination or type your travel vision in natural language.',
         type: 'warning'
       });
@@ -173,24 +158,27 @@ const CreateTrip = () => {
 
   if (loading) {
     return (
-      <div className="min-h-[75vh] flex items-center justify-center px-4">
-        <Loader text="Gemini 3.7 AI is synthesizing your bespoke itinerary..." />
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <AiGenerationLoader
+          destination={destination || naturalPrompt || 'Selected Destination'}
+          durationDays={durationDays}
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-foreground py-8 sm:py-14 px-3 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#09090b] text-foreground py-8 sm:py-14 px-3 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full liquid-glass border border-cyan-500/30 text-cyan-400 text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full liquid-glass border border-orange-500/30 text-orange-400 text-xs font-semibold uppercase tracking-wider">
             <Sparkles className="size-3.5" />
             Natural Language Journey Architect
           </div>
           <h1 className="text-3xl sm:text-5xl font-normal font-['Instrument_Serif'] tracking-tight">
             Design Your Custom Itinerary
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto font-sans leading-relaxed">
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
             Describe your trip naturally or refine preferences below to generate a tailored day-by-day plan.
           </p>
         </div>
@@ -199,14 +187,14 @@ const CreateTrip = () => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold text-foreground flex items-center gap-2">
-                <Wand2 className="size-4 text-cyan-400" />
+                <Wand2 className="size-4 text-orange-400" />
                 <span>Natural Language Input (Prompt or Vibes)</span>
               </label>
               {naturalPrompt && (
                 <button
                   type="button"
                   onClick={() => parseNaturalLanguage(naturalPrompt)}
-                  className="text-[11px] font-semibold text-cyan-400 hover:underline cursor-pointer"
+                  className="text-[11px] font-semibold text-orange-400 hover:underline cursor-pointer"
                 >
                   Auto-Fill Preferences
                 </button>
@@ -220,7 +208,7 @@ const CreateTrip = () => {
                 parseNaturalLanguage(e.target.value);
               }}
               placeholder="e.g. I want a 5-day cultural and food trip to Kyoto in autumn with moderate budget for a couple..."
-              className="w-full p-4 rounded-2xl bg-secondary/50 border border-border text-sm text-foreground placeholder-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none font-sans"
+              className="w-full p-4 rounded-2xl bg-secondary/50 border border-border text-sm text-foreground placeholder-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-orange-500/50 resize-none font-sans"
             />
             <div className="flex flex-wrap items-center gap-1.5 pt-1">
               <span className="text-[11px] text-muted-foreground mr-1">Inspirations:</span>
@@ -241,7 +229,7 @@ const CreateTrip = () => {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                  <MapPin className="size-3.5 text-cyan-400" />
+                  <MapPin className="size-3.5 text-orange-400" />
                   <span>Destination / City</span>
                 </label>
                 {!isDestinationValid && destination ? (
@@ -263,7 +251,7 @@ const CreateTrip = () => {
                       ? 'border-rose-500/80 focus:ring-1 focus:ring-rose-500/50 bg-rose-950/10'
                       : isDestinationValid && destination
                       ? 'border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 bg-emerald-950/10'
-                      : 'border-border focus:ring-1 focus:ring-cyan-500/50'
+                      : 'border-border focus:ring-1 focus:ring-orange-500/50'
                   }`}
                 />
                 {isDestinationValid && destination && (
@@ -274,14 +262,14 @@ const CreateTrip = () => {
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                <Calendar className="size-3.5 text-cyan-400" />
+                <Calendar className="size-3.5 text-orange-400" />
                 <span>Start Date</span>
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50 [color-scheme:dark]"
+                className="w-full px-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50 [color-scheme:dark]"
               />
             </div>
           </div>
@@ -290,7 +278,7 @@ const CreateTrip = () => {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                  <Clock className="size-3.5 text-cyan-400" />
+                  <Clock className="size-3.5 text-orange-400" />
                   <span>Duration ({durationDays} Days)</span>
                 </label>
                 {!isDurationValid ? (
@@ -322,13 +310,13 @@ const CreateTrip = () => {
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                <DollarSign className="size-3.5 text-cyan-400" />
+                <DollarSign className="size-3.5 text-orange-400" />
                 <span>Budget Tier</span>
               </label>
               <select
                 value={budgetLevel}
                 onChange={(e) => setBudgetLevel(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                className="w-full px-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               >
                 <option value="Budget" className="bg-card text-foreground">Budget Friendly</option>
                 <option value="Moderate" className="bg-card text-foreground">Moderate / Balanced</option>
@@ -338,13 +326,13 @@ const CreateTrip = () => {
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                <Users className="size-3.5 text-cyan-400" />
+                <Users className="size-3.5 text-orange-400" />
                 <span>Companions</span>
               </label>
               <select
                 value={companions}
                 onChange={(e) => setCompanions(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                className="w-full px-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               >
                 <option value="Solo" className="bg-card text-foreground">Solo Traveler</option>
                 <option value="Couple" className="bg-card text-foreground">Couple / Romantic</option>
@@ -356,7 +344,7 @@ const CreateTrip = () => {
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-              <Tag className="size-3.5 text-cyan-400" />
+              <Tag className="size-3.5 text-orange-400" />
               <span>Interests & Vibes</span>
             </label>
             <input
@@ -364,7 +352,7 @@ const CreateTrip = () => {
               value={interests}
               onChange={(e) => setInterests(e.target.value)}
               placeholder="e.g. Architecture, Hidden Cafes, Photography, Hiking"
-              className="w-full px-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm text-foreground placeholder-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+              className="w-full px-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm text-foreground placeholder-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
             />
           </div>
 

@@ -10,7 +10,8 @@ const hotelSchema = new mongoose.Schema({
   name: { type: String, trim: true },
   imageUrl: { type: String, trim: true },
   rating: { type: Number, default: 4.8 },
-  priceRange: { type: String, default: '$$$' }
+  priceRange: { type: String, default: '$$$' },
+  pricePerNight: { type: String, default: '$180/night', trim: true }
 }, { _id: false });
 
 const gallerySchema = new mongoose.Schema({

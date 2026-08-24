@@ -1,17 +1,11 @@
 import { useState } from 'react';
 import {
-  Settings,
   Sparkles,
   Database,
-  Cloud,
-  Shield,
   Save,
   CheckCircle2,
-  Cpu,
-  Globe,
   Sliders,
-  Code2,
-  Heart
+  Code2
 } from 'lucide-react';
 import { useModal } from '@/context/ModalContext';
 
@@ -47,20 +41,20 @@ export default function AdminSettings() {
   };
 
   return (
-    <div className="w-full space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/80 pb-5">
+    <div className="w-full space-y-4 font-sans">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-border/80 pb-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-heading">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground font-heading">
             System Settings
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-[11px] text-muted-foreground mt-0.5">
             Configure WanderSync generative AI engine parameters, cloud services, and application variables.
           </p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md shadow-cyan-500/20 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-orange-500 hover:bg-orange-400 text-zinc-950 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md shadow-orange-500/20 disabled:opacity-50"
         >
           <Save className="size-3.5" />
           <span>{saving ? 'Saving...' : 'Save Configuration'}</span>
@@ -70,7 +64,7 @@ export default function AdminSettings() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
         <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-5">
           <div className="flex items-center gap-2.5 border-b border-border pb-4">
-            <div className="size-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
               <Sparkles className="size-4" />
             </div>
             <div>
@@ -85,7 +79,7 @@ export default function AdminSettings() {
               <select
                 value={aiSettings.model}
                 onChange={(e) => setAiSettings({ ...aiSettings, model: e.target.value })}
-                className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               >
                 <option value="gemini-1.5-flash">Google Gemini 1.5 Flash (Ultra Fast / Low Latency)</option>
                 <option value="gemini-2.5-flash">Google Gemini 2.5 Flash (Advanced Reasoning)</option>
@@ -103,7 +97,7 @@ export default function AdminSettings() {
                   max="1.0"
                   value={aiSettings.temperature}
                   onChange={(e) => setAiSettings({ ...aiSettings, temperature: e.target.value })}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                 />
               </div>
 
@@ -113,7 +107,7 @@ export default function AdminSettings() {
                   type="number"
                   value={aiSettings.maxTokens}
                   onChange={(e) => setAiSettings({ ...aiSettings, maxTokens: e.target.value })}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                 />
               </div>
             </div>
@@ -127,7 +121,7 @@ export default function AdminSettings() {
                 type="checkbox"
                 checked={aiSettings.strictJsonSchema}
                 onChange={(e) => setAiSettings({ ...aiSettings, strictJsonSchema: e.target.checked })}
-                className="size-4 rounded accent-cyan-500 cursor-pointer"
+                className="size-4 rounded accent-orange-500 cursor-pointer"
               />
             </div>
           </div>
@@ -135,7 +129,7 @@ export default function AdminSettings() {
 
         <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-5">
           <div className="flex items-center gap-2.5 border-b border-border pb-4">
-            <div className="size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
               <Sliders className="size-4" />
             </div>
             <div>
@@ -151,7 +145,7 @@ export default function AdminSettings() {
                 type="text"
                 value={generalSettings.appName}
                 onChange={(e) => setGeneralSettings({ ...generalSettings, appName: e.target.value })}
-                className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               />
             </div>
 
@@ -161,7 +155,7 @@ export default function AdminSettings() {
                 type="text"
                 value={generalSettings.tagline}
                 onChange={(e) => setGeneralSettings({ ...generalSettings, tagline: e.target.value })}
-                className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               />
             </div>
 
@@ -171,7 +165,7 @@ export default function AdminSettings() {
                 <select
                   value={generalSettings.defaultCurrency}
                   onChange={(e) => setGeneralSettings({ ...generalSettings, defaultCurrency: e.target.value })}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                 >
                   <option value="USD">USD ($)</option>
                   <option value="EUR">EUR (€)</option>
@@ -186,7 +180,7 @@ export default function AdminSettings() {
                   type="number"
                   value={generalSettings.defaultDays}
                   onChange={(e) => setGeneralSettings({ ...generalSettings, defaultDays: Number(e.target.value) })}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full px-3 py-2 bg-input border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                 />
               </div>
             </div>
@@ -195,7 +189,7 @@ export default function AdminSettings() {
 
         <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex items-center gap-2.5 border-b border-border pb-4">
-            <div className="size-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
               <Database className="size-4" />
             </div>
             <div>
@@ -210,8 +204,8 @@ export default function AdminSettings() {
                 <span className="text-xs font-semibold text-foreground block">MongoDB Atlas M0</span>
                 <span className="text-[10px] text-muted-foreground">Cloud Database Cluster</span>
               </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <CheckCircle2 className="size-3" /> Online
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/30">
+                <CheckCircle2 className="size-3 text-orange-400" /> Online
               </span>
             </div>
 
@@ -220,8 +214,8 @@ export default function AdminSettings() {
                 <span className="text-xs font-semibold text-foreground block">Google Gemini API</span>
                 <span className="text-[10px] text-muted-foreground">AI Intelligence Studio</span>
               </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <CheckCircle2 className="size-3" /> Active
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/30">
+                <CheckCircle2 className="size-3 text-orange-400" /> Active
               </span>
             </div>
 
@@ -230,8 +224,8 @@ export default function AdminSettings() {
                 <span className="text-xs font-semibold text-foreground block">Cloudinary CDN</span>
                 <span className="text-[10px] text-muted-foreground">Media & Avatar Storage</span>
               </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <CheckCircle2 className="size-3" /> Active
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/30">
+                <CheckCircle2 className="size-3 text-orange-400" /> Active
               </span>
             </div>
 
@@ -240,8 +234,8 @@ export default function AdminSettings() {
                 <span className="text-xs font-semibold text-foreground block">Open-Meteo REST</span>
                 <span className="text-[10px] text-muted-foreground">Live 7-Day Weather API</span>
               </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <CheckCircle2 className="size-3" /> Active
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/30">
+                <CheckCircle2 className="size-3 text-orange-400" /> Active
               </span>
             </div>
           </div>
@@ -250,7 +244,7 @@ export default function AdminSettings() {
         <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2.5 border-b border-border pb-4">
-              <div className="size-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+              <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
                 <Code2 className="size-4" />
               </div>
               <div>
@@ -267,7 +261,7 @@ export default function AdminSettings() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">Release Version</span>
-                  <span className="text-xs font-mono text-cyan-400">v1.0.0 (Production)</span>
+                  <span className="text-xs font-mono text-orange-400 font-semibold">v1.0.0 (Production)</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">Engineering Lead</span>

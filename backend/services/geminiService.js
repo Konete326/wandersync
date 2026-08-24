@@ -11,33 +11,42 @@ const cleanJsonResponse = (text) => {
   return JSON.parse(cleaned.trim());
 };
 
-const executeWithFallback = async (prompt) => {
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const executeWithRetryAndFallback = async (prompt, isJson = true) => {
   let lastError = null;
+
   for (const modelName of AVAILABLE_MODELS) {
-    try {
-      const model = getGeminiModel(modelName);
-      if (!model) {
-        throw new Error('Gemini API key is not configured in backend .env');
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const model = getGeminiModel(modelName, isJson);
+        if (!model) throw new Error('Gemini API key is not configured in backend .env');
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const rawText = response.text();
+
+        return isJson ? cleanJsonResponse(rawText) : rawText;
+      } catch (error) {
+        lastError = error;
+        if (attempt < 3) {
+          await sleep(attempt * 1000);
+        }
       }
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const rawText = response.text();
-      return cleanJsonResponse(rawText);
-    } catch (error) {
-      lastError = error;
     }
   }
-  throw new Error(lastError?.message || 'Failed to generate content with available Gemini models');
+
+  throw new Error(lastError?.message || 'Failed to generate content with available Gemini models after multiple retries');
 };
 
 export const generateAiItinerary = async (tripParams) => {
   const prompt = buildItineraryPrompt(tripParams);
-  return await executeWithFallback(prompt);
+  return await executeWithRetryAndFallback(prompt, true);
 };
 
 export const refineAiItinerary = async (currentItinerary, userMessage) => {
   const prompt = buildChatRefinePrompt(currentItinerary, userMessage);
-  return await executeWithFallback(prompt);
+  return await executeWithRetryAndFallback(prompt, true);
 };
 
 export const autofillDestinationData = async (country, city) => {
@@ -53,11 +62,11 @@ JSON schema:
     { "name": "Top Landmark 2", "imageUrl": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=80", "description": "Highlight description" }
   ],
   "hotels": [
-    { "name": "Luxury Hotel 1", "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=80", "rating": 4.9, "priceRange": "$$$$" },
-    { "name": "Boutique Hotel 2", "imageUrl": "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&auto=format&fit=crop&q=80", "rating": 4.7, "priceRange": "$$$" }
+    { "name": "Luxury Hotel 1", "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=80", "rating": 4.9, "priceRange": "$$$$", "pricePerNight": "$280/night" },
+    { "name": "Boutique Hotel 2", "imageUrl": "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&auto=format&fit=crop&q=80", "rating": 4.7, "priceRange": "$$$", "pricePerNight": "$165/night" }
   ]
 }`;
-  return await executeWithFallback(prompt);
+  return await executeWithRetryAndFallback(prompt, true);
 };
 
 export const chatWithGemini = async (message, history = [], tripContext = null) => {
@@ -70,17 +79,5 @@ export const chatWithGemini = async (message, history = [], tripContext = null) 
   }
   prompt += `\nUser's Message: ${message}\nAssistant:`;
 
-  let lastError = null;
-  for (const modelName of AVAILABLE_MODELS) {
-    try {
-      const model = getGeminiModel(modelName, false);
-      if (!model) throw new Error('Gemini API key is not configured in backend .env');
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (err) {
-      lastError = err;
-    }
-  }
-  throw new Error(lastError?.message || 'Failed to generate response from Gemini');
+  return await executeWithRetryAndFallback(prompt, false);
 };

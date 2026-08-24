@@ -46,7 +46,7 @@ export const navGroups = [
         icon: <Receipt className="size-4" />
       },
       {
-        title: 'Media CDN',
+        title: 'Destinations & Photos',
         path: '/admin/media',
         icon: <Image className="size-4" />
       }

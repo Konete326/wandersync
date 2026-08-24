@@ -72,12 +72,12 @@ export default function AdminProfile() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/20">
             <Shield className="size-3" />
             {formData.role.toUpperCase()}
           </span>
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <CheckCircle2 className="size-3" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-orange-500/10 text-orange-400 border border-orange-500/30">
+            <CheckCircle2 className="size-3 text-orange-400" />
             Active Session
           </span>
         </div>
@@ -88,7 +88,7 @@ export default function AdminProfile() {
           <div className="bg-card border border-border/80 rounded-2xl p-4 sm:p-5 space-y-4">
             <div className="flex flex-col items-center text-center">
               <div className="relative group cursor-pointer mb-2">
-                <div className="size-16 sm:size-20 rounded-2xl overflow-hidden border-2 border-cyan-500/40 bg-secondary">
+                <div className="size-16 sm:size-20 rounded-2xl overflow-hidden border-2 border-orange-500/40 bg-secondary">
                   <img
                     src={user?.avatar?.url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80'}
                     alt={formData.name}
@@ -117,15 +117,15 @@ export default function AdminProfile() {
 
             <div className="space-y-2 pt-2 border-t border-border/60 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <MapPin className="size-3.5 text-cyan-400 shrink-0" />
+                <MapPin className="size-3.5 text-orange-400 shrink-0" />
                 <span>{formData.location}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Globe className="size-3.5 text-cyan-400 shrink-0" />
+                <Globe className="size-3.5 text-orange-400 shrink-0" />
                 <span>Default Currency: {formData.currency}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar className="size-3.5 text-cyan-400 shrink-0" />
+                <Calendar className="size-3.5 text-orange-400 shrink-0" />
                 <span>Timezone: UTC-8 (Pacific)</span>
               </div>
             </div>
@@ -136,7 +136,7 @@ export default function AdminProfile() {
           <form onSubmit={handleSaveProfile} className="bg-card border border-border/80 rounded-2xl p-4 sm:p-5 space-y-3.5">
             <div className="flex items-center justify-between border-b border-border/70 pb-3">
               <div className="flex items-center gap-2">
-                <div className="size-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                <div className="size-7 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
                   <User className="size-3.5" />
                 </div>
                 <h3 className="text-sm font-bold text-foreground">General Information</h3>
@@ -144,7 +144,7 @@ export default function AdminProfile() {
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-400 text-zinc-950 text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50 shadow-md shadow-orange-500/20"
               >
                 <Save className="size-3" />
                 <span>{saving ? 'Saving...' : 'Save Profile'}</span>
@@ -160,7 +160,7 @@ export default function AdminProfile() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full pl-8 pr-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                    className="w-full pl-8 pr-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                   />
                 </div>
               </div>
@@ -173,7 +173,7 @@ export default function AdminProfile() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full pl-8 pr-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                    className="w-full pl-8 pr-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                   />
                 </div>
               </div>
@@ -184,7 +184,7 @@ export default function AdminProfile() {
                   type="text"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                  className="w-full px-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                 />
               </div>
 
@@ -193,7 +193,7 @@ export default function AdminProfile() {
                 <select
                   value={formData.currency}
                   onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                  className="w-full px-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                  className="w-full px-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                 >
                   <option value="USD">USD ($)</option>
                   <option value="EUR">EUR (€)</option>
@@ -209,7 +209,7 @@ export default function AdminProfile() {
                   rows={2}
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  className="w-full p-2 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
+                  className="w-full p-2 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50 resize-none"
                 />
               </div>
             </div>
@@ -239,7 +239,7 @@ export default function AdminProfile() {
                   value={passwords.current}
                   onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
                   placeholder="••••••••"
-                  className="w-full px-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                  className="w-full px-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                 />
               </div>
 
@@ -250,7 +250,7 @@ export default function AdminProfile() {
                   value={passwords.newPass}
                   onChange={(e) => setPasswords({ ...passwords, newPass: e.target.value })}
                   placeholder="••••••••"
-                  className="w-full px-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                  className="w-full px-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                 />
               </div>
 
@@ -261,7 +261,7 @@ export default function AdminProfile() {
                   value={passwords.confirm}
                   onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
                   placeholder="••••••••"
-                  className="w-full px-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                  className="w-full px-3 py-1.5 bg-secondary/50 border border-border/80 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
                 />
               </div>
             </div>

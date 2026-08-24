@@ -7,8 +7,8 @@ import {
   CheckCircle2,
   Trash2,
   Check,
-  AlertCircle,
-  Filter
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useModal } from '@/context/ModalContext';
 
@@ -52,12 +52,30 @@ const initialNotifications = [
     type: 'system',
     time: '5 hours ago',
     read: true
+  },
+  {
+    id: 6,
+    title: 'New Destination Published: Kyoto',
+    message: 'Cultural heritage landmark and 4 tourist spots successfully indexed in global catalog.',
+    type: 'trip',
+    time: '8 hours ago',
+    read: true
+  },
+  {
+    id: 7,
+    title: 'Database Auto-Backup Verified',
+    message: 'Atlas cluster snapshot completed with zero replica lag.',
+    type: 'system',
+    time: '12 hours ago',
+    read: true
   }
 ];
 
 export default function AdminNotifications() {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [filter, setFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 5;
   const { showModal, showToast } = useModal();
 
   const filtered = notifications.filter((n) => {
@@ -67,6 +85,9 @@ export default function AdminNotifications() {
     if (filter === 'trip') return n.type === 'trip';
     return true;
   });
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+  const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   const markAllAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
@@ -90,143 +111,151 @@ export default function AdminNotifications() {
   const getIcon = (type) => {
     switch (type) {
       case 'ai':
-        return <Sparkles className="size-4 text-cyan-400" />;
+        return <Sparkles className="size-3.5 text-orange-400" />;
       case 'security':
-        return <ShieldCheck className="size-4 text-amber-400" />;
+        return <ShieldCheck className="size-3.5 text-amber-400" />;
       case 'trip':
-        return <Compass className="size-4 text-emerald-400" />;
+        return <Compass className="size-3.5 text-orange-400" />;
       default:
-        return <Bell className="size-4 text-blue-400" />;
+        return <Bell className="size-3.5 text-orange-400" />;
     }
   };
 
   const getBadgeColor = (type) => {
     switch (type) {
       case 'ai':
-        return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
+        return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
       case 'security':
         return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
       case 'trip':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+        return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
       default:
-        return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+        return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
     }
   };
 
   return (
-    <div className="w-full space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/80 pb-5">
+    <div className="w-full space-y-3.5 max-w-7xl mx-auto font-sans">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-border/80 pb-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-heading">
-            System Notifications
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Real-time operational alerts, AI generation logs, and security telemetry.
+          <div className="flex items-center gap-2">
+            <div className="size-7 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
+              <Bell className="size-3.5" />
+            </div>
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground font-heading">
+              System Notifications
+            </h1>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/30">
+              {notifications.filter((n) => !n.read).length} New
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Real-time operational alerts, AI generation logs, and security telemetry
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={markAllAsRead}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-secondary hover:bg-secondary/80 text-foreground text-xs font-semibold rounded-xl border border-border transition-all cursor-pointer shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary/70 hover:bg-secondary text-foreground text-xs font-semibold rounded-lg border border-border transition-all cursor-pointer shadow-sm"
           >
-            <Check className="size-3.5" />
+            <Check className="size-3 text-orange-400" />
             <span>Mark All Read</span>
           </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-1.5">
         <button
-          onClick={() => setFilter('all')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+          onClick={() => { setFilter('all'); setPage(1); }}
+          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             filter === 'all'
-              ? 'bg-cyan-500 text-zinc-950 shadow-md shadow-cyan-500/20'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border'
+              ? 'bg-orange-500 text-zinc-950 shadow-sm shadow-orange-500/20 font-bold'
+              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
           }`}
         >
           All ({notifications.length})
         </button>
         <button
-          onClick={() => setFilter('unread')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+          onClick={() => { setFilter('unread'); setPage(1); }}
+          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             filter === 'unread'
-              ? 'bg-cyan-500 text-zinc-950 shadow-md shadow-cyan-500/20'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border'
+              ? 'bg-orange-500 text-zinc-950 shadow-sm shadow-orange-500/20 font-bold'
+              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
           }`}
         >
           Unread ({notifications.filter((n) => !n.read).length})
         </button>
         <button
-          onClick={() => setFilter('ai')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+          onClick={() => { setFilter('ai'); setPage(1); }}
+          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             filter === 'ai'
-              ? 'bg-cyan-500 text-zinc-950 shadow-md shadow-cyan-500/20'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border'
+              ? 'bg-orange-500 text-zinc-950 shadow-sm shadow-orange-500/20 font-bold'
+              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
           }`}
         >
           AI Engine
         </button>
         <button
-          onClick={() => setFilter('security')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+          onClick={() => { setFilter('security'); setPage(1); }}
+          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             filter === 'security'
-              ? 'bg-cyan-500 text-zinc-950 shadow-md shadow-cyan-500/20'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border'
+              ? 'bg-orange-500 text-zinc-950 shadow-sm shadow-orange-500/20 font-bold'
+              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
           }`}
         >
           Security
         </button>
         <button
-          onClick={() => setFilter('trip')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+          onClick={() => { setFilter('trip'); setPage(1); }}
+          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             filter === 'trip'
-              ? 'bg-cyan-500 text-zinc-950 shadow-md shadow-cyan-500/20'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border'
+              ? 'bg-orange-500 text-zinc-950 shadow-sm shadow-orange-500/20 font-bold'
+              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
           }`}
         >
           Trips
         </button>
       </div>
 
-      <div className="space-y-3 w-full">
-        {filtered.length === 0 ? (
-          <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-3">
-            <CheckCircle2 className="size-10 text-muted-foreground mx-auto" />
-            <h3 className="text-base font-semibold text-foreground">All Clear</h3>
+      <div className="space-y-2 w-full">
+        {paginated.length === 0 ? (
+          <div className="bg-[#121215] border border-border rounded-xl p-8 text-center space-y-2">
+            <CheckCircle2 className="size-8 text-muted-foreground mx-auto" />
+            <h3 className="text-sm font-bold text-foreground">All Clear</h3>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               No notifications matching this category at this moment.
             </p>
           </div>
         ) : (
-          filtered.map((n) => (
+          paginated.map((n) => (
             <div
               key={n.id}
-              className={`flex items-start justify-between gap-4 p-4 sm:p-5 rounded-2xl border transition-all ${
+              className={`flex items-start justify-between gap-3 p-3 rounded-xl border transition-all ${
                 n.read
                   ? 'bg-card/70 border-border/70 text-muted-foreground'
-                  : 'bg-card border-border shadow-md ring-1 ring-cyan-500/20 text-foreground'
+                  : 'bg-[#121215] border-border hover:border-orange-500/30 shadow-sm ring-1 ring-orange-500/10 text-foreground'
               }`}
             >
-              <div className="flex items-start gap-3.5 min-w-0">
-                <div className="size-9 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0 mt-0.5">
+              <div className="flex items-start gap-2.5 min-w-0">
+                <div className="size-7 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0 mt-0.5">
                   {getIcon(n.type)}
                 </div>
-                <div className="space-y-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-semibold text-foreground tracking-tight">
+                <div className="space-y-0.5 min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <h3 className="text-xs font-bold text-foreground tracking-tight">
                       {n.title}
                     </h3>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getBadgeColor(n.type)}`}>
+                    <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-semibold border ${getBadgeColor(n.type)}`}>
                       {n.type.toUpperCase()}
                     </span>
                     {!n.read && (
-                      <span className="size-2 rounded-full bg-cyan-400 inline-block animate-pulse"></span>
+                      <span className="size-1.5 rounded-full bg-orange-400 inline-block animate-pulse"></span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
+                  <p className="text-xs text-zinc-400 leading-relaxed">
                     {n.message}
                   </p>
-                  <span className="block text-[11px] text-muted-foreground/70 font-mono pt-1">
+                  <span className="block text-[10px] text-muted-foreground/70 font-mono">
                     {n.time}
                   </span>
                 </div>
@@ -235,15 +264,60 @@ export default function AdminNotifications() {
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => deleteNotification(n.id, n.title)}
-                  className="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                  className="p-1 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
                   title="Remove notification"
                 >
-                  <Trash2 className="size-4" />
+                  <Trash2 className="size-3.5" />
                 </button>
               </div>
             </div>
           ))
         )}
+      </div>
+
+      {/* Mandatory Pagination Section */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2.5 border-t border-border/80 text-xs text-muted-foreground">
+        <div>
+          Showing <strong className="text-foreground">{filtered.length === 0 ? 0 : (page - 1) * itemsPerPage + 1}</strong> to{' '}
+          <strong className="text-foreground">{Math.min(page * itemsPerPage, filtered.length)}</strong> of{' '}
+          <strong className="text-foreground">{filtered.length}</strong> notifications
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(p - 1, 1))}
+            className="px-2.5 py-1 rounded-lg bg-secondary/60 hover:bg-secondary border border-border text-xs text-foreground disabled:opacity-40 cursor-pointer flex items-center gap-1 transition-colors"
+          >
+            <ChevronLeft className="size-3.5" />
+            <span>Prev</span>
+          </button>
+
+          <div className="flex items-center gap-1 px-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`size-7 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors cursor-pointer ${
+                  page === p
+                    ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm shadow-orange-500/20'
+                    : 'bg-secondary/40 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          <button
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+            className="px-2.5 py-1 rounded-lg bg-secondary/60 hover:bg-secondary border border-border text-xs text-foreground disabled:opacity-40 cursor-pointer flex items-center gap-1 transition-colors"
+          >
+            <span>Next</span>
+            <ChevronRight className="size-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   );

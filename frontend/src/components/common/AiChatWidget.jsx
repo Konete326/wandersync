@@ -1,13 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import {
-  MessageSquare,
   X,
   Send,
   Sparkles,
   Minimize2,
   Trash2,
   Brain,
-  Cpu,
   Zap,
   Bot
 } from 'lucide-react';
@@ -102,7 +100,7 @@ export default function AiChatWidget({ tripContext = null }) {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages((prev) => [...prev, botMsg]);
-    } catch (err) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         {
@@ -130,39 +128,35 @@ export default function AiChatWidget({ tripContext = null }) {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 font-sans">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 font-sans">
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="group relative flex items-center gap-2.5 p-3.5 sm:px-5 sm:py-3.5 rounded-full bg-zinc-950 border border-cyan-500/50 shadow-2xl shadow-cyan-950/60 hover:border-cyan-400 hover:scale-105 transition-all duration-300 cursor-pointer"
+          className="size-12 rounded-full bg-[#121215] border border-orange-500/40 hover:border-orange-500 flex items-center justify-center text-orange-400 shadow-xl shadow-orange-950/40 hover:scale-110 transition-all duration-200 cursor-pointer relative group"
+          title="WanderSync AI Concierge"
         >
-          <div className="relative">
-            <Sparkles className="size-5 text-cyan-400 animate-pulse" />
-            <span className="absolute -top-1 -right-1 size-2 bg-emerald-400 rounded-full animate-ping" />
-          </div>
-          <span className="hidden sm:inline text-xs font-bold text-foreground">
-            AI Concierge
-          </span>
+          <Bot className="size-5 text-orange-400 group-hover:rotate-12 transition-transform" />
+          <span className="absolute top-1.5 right-1.5 size-2 bg-orange-400 rounded-full animate-pulse ring-2 ring-[#121215]" />
         </button>
       )}
 
       {isOpen && (
-        <div className="w-[340px] sm:w-[410px] bg-[#121215] border border-border/80 shadow-2xl rounded-2xl overflow-hidden flex flex-col h-[520px] animate-in slide-in-from-bottom-5 duration-300 select-none">
+        <div className="w-[calc(100vw-2rem)] max-w-[390px] sm:w-[390px] bg-[#121215] border border-orange-500/30 shadow-2xl rounded-2xl overflow-hidden flex flex-col h-[520px] max-h-[82vh] animate-in slide-in-from-bottom-5 duration-200">
           <div className="px-4 py-3 border-b border-border/80 bg-secondary/40 flex justify-between items-center">
             <div className="flex items-center gap-2.5">
-              <div className="size-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
-                <Brain className="size-4 text-cyan-400 animate-pulse" />
+              <div className="size-7 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
+                <Bot className="size-4" />
               </div>
               <div>
                 <h2 className="text-xs font-bold text-foreground flex items-center gap-2">
                   <span>WanderSync Concierge</span>
-                  <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-1">
-                    <span className="size-1.5 bg-emerald-400 rounded-full animate-ping" />
+                  <span className="bg-orange-500/15 text-orange-400 border border-orange-500/30 text-[9px] px-1.5 py-0.2 rounded-full font-semibold flex items-center gap-1">
+                    <span className="size-1.5 bg-orange-400 rounded-full animate-ping" />
                     <span>Gemini 3.7</span>
                   </span>
                 </h2>
-                <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">
-                  {tripContext ? `Context: ${tripContext.destination || 'Itinerary'}` : 'Thinking Travel Assistant'}
+                <p className="text-[10px] text-muted-foreground truncate max-w-[180px]">
+                  {tripContext ? `Context: ${tripContext.destination || 'Itinerary'}` : 'Intelligent Travel Assistant'}
                 </p>
               </div>
             </div>
@@ -185,7 +179,7 @@ export default function AiChatWidget({ tripContext = null }) {
             </div>
           </div>
 
-          <div className="flex-1 p-3.5 overflow-y-auto flex flex-col space-y-3 bg-[#0c0c0e]">
+          <div className="flex-1 p-3.5 overflow-y-auto flex flex-col space-y-3 bg-[#0a0a0c]">
             {messages.map((msg) => {
               const isUser = msg.sender === 'user';
               return (
@@ -196,8 +190,8 @@ export default function AiChatWidget({ tripContext = null }) {
                   <div
                     className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-wrap ${
                       isUser
-                        ? 'bg-cyan-600 text-white rounded-br-none shadow-md shadow-cyan-900/30'
-                        : 'bg-[#18181c] text-zinc-200 border border-border/80 rounded-bl-none shadow-sm'
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-medium rounded-br-none shadow-md shadow-orange-950/20'
+                        : 'bg-[#18181b] text-zinc-200 border border-border/80 rounded-bl-none shadow-sm'
                     }`}
                   >
                     {msg.text}
@@ -210,11 +204,11 @@ export default function AiChatWidget({ tripContext = null }) {
             })}
 
             {loading && (
-              <div className="self-start max-w-[90%] rounded-2xl p-3 bg-secondary/40 border border-cyan-500/30 space-y-2 animate-in fade-in duration-200">
-                <div className="flex items-center gap-2 text-cyan-400">
+              <div className="self-start max-w-[90%] rounded-2xl p-3 bg-secondary/40 border border-orange-500/30 space-y-2 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 text-orange-400">
                   <Brain className="size-3.5 animate-spin" />
                   <span className="text-[11px] font-bold">Thinking Process</span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 font-mono border border-cyan-800/60 ml-auto">
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-orange-950/80 text-orange-300 font-mono border border-orange-800/60 ml-auto">
                     {thinkingSeconds}s
                   </span>
                 </div>
@@ -223,20 +217,20 @@ export default function AiChatWidget({ tripContext = null }) {
                   <span className="animate-pulse">{thinkingSteps[thinkingStep]}</span>
                 </div>
                 <div className="w-full bg-secondary/80 h-1 rounded-full overflow-hidden">
-                  <div className="bg-gradient-to-r from-cyan-500 to-emerald-400 h-full w-2/3 animate-pulse rounded-full" />
+                  <div className="bg-gradient-to-r from-orange-500 to-amber-400 h-full w-2/3 animate-pulse rounded-full" />
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="px-3 py-2 bg-[#121215] border-t border-border/60 space-y-2">
+          <div className="px-3 py-2.5 bg-[#121215] border-t border-border/60 space-y-2">
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
               {quickPrompts.map((prompt) => (
                 <button
                   key={prompt}
                   onClick={() => handleSendMessage(prompt)}
-                  className="text-[10px] px-2.5 py-1 rounded-full bg-secondary/80 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border whitespace-nowrap transition-colors cursor-pointer"
+                  className="text-[10px] px-2.5 py-1 rounded-full bg-secondary/80 hover:bg-secondary text-muted-foreground hover:text-orange-400 border border-border hover:border-orange-500/30 whitespace-nowrap transition-colors cursor-pointer"
                 >
                   {prompt}
                 </button>
@@ -255,12 +249,12 @@ export default function AiChatWidget({ tripContext = null }) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask advice, modify itinerary, food spots..."
-                className="flex-1 px-3 py-2 rounded-xl bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                className="flex-1 px-3 py-2 rounded-xl bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               />
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
-                className="p-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold rounded-xl transition-all disabled:opacity-40 cursor-pointer shadow-sm"
+                className="p-2 bg-orange-500 hover:bg-orange-400 text-zinc-950 font-bold rounded-xl transition-all disabled:opacity-40 cursor-pointer shadow-sm shadow-orange-500/20"
               >
                 <Send className="size-3.5" />
               </button>

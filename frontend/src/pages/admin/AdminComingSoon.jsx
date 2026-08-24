@@ -8,7 +8,6 @@ import {
   Clock,
   ArrowRight,
   ShieldCheck,
-  Zap,
   CheckCircle2
 } from 'lucide-react';
 
@@ -17,8 +16,8 @@ const routeConfigs = {
     title: 'Trips Maestro Management',
     subtitle: 'Comprehensive control center for moderating, inspecting, and managing all AI-generated travel itineraries across the globe.',
     icon: Compass,
-    color: 'text-cyan-400',
-    bg: 'bg-cyan-500/10 border-cyan-500/20',
+    color: 'text-orange-400',
+    bg: 'bg-orange-500/10 border-orange-500/20',
     plannedFeatures: [
       'Global Itinerary Search & Advanced Filter Engine',
       'Real-time Destination Popularity Heatmaps',
@@ -31,8 +30,8 @@ const routeConfigs = {
     title: 'Travelers & Member Directory',
     subtitle: 'Manage traveler accounts, permissions, authentication security, and personalized travel profile preferences.',
     icon: Users,
-    color: 'text-blue-400',
-    bg: 'bg-blue-500/10 border-blue-500/20',
+    color: 'text-amber-400',
+    bg: 'bg-amber-500/10 border-amber-500/20',
     plannedFeatures: [
       'Role-based access control (Admin / Traveler)',
       'Account suspension & activity logs',
@@ -45,8 +44,8 @@ const routeConfigs = {
     title: 'Gemini AI Telemetry & Analytics',
     subtitle: 'Deep performance metrics, prompt token usage, response times, and model accuracy logs for Google Gemini Generative AI.',
     icon: Sparkles,
-    color: 'text-purple-400',
-    bg: 'bg-purple-500/10 border-purple-500/20',
+    color: 'text-orange-400',
+    bg: 'bg-orange-500/10 border-orange-500/20',
     plannedFeatures: [
       'Live Gemini API Token Consumption Graphs',
       'Prompt Success vs. Error Rate Tracking',
@@ -91,8 +90,8 @@ export default function AdminComingSoon() {
     title: 'Module Under Construction',
     subtitle: 'This section of the WanderSync Admin Command Center is currently in active development.',
     icon: Clock,
-    color: 'text-cyan-400',
-    bg: 'bg-cyan-500/10 border-cyan-500/20',
+    color: 'text-orange-400',
+    bg: 'bg-orange-500/10 border-orange-500/20',
     plannedFeatures: [
       'High-performance asynchronous API endpoints',
       'Modern dark black glassmorphism UI',
@@ -104,32 +103,32 @@ export default function AdminComingSoon() {
   const IconComponent = current.icon;
 
   return (
-    <div className="w-full space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/80 pb-5">
+    <div className="w-full space-y-4 font-sans">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-border/80 pb-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-heading">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground font-heading">
             {current.title}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-[11px] text-muted-foreground mt-0.5">
             {current.subtitle}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${current.bg} ${current.color}`}>
-            <Clock className="size-3.5" />
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${current.bg} ${current.color}`}>
+            <Clock className="size-3" />
             {current.eta}
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
         <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
           <div className="flex items-center gap-4">
             <div className={`size-14 rounded-2xl border flex items-center justify-center ${current.bg} ${current.color}`}>
               <IconComponent className="size-7" />
             </div>
             <div>
-              <span className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-semibold">
+              <span className="text-xs font-mono uppercase tracking-widest text-orange-400 font-semibold">
                 Feature Roadmap
               </span>
               <h2 className="text-xl font-bold text-foreground tracking-tight">
@@ -152,7 +151,7 @@ export default function AdminComingSoon() {
                   key={i}
                   className="flex items-start gap-2.5 p-3.5 rounded-xl bg-secondary/50 border border-border text-xs text-foreground/90 font-medium"
                 >
-                  <CheckCircle2 className="size-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="size-4 text-orange-400 shrink-0 mt-0.5" />
                   <span>{feature}</span>
                 </div>
               ))}
