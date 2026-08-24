@@ -85,10 +85,10 @@ export default function AdminGallery() {
     navigate(`/admin/media/edit/${item._id}`);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = (id, title = 'this destination') => {
     showModal({
       title: 'Delete Destination',
-      message: 'Are you sure you want to permanently delete this destination, tourist spots, and hotels from Atlas & Cloudinary?',
+      message: `Are you sure you want to permanently delete "${title}" and all associated tourist spots and hotel stays?`,
       type: 'danger',
       isConfirm: true,
       confirmText: 'Delete',
@@ -213,7 +213,7 @@ export default function AdminGallery() {
                 item={item}
                 onInspect={(itm) => setInspectItem(itm)}
                 onEdit={(itm) => handleOpenEdit(itm)}
-                onDelete={(id) => handleDelete(id)}
+                onDelete={(id, title) => handleDelete(id, title)}
               />
             ))}
           </div>

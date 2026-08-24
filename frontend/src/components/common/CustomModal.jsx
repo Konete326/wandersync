@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { AlertTriangle, CheckCircle2, Info, AlertOctagon, X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { AlertTriangle, CheckCircle2, Info, AlertOctagon, X, Trash2 } from 'lucide-react';
 
 const CustomModal = ({
   isOpen,
@@ -13,6 +13,8 @@ const CustomModal = ({
   onCancel,
   onClose
 }) => {
+  const confirmBtnRef = useRef(null);
+
   const handleConfirm = () => {
     if (onConfirm) onConfirm();
     onClose();
@@ -26,80 +28,90 @@ const CustomModal = ({
   useEffect(() => {
     if (!isOpen) return;
 
+    // Focus confirm button for quick keyboard Enter confirmation
+    setTimeout(() => {
+      confirmBtnRef.current?.focus();
+    }, 50);
+
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         e.preventDefault();
         handleCancel();
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        handleConfirm();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onConfirm, onCancel, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const icons = {
-    info: <Info className="size-6 text-cyan-400" />,
-    success: <CheckCircle2 className="size-6 text-emerald-400" />,
-    warning: <AlertTriangle className="size-6 text-amber-400" />,
-    danger: <AlertOctagon className="size-6 text-rose-400" />
+    info: <Info className="size-5 text-orange-400" />,
+    success: <CheckCircle2 className="size-5 text-emerald-400" />,
+    warning: <AlertTriangle className="size-5 text-amber-400" />,
+    danger: <Trash2 className="size-5 text-rose-400" />
   };
 
   const iconBgs = {
-    info: 'bg-cyan-500/10 border-cyan-500/20',
-    success: 'bg-emerald-500/10 border-emerald-500/20',
-    warning: 'bg-amber-500/10 border-amber-500/20',
-    danger: 'bg-rose-500/10 border-rose-500/20'
+    info: 'bg-orange-500/10 border-orange-500/30 text-orange-400',
+    success: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
+    warning: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
+    danger: 'bg-rose-500/15 border-rose-500/30 text-rose-400'
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="relative w-full max-w-md p-6 rounded-2xl bg-card border border-border shadow-2xl animate-in zoom-in-95 duration-150 space-y-5">
+    <div
+      onClick={handleCancel}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-100 select-none"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md p-5 rounded-2xl bg-[#121215] border border-border/90 shadow-2xl shadow-black/80 animate-in zoom-in-95 duration-100 space-y-4 font-sans"
+      >
         <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-colors cursor-pointer"
+          onClick={handleCancel}
+          className="absolute top-3.5 right-3.5 p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-colors cursor-pointer"
         >
           <X className="size-4" />
         </button>
 
-        <div className="flex items-start gap-4">
-          <div className={`p-3 rounded-xl border flex items-center justify-center shrink-0 ${iconBgs[type] || iconBgs.info}`}>
+        <div className="flex items-start gap-3.5">
+          <div className={`p-2.5 rounded-xl border flex items-center justify-center shrink-0 ${iconBgs[type] || iconBgs.info}`}>
             {icons[type] || icons.info}
           </div>
           <div className="flex-1 pt-0.5 space-y-1">
-            <h3 className="text-base font-bold text-foreground font-heading tracking-tight">
+            <h3 className="text-sm sm:text-base font-bold text-foreground font-heading tracking-tight">
               {title}
             </h3>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               {message}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border/80">
+        <div className="flex items-center justify-end gap-2 pt-2.5 border-t border-border/70">
           {isConfirm && (
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground bg-secondary hover:bg-secondary/80 border border-border rounded-xl transition-all cursor-pointer min-h-[38px]"
+              className="px-3.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground bg-secondary/60 hover:bg-secondary border border-border rounded-xl transition-all cursor-pointer min-h-[34px]"
             >
               {cancelText}
             </button>
           )}
           <button
+            ref={confirmBtnRef}
             type="button"
             onClick={handleConfirm}
-            className={`px-5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer min-h-[38px] shadow-sm ${
+            className={`px-4 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer min-h-[34px] shadow-sm flex items-center gap-1.5 ${
               type === 'danger'
-                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/50'
-                : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-950/50'
+                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/50 ring-1 ring-rose-500/50'
+                : 'bg-orange-500 hover:bg-orange-400 text-zinc-950 shadow-orange-950/50 font-bold'
             }`}
           >
-            {confirmText}
+            {type === 'danger' && <Trash2 className="size-3.5" />}
+            <span>{confirmText}</span>
           </button>
         </div>
       </div>

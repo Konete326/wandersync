@@ -33,7 +33,7 @@ export default function DestinationCard({ item, onInspect, onEdit, onDelete }) {
               <Edit3 className="size-3" />
             </button>
             <button
-              onClick={() => onDelete(item._id)}
+              onClick={() => onDelete(item._id, item.title)}
               className="p-1 rounded-lg hover:bg-rose-500 text-zinc-300 hover:text-white transition-colors cursor-pointer"
               title="Delete destination"
             >
