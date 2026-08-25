@@ -32,6 +32,7 @@ import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
 import { FLIGHT_PRESETS } from '@/utils/entityPresetsData';
+import { broadcastRealtimeUpdate } from '@/utils/realtimeSync';
 
 const cabinClasses = ['Economy', 'Premium Economy', 'Business Class', 'First Class'];
 const flightStatuses = ['Scheduled', 'Available', 'Filling Fast', 'Boarding', 'Delayed'];
@@ -207,9 +208,11 @@ export default function AdminFlightEditor() {
 
       if (isEditing) {
         await updateFlight(id, body);
+        broadcastRealtimeUpdate('flights');
         showToast('Flight schedule updated successfully', 'success');
       } else {
         await createFlight(body);
+        broadcastRealtimeUpdate('flights');
         showToast('New flight scheduled to live flight board', 'success');
       }
       navigate('/admin/flights');

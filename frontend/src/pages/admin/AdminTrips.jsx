@@ -33,19 +33,31 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 
+import {
+  subscribeRealtimeUpdate,
+  broadcastRealtimeUpdate,
+  getCachedData,
+  setCachedData
+} from '@/utils/realtimeSync';
+
 export default function AdminTrips() {
   const navigate = useNavigate();
   const { showModal, showToast } = useModal();
 
-  const [trips, setTrips] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [visibility, setVisibility] = useState('all');
   const [selectedCountry, setSelectedCountry] = useState('All');
   const [countriesList, setCountriesList] = useState([]);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
+  const limit = 8;
+
+  const cacheKey = `trips_${visibility}_${selectedCountry}_${page}_${search}`;
+  const initialData = getCachedData(cacheKey);
+
+  const [trips, setTrips] = useState(initialData?.trips || []);
+  const [loading, setLoading] = useState(!initialData);
+  const [totalPages, setTotalPages] = useState(initialData?.pages || 1);
+  const [total, setTotal] = useState(initialData?.total || 0);
   const [inspectTrip, setInspectTrip] = useState(null);
 
   const loadCountries = async () => {
@@ -58,8 +70,12 @@ export default function AdminTrips() {
     }
   };
 
-  const loadTrips = async (pageNum = 1) => {
-    setLoading(true);
+  const loadTrips = async (pageNum = 1, isBackground = false) => {
+    const key = `trips_${visibility}_${selectedCountry}_${pageNum}_${search}`;
+    const cached = getCachedData(key);
+    if (!isBackground && !cached) {
+      setLoading(true);
+    }
     try {
       const res = await getAdminAllTrips(
         pageNum,
@@ -73,11 +89,14 @@ export default function AdminTrips() {
         setPage(res.data.page || pageNum);
         setTotalPages(res.data.pages || 1);
         setTotal(res.data.total || 0);
+        setCachedData(key, res.data);
       } else {
         setTrips([]);
       }
     } catch {
-      showToast('Could not load itineraries', 'error');
+      if (!isBackground) {
+        showToast('Could not load itineraries', 'error');
+      }
       setTrips([]);
     } finally {
       setLoading(false);
@@ -92,6 +111,19 @@ export default function AdminTrips() {
     loadTrips(page);
   }, [page, visibility, selectedCountry]);
 
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('trips', () => {
+      loadTrips(page, true);
+    });
+    const timer = setInterval(() => {
+      loadTrips(page, true);
+    }, 8000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
+  }, [page, visibility, selectedCountry, search]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setPage(1);
@@ -99,26 +131,30 @@ export default function AdminTrips() {
   };
 
   const handleToggleFeatured = async (id, currentVal) => {
+    setTrips((prev) =>
+      prev.map((t) => (t._id === id ? { ...t, featured: !currentVal } : t))
+    );
     try {
       await toggleTripFeatured(id);
+      broadcastRealtimeUpdate('trips');
       showToast(`Trip ${!currentVal ? 'featured on showcase' : 'unfeatured'}`, 'success');
-      setTrips((prev) =>
-        prev.map((t) => (t._id === id ? { ...t, featured: !currentVal } : t))
-      );
     } catch {
       showToast('Failed to update featured state', 'error');
+      loadTrips(page, true);
     }
   };
 
   const handleToggleVisibility = async (id, currentVal) => {
+    setTrips((prev) =>
+      prev.map((t) => (t._id === id ? { ...t, isPublic: !currentVal } : t))
+    );
     try {
       await toggleTripVisibility(id);
+      broadcastRealtimeUpdate('trips');
       showToast(`Trip is now ${!currentVal ? 'Public' : 'Private'}`, 'success');
-      setTrips((prev) =>
-        prev.map((t) => (t._id === id ? { ...t, isPublic: !currentVal } : t))
-      );
     } catch {
       showToast('Failed to update visibility state', 'error');
+      loadTrips(page, true);
     }
   };
 
@@ -128,12 +164,15 @@ export default function AdminTrips() {
       message: `Are you sure you want to delete the trip "${title || 'Untitled Trip'}"? This will permanently remove all associated days, schedule data, and community links.`,
       type: 'danger',
       onConfirm: async () => {
+        setTrips((prev) => prev.filter((t) => t._id !== id));
+        setTotal((prev) => Math.max(0, prev - 1));
         try {
           await deleteTripAdmin(id);
+          broadcastRealtimeUpdate('trips');
           showToast('Trip itinerary deleted successfully', 'success');
-          loadTrips(page);
         } catch {
           showToast('Failed to delete itinerary', 'error');
+          loadTrips(page);
         }
       }
     });

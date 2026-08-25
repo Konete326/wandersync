@@ -20,6 +20,13 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 
+import {
+  subscribeRealtimeUpdate,
+  broadcastRealtimeUpdate,
+  getCachedData,
+  setCachedData
+} from '@/utils/realtimeSync';
+
 const spotCategories = ['All', 'Landmark', 'Temple & Shrine', 'Nature & Park', 'Museum', 'Beach', 'Historical Site', 'Viewpoint'];
 
 export default function AdminSpots() {
@@ -29,16 +36,19 @@ export default function AdminSpots() {
 
   const { showModal, showToast } = useModal();
 
-  const [spots, setSpots] = useState([]);
-  const [countriesList, setCountriesList] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   const [country, setCountry] = useState(initialCountry);
   const [category, setCategory] = useState('All');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
+
+  const cacheKey = `spots_${country}_${category}_${page}_${search}`;
+  const initialData = getCachedData(cacheKey);
+
+  const [spots, setSpots] = useState(initialData?.spots || []);
+  const [countriesList, setCountriesList] = useState([]);
+  const [loading, setLoading] = useState(!initialData);
+  const [totalPages, setTotalPages] = useState(initialData?.pages || 1);
+  const [total, setTotal] = useState(initialData?.total || 0);
 
   useEffect(() => {
     const loadCountryOptions = async () => {
@@ -53,8 +63,13 @@ export default function AdminSpots() {
     loadCountryOptions();
   }, []);
 
-  const loadData = async (pageNum = 1) => {
-    setLoading(true);
+  const loadData = async (pageNum = 1, isBackground = false) => {
+    const key = `spots_${country}_${category}_${pageNum}_${search}`;
+    const cached = getCachedData(key);
+    if (!isBackground && !cached) {
+      setLoading(true);
+    }
+
     try {
       const res = await fetchSpots(pageNum, 6, country, '', category, search);
       if (res.data) {
@@ -62,9 +77,12 @@ export default function AdminSpots() {
         setPage(res.data.page || pageNum);
         setTotalPages(res.data.pages || 1);
         setTotal(res.data.total || 0);
+        setCachedData(key, res.data);
       }
     } catch {
-      showToast('Could not load tourist attractions', 'error');
+      if (!isBackground) {
+        showToast('Could not load tourist attractions', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -74,6 +92,19 @@ export default function AdminSpots() {
     loadData(1);
   }, [country, category]);
 
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('spots', () => {
+      loadData(page, true);
+    });
+    const timer = setInterval(() => {
+      loadData(page, true);
+    }, 8000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
+  }, [page, country, category, search]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     loadData(1);
@@ -81,18 +112,21 @@ export default function AdminSpots() {
 
   const handleDelete = (id, name) => {
     showModal({
-      title: 'Delete Tourist Spot',
-      message: `Are you sure you want to delete attraction "${name}"?`,
+      title: 'Delete Attraction Spot',
+      message: `Are you sure you want to delete "${name}" from your platform spots directory?`,
       type: 'danger',
       isConfirm: true,
       confirmText: 'Delete',
       onConfirm: async () => {
+        setSpots((prev) => prev.filter((s) => s._id !== id));
+        setTotal((prev) => Math.max(0, prev - 1));
         try {
           await deleteSpot(id);
-          showToast('Tourist spot deleted successfully', 'info');
-          loadData(page);
+          broadcastRealtimeUpdate('spots');
+          showToast('Attraction removed successfully', 'info');
         } catch {
-          showToast('Failed to delete spot', 'error');
+          showToast('Failed to delete attraction', 'error');
+          loadData(page);
         }
       }
     });

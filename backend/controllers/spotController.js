@@ -18,7 +18,7 @@ export const getSpots = async (req, res) => {
     if (req.query.city && req.query.city !== 'All') filter.city = new RegExp(`^${req.query.city}$`, 'i');
     if (req.query.category && req.query.category !== 'All') filter.category = new RegExp(`^${req.query.category}$`, 'i');
     const total = await Spot.countDocuments(filter);
-    const spots = await Spot.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit);
+    const spots = await Spot.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean();
     return sendSuccess(res, 'Spots fetched successfully', {
       spots,
       total,
@@ -33,7 +33,7 @@ export const getSpots = async (req, res) => {
 
 export const getSpotById = async (req, res) => {
   try {
-    const spot = await Spot.findById(req.params.id);
+    const spot = await Spot.findById(req.params.id).lean();
     if (!spot) return sendError(res, 'Tourist spot not found', 404);
     return sendSuccess(res, 'Spot details fetched', spot);
   } catch (error) {

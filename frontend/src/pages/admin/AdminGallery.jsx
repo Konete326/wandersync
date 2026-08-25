@@ -26,6 +26,13 @@ import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import DestinationCard from '@/components/admin/DestinationCard';
 
+import {
+  subscribeRealtimeUpdate,
+  broadcastRealtimeUpdate,
+  getCachedData,
+  setCachedData
+} from '@/utils/realtimeSync';
+
 const categories = [
   'All',
   'Landscape',
@@ -40,19 +47,27 @@ const categories = [
 export default function AdminGallery() {
   const navigate = useNavigate();
   const { showModal, showToast } = useModal();
-  const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(6);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
 
+  const cacheKey = `gallery_${category}_${page}_${limit}_${search}`;
+  const initialData = getCachedData(cacheKey);
+
+  const [items, setItems] = useState(initialData?.items || []);
+  const [totalPages, setTotalPages] = useState(initialData?.pages || 1);
+  const [total, setTotal] = useState(initialData?.total || 0);
+  const [loading, setLoading] = useState(!initialData);
+
   const [inspectItem, setInspectItem] = useState(null);
 
-  const loadItems = async (pageNum = 1, currentLimit = limit) => {
-    setLoading(true);
+  const loadItems = async (pageNum = 1, currentLimit = limit, isBackground = false) => {
+    const key = `gallery_${category}_${pageNum}_${currentLimit}_${search}`;
+    const cached = getCachedData(key);
+    if (!isBackground && !cached) {
+      setLoading(true);
+    }
     try {
       const res = await fetchGalleryItems(pageNum, currentLimit, '', category, search);
       if (res.data?.items) {
@@ -60,9 +75,12 @@ export default function AdminGallery() {
         setPage(res.data.page || pageNum);
         setTotalPages(res.data.pages || 1);
         setTotal(res.data.total || 0);
+        setCachedData(key, res.data);
       }
     } catch {
-      showToast('Could not load destinations catalog', 'error');
+      if (!isBackground) {
+        showToast('Could not load destinations catalog', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -71,6 +89,19 @@ export default function AdminGallery() {
   useEffect(() => {
     loadItems(1, limit);
   }, [category, limit]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('gallery', () => {
+      loadItems(page, limit, true);
+    });
+    const timer = setInterval(() => {
+      loadItems(page, limit, true);
+    }, 8000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
+  }, [page, limit, category, search]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -93,12 +124,15 @@ export default function AdminGallery() {
       isConfirm: true,
       confirmText: 'Delete',
       onConfirm: async () => {
+        setItems((prev) => prev.filter((i) => i._id !== id));
+        setTotal((prev) => Math.max(0, prev - 1));
         try {
           await deleteGalleryItem(id);
+          broadcastRealtimeUpdate('gallery');
           showToast('Destination deleted from database', 'info');
-          loadItems(page, limit);
         } catch {
           showToast('Failed to delete destination', 'error');
+          loadItems(page, limit);
         }
       }
     });

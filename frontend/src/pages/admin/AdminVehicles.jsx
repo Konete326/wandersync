@@ -20,23 +20,38 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 
+import {
+  subscribeRealtimeUpdate,
+  broadcastRealtimeUpdate,
+  getCachedData,
+  setCachedData
+} from '@/utils/realtimeSync';
+
 const vehicleTypes = ['All', 'SUV', 'Luxury Sedan', 'Van & Minibus', '4x4 Off-Road', 'Convertible', 'Electric'];
 
 export default function AdminVehicles() {
   const navigate = useNavigate();
   const { showModal, showToast } = useModal();
 
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   const [vehicleType, setVehicleType] = useState('All');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
 
-  const loadData = async (pageNum = 1) => {
-    setLoading(true);
+  const cacheKey = `vehicles_${vehicleType}_${page}_${search}`;
+  const initialData = getCachedData(cacheKey);
+
+  const [vehicles, setVehicles] = useState(initialData?.vehicles || []);
+  const [loading, setLoading] = useState(!initialData);
+  const [totalPages, setTotalPages] = useState(initialData?.pages || 1);
+  const [total, setTotal] = useState(initialData?.total || 0);
+
+  const loadData = async (pageNum = 1, isBackground = false) => {
+    const key = `vehicles_${vehicleType}_${pageNum}_${search}`;
+    const cached = getCachedData(key);
+    if (!isBackground && !cached) {
+      setLoading(true);
+    }
+
     try {
       const res = await fetchVehicles(pageNum, 6, vehicleType, '', '', '', search);
       if (res.data) {
@@ -44,9 +59,12 @@ export default function AdminVehicles() {
         setPage(res.data.page || pageNum);
         setTotalPages(res.data.pages || 1);
         setTotal(res.data.total || 0);
+        setCachedData(key, res.data);
       }
     } catch {
-      showToast('Could not load vehicles fleet', 'error');
+      if (!isBackground) {
+        showToast('Could not load vehicles fleet', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -55,6 +73,19 @@ export default function AdminVehicles() {
   useEffect(() => {
     loadData(1);
   }, [vehicleType]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('vehicles', () => {
+      loadData(page, true);
+    });
+    const timer = setInterval(() => {
+      loadData(page, true);
+    }, 8000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
+  }, [page, vehicleType, search]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -69,12 +100,15 @@ export default function AdminVehicles() {
       isConfirm: true,
       confirmText: 'Remove',
       onConfirm: async () => {
+        setVehicles((prev) => prev.filter((v) => v._id !== id));
+        setTotal((prev) => Math.max(0, prev - 1));
         try {
           await deleteVehicle(id);
+          broadcastRealtimeUpdate('vehicles');
           showToast('Vehicle removed from fleet', 'info');
-          loadData(page);
         } catch {
           showToast('Failed to delete vehicle', 'error');
+          loadData(page);
         }
       }
     });

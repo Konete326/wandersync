@@ -20,13 +20,9 @@ export const getVehicles = async (req, res) => {
     if (req.query.city && req.query.city !== 'All') filter.city = new RegExp(`^${req.query.city}$`, 'i');
     if (req.query.status && req.query.status !== 'All') filter.status = req.query.status;
     const total = await Vehicle.countDocuments(filter);
-    const vehicles = await Vehicle.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit);
+    const vehicles = await Vehicle.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean();
     return sendSuccess(res, 'Vehicles fetched successfully', {
-      vehicles,
-      total,
-      page,
-      pages: Math.ceil(total / limit) || 1,
-      limit
+      vehicles, total, page, pages: Math.ceil(total / limit) || 1, limit
     });
   } catch (error) {
     return sendError(res, error.message, 500);
@@ -35,7 +31,7 @@ export const getVehicles = async (req, res) => {
 
 export const getVehicleById = async (req, res) => {
   try {
-    const vehicle = await Vehicle.findById(req.params.id);
+    const vehicle = await Vehicle.findById(req.params.id).lean();
     if (!vehicle) return sendError(res, 'Vehicle not found', 404);
     return sendSuccess(res, 'Vehicle details fetched', vehicle);
   } catch (error) {

@@ -26,22 +26,37 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 
+import {
+  subscribeRealtimeUpdate,
+  broadcastRealtimeUpdate,
+  getCachedData,
+  setCachedData
+} from '@/utils/realtimeSync';
+
 export default function AdminUsers() {
   const { user: currentAdmin } = useAuth();
   const { showModal, showToast } = useModal();
 
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
   const limit = 10;
 
-  const loadUsers = async (pageNum = 1) => {
-    setLoading(true);
+  const cacheKey = `users_${roleFilter}_${statusFilter}_${page}_${search}`;
+  const initialData = getCachedData(cacheKey);
+
+  const [users, setUsers] = useState(initialData?.users || []);
+  const [loading, setLoading] = useState(!initialData);
+  const [totalPages, setTotalPages] = useState(initialData?.pages || 1);
+  const [total, setTotal] = useState(initialData?.total || 0);
+
+  const loadUsers = async (pageNum = 1, isBackground = false) => {
+    const key = `users_${roleFilter}_${statusFilter}_${pageNum}_${search}`;
+    const cached = getCachedData(key);
+    if (!isBackground && !cached) {
+      setLoading(true);
+    }
     try {
       const res = await getAdminAllUsers(
         pageNum,
@@ -55,11 +70,14 @@ export default function AdminUsers() {
         setPage(res.data.page || pageNum);
         setTotalPages(res.data.pages || 1);
         setTotal(res.data.total || 0);
+        setCachedData(key, res.data);
       } else {
         setUsers([]);
       }
     } catch {
-      showToast('Could not load users directory', 'error');
+      if (!isBackground) {
+        showToast('Could not load users directory', 'error');
+      }
       setUsers([]);
     } finally {
       setLoading(false);
@@ -69,6 +87,19 @@ export default function AdminUsers() {
   useEffect(() => {
     loadUsers(page);
   }, [page, roleFilter, statusFilter]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('users', () => {
+      loadUsers(page, true);
+    });
+    const timer = setInterval(() => {
+      loadUsers(page, true);
+    }, 8000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
+  }, [page, roleFilter, statusFilter, search]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -89,14 +120,16 @@ export default function AdminUsers() {
       message: `Are you sure you want to ${actionText} (${user.email})?`,
       type: 'warning',
       onConfirm: async () => {
+        setUsers((prev) =>
+          prev.map((u) => (u._id === user._id ? { ...u, role: newRole } : u))
+        );
         try {
           await updateUserRole(user._id, newRole);
+          broadcastRealtimeUpdate('users');
           showToast(`User role updated to ${newRole}`, 'success');
-          setUsers((prev) =>
-            prev.map((u) => (u._id === user._id ? { ...u, role: newRole } : u))
-          );
         } catch (err) {
           showToast(err.response?.data?.message || 'Failed to update user role', 'error');
+          loadUsers(page);
         }
       }
     });
@@ -117,14 +150,16 @@ export default function AdminUsers() {
         : `Reactivate account for ${user.name}? They will regain access to their trips and features.`,
       type: isBanning ? 'danger' : 'info',
       onConfirm: async () => {
+        setUsers((prev) =>
+          prev.map((u) => (u._id === user._id ? { ...u, status: newStatus } : u))
+        );
         try {
           await toggleUserStatus(user._id, newStatus);
+          broadcastRealtimeUpdate('users');
           showToast(`Account marked as ${newStatus}`, 'success');
-          setUsers((prev) =>
-            prev.map((u) => (u._id === user._id ? { ...u, status: newStatus } : u))
-          );
         } catch (err) {
           showToast(err.response?.data?.message || 'Failed to update user status', 'error');
+          loadUsers(page);
         }
       }
     });
@@ -140,12 +175,15 @@ export default function AdminUsers() {
       message: `Are you sure you want to delete ${user.name} (${user.email}) and all their generated itineraries? This action is permanent and cannot be undone.`,
       type: 'danger',
       onConfirm: async () => {
+        setUsers((prev) => prev.filter((u) => u._id !== user._id));
+        setTotal((prev) => Math.max(0, prev - 1));
         try {
           await deleteUserAdmin(user._id);
-          showToast('User account removed permanently', 'success');
-          loadUsers(page);
+          broadcastRealtimeUpdate('users');
+          showToast('User account permanently deleted', 'success');
         } catch (err) {
-          showToast(err.response?.data?.message || 'Failed to delete user', 'error');
+          showToast(err.response?.data?.message || 'Failed to delete user account', 'error');
+          loadUsers(page);
         }
       }
     });

@@ -30,6 +30,13 @@ import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 
+import {
+  subscribeRealtimeUpdate,
+  broadcastRealtimeUpdate,
+  getCachedData,
+  setCachedData
+} from '@/utils/realtimeSync';
+
 const categories = [
   'All',
   'AI & LLM Compute',
@@ -45,8 +52,18 @@ const billingCycles = ['Monthly', 'Annually', 'Usage-based', 'One-time'];
 
 export default function AdminExpenses() {
   const { showModal, showToast } = useModal();
-  const [expenses, setExpenses] = useState([]);
-  const [stats, setStats] = useState({
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('All');
+  const [status, setStatus] = useState('All');
+
+  const cacheKey = `expenses_${category}_${status}_${page}_${limit}_${search}`;
+  const initialData = getCachedData(cacheKey);
+
+  const [expenses, setExpenses] = useState(initialData?.expenses || []);
+  const [stats, setStats] = useState(initialData?.stats || {
     totalSpent: 0,
     pendingAmount: 0,
     uniqueVendors: 0,
@@ -54,15 +71,9 @@ export default function AdminExpenses() {
     totalRecords: 0
   });
 
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('All');
-  const [status, setStatus] = useState('All');
+  const [totalPages, setTotalPages] = useState(initialData?.pages || 1);
+  const [total, setTotal] = useState(initialData?.total || 0);
+  const [loading, setLoading] = useState(!initialData);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
@@ -80,8 +91,12 @@ export default function AdminExpenses() {
     notes: ''
   });
 
-  const loadExpenses = async (pageNum = 1, currentLimit = limit) => {
-    setLoading(true);
+  const loadExpenses = async (pageNum = 1, currentLimit = limit, isBackground = false) => {
+    const key = `expenses_${category}_${status}_${pageNum}_${currentLimit}_${search}`;
+    const cached = getCachedData(key);
+    if (!isBackground && !cached) {
+      setLoading(true);
+    }
     try {
       const res = await fetchPlatformExpenses(pageNum, currentLimit, category, status, search);
       if (res.data) {
@@ -92,9 +107,12 @@ export default function AdminExpenses() {
         if (res.data.stats) {
           setStats(res.data.stats);
         }
+        setCachedData(key, res.data);
       }
     } catch {
-      showToast('Could not load platform expenses', 'error');
+      if (!isBackground) {
+        showToast('Could not load platform expenses', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -103,6 +121,19 @@ export default function AdminExpenses() {
   useEffect(() => {
     loadExpenses(1, limit);
   }, [category, status, limit]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('expenses', () => {
+      loadExpenses(page, limit, true);
+    });
+    const timer = setInterval(() => {
+      loadExpenses(page, limit, true);
+    }, 8000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
+  }, [page, limit, category, status, search]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -149,12 +180,15 @@ export default function AdminExpenses() {
       isConfirm: true,
       confirmText: 'Delete',
       onConfirm: async () => {
+        setExpenses((prev) => prev.filter((e) => e._id !== id));
+        setTotal((prev) => Math.max(0, prev - 1));
         try {
           await deletePlatformExpense(id);
+          broadcastRealtimeUpdate('expenses');
           showToast('Expense record deleted successfully', 'info');
-          loadExpenses(page, limit);
         } catch {
           showToast('Failed to delete expense record', 'error');
+          loadExpenses(page, limit);
         }
       }
     });
@@ -170,13 +204,15 @@ export default function AdminExpenses() {
     try {
       if (editingExpense) {
         await updatePlatformExpense(editingExpense._id, formData);
+        broadcastRealtimeUpdate('expenses');
         showToast('Platform expense record updated', 'success');
       } else {
         await createPlatformExpense(formData);
+        broadcastRealtimeUpdate('expenses');
         showToast('New platform expense recorded', 'success');
       }
       setModalOpen(false);
-      loadExpenses(page, limit);
+      loadExpenses(page, limit, true);
     } catch {
       showToast('Failed to save platform expense', 'error');
     } finally {

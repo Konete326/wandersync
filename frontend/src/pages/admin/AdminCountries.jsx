@@ -18,22 +18,37 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 
+import {
+  subscribeRealtimeUpdate,
+  broadcastRealtimeUpdate,
+  getCachedData,
+  setCachedData
+} from '@/utils/realtimeSync';
+
 const continents = ['All', 'Asia', 'Europe', 'North America', 'South America', 'Africa', 'Oceania'];
 
 export default function AdminCountries() {
   const navigate = useNavigate();
   const { showModal, showToast } = useModal();
 
-  const [countries, setCountries] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `countries_${continent}_${page}_${search}`;
+  const initialData = getCachedData(cacheKey);
+
+  const [countries, setCountries] = useState(initialData?.countries || []);
+  const [loading, setLoading] = useState(!initialData);
   const [continent, setContinent] = useState('All');
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(initialData?.page || 1);
+  const [totalPages, setTotalPages] = useState(initialData?.pages || 1);
+  const [total, setTotal] = useState(initialData?.total || 0);
 
-  const loadData = async (pageNum = 1) => {
-    setLoading(true);
+  const loadData = async (pageNum = 1, isBackground = false) => {
+    const key = `countries_${continent}_${pageNum}_${search}`;
+    const cached = getCachedData(key);
+    if (!isBackground && !cached) {
+      setLoading(true);
+    }
+
     try {
       const res = await fetchCountries(pageNum, 6, continent, search);
       if (res.data) {
@@ -41,9 +56,12 @@ export default function AdminCountries() {
         setPage(res.data.page || pageNum);
         setTotalPages(res.data.pages || 1);
         setTotal(res.data.total || 0);
+        setCachedData(key, res.data);
       }
     } catch {
-      showToast('Could not load countries catalog', 'error');
+      if (!isBackground) {
+        showToast('Could not load countries catalog', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -52,6 +70,19 @@ export default function AdminCountries() {
   useEffect(() => {
     loadData(1);
   }, [continent]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('countries', () => {
+      loadData(page, true);
+    });
+    const timer = setInterval(() => {
+      loadData(page, true);
+    }, 8000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
+  }, [page, continent, search]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -66,12 +97,15 @@ export default function AdminCountries() {
       isConfirm: true,
       confirmText: 'Delete',
       onConfirm: async () => {
+        setCountries((prev) => prev.filter((c) => c._id !== id));
+        setTotal((prev) => Math.max(0, prev - 1));
         try {
           await deleteCountry(id);
+          broadcastRealtimeUpdate('countries');
           showToast('Country deleted successfully', 'info');
-          loadData(page);
         } catch {
           showToast('Failed to delete country', 'error');
+          loadData(page);
         }
       }
     });

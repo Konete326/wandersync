@@ -25,22 +25,33 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 
+import {
+  subscribeRealtimeUpdate,
+  broadcastRealtimeUpdate,
+  getCachedData,
+  setCachedData
+} from '@/utils/realtimeSync';
+
 const statusOptions = ['All', 'Open', 'Filling Fast', 'Sold Out', 'In Progress', 'Completed'];
 
 export default function AdminGroupTours() {
   const navigate = useNavigate();
   const { showModal, showToast } = useModal();
 
-  const [tours, setTours] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
-  const [countriesList, setCountriesList] = useState([]);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
   const limit = 6;
+
+  const cacheKey = `tours_${selectedCountry}_${selectedStatus}_${page}_${search}`;
+  const initialData = getCachedData(cacheKey);
+
+  const [tours, setTours] = useState(initialData?.tours || []);
+  const [loading, setLoading] = useState(!initialData);
+  const [countriesList, setCountriesList] = useState([]);
+  const [totalPages, setTotalPages] = useState(initialData?.pages || 1);
+  const [total, setTotal] = useState(initialData?.total || 0);
 
   const loadCountries = async () => {
     try {
@@ -52,8 +63,13 @@ export default function AdminGroupTours() {
     }
   };
 
-  const loadTours = async (pageNum = 1) => {
-    setLoading(true);
+  const loadTours = async (pageNum = 1, isBackground = false) => {
+    const key = `tours_${selectedCountry}_${selectedStatus}_${pageNum}_${search}`;
+    const cached = getCachedData(key);
+    if (!isBackground && !cached) {
+      setLoading(true);
+    }
+
     try {
       const res = await fetchGroupTours(
         pageNum,
@@ -67,11 +83,14 @@ export default function AdminGroupTours() {
         setPage(res.data.page || pageNum);
         setTotalPages(res.data.pages || 1);
         setTotal(res.data.total || 0);
+        setCachedData(key, res.data);
       } else {
         setTours([]);
       }
     } catch {
-      showToast('Could not load group tour packages', 'error');
+      if (!isBackground) {
+        showToast('Could not load group tour packages', 'error');
+      }
       setTours([]);
     } finally {
       setLoading(false);
@@ -86,6 +105,19 @@ export default function AdminGroupTours() {
     loadTours(page);
   }, [page, selectedCountry, selectedStatus]);
 
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('group-tours', () => {
+      loadTours(page, true);
+    });
+    const timer = setInterval(() => {
+      loadTours(page, true);
+    }, 8000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
+  }, [page, selectedCountry, selectedStatus, search]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setPage(1);
@@ -94,16 +126,21 @@ export default function AdminGroupTours() {
 
   const handleDelete = (id, title) => {
     showModal({
-      title: 'Delete Group Tour Package?',
-      message: `Are you sure you want to remove the group tour "${title}"? This will permanently delete the itinerary package and seat allocation.`,
+      title: 'Delete Tour Package',
+      message: `Are you sure you want to permanently delete "${title}" from the active agency catalog?`,
       type: 'danger',
+      isConfirm: true,
+      confirmText: 'Delete Tour',
       onConfirm: async () => {
+        setTours((prev) => prev.filter((t) => t._id !== id));
+        setTotal((prev) => Math.max(0, prev - 1));
         try {
           await deleteGroupTour(id);
-          showToast('Tour package removed successfully', 'success');
-          loadTours(page);
+          broadcastRealtimeUpdate('group-tours');
+          showToast('Tour package removed from catalog', 'info');
         } catch {
-          showToast('Failed to delete tour package', 'error');
+          showToast('Failed to delete group tour', 'error');
+          loadTours(page);
         }
       }
     });

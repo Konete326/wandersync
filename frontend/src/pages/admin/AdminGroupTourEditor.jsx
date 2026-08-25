@@ -34,6 +34,7 @@ import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
 import { detectLocalCallingCode } from '@/utils/countryDetector';
 import { GROUP_TOUR_PRESETS } from '@/utils/entityPresetsData';
+import { broadcastRealtimeUpdate } from '@/utils/realtimeSync';
 
 const tourCategories = ['Cultural & Adventure', 'Family Expedition', 'Honeymoon Special', 'Pilgrimage & Sacred', 'Nature & Safari', 'Corporate Retreat'];
 const tourStatuses = ['Open', 'Filling Fast', 'Sold Out', 'In Progress', 'Completed'];
@@ -218,9 +219,11 @@ export default function AdminGroupTourEditor() {
 
       if (isEditing) {
         await updateGroupTour(id, body);
+        broadcastRealtimeUpdate('group-tours');
         showToast('Group tour package updated successfully', 'success');
       } else {
         await createGroupTour(body);
+        broadcastRealtimeUpdate('group-tours');
         showToast('New group tour published to agency catalog', 'success');
       }
       navigate('/admin/group-tours');

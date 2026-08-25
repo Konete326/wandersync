@@ -30,8 +30,8 @@ export const getPlatformExpenses = async (req, res) => {
       ];
     }
     const total = await Expense.countDocuments(filter);
-    const expenses = await Expense.find(filter).sort({ date: -1 }).skip((page - 1) * limit).limit(limit).populate('user', 'name email');
-    const allPlatform = await Expense.find({ isPlatformExpense: true });
+    const expenses = await Expense.find(filter).sort({ date: -1 }).skip((page - 1) * limit).limit(limit).populate('user', 'name email').lean();
+    const allPlatform = await Expense.find({ isPlatformExpense: true }).lean();
     const totalSpent = allPlatform.filter((e) => e.status === 'Paid').reduce((sum, e) => sum + e.amount, 0);
     const pendingAmount = allPlatform.filter((e) => e.status === 'Pending').reduce((sum, e) => sum + e.amount, 0);
     const uniqueVendors = new Set(allPlatform.map((e) => e.vendor)).size;

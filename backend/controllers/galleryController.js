@@ -17,7 +17,7 @@ export const getGalleryItems = async (req, res) => {
       ];
     }
     const total = await Gallery.countDocuments(filter);
-    const items = await Gallery.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).populate('createdBy', 'name email');
+    const items = await Gallery.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).populate('createdBy', 'name email').lean();
     return sendSuccess(res, 'Gallery items fetched successfully', { items, total, page, pages: Math.ceil(total / limit) || 1, limit });
   } catch (error) {
     return sendError(res, error.message, 500);
@@ -26,7 +26,7 @@ export const getGalleryItems = async (req, res) => {
 
 export const getGalleryItemById = async (req, res) => {
   try {
-    const item = await Gallery.findById(req.params.id).populate('createdBy', 'name email');
+    const item = await Gallery.findById(req.params.id).populate('createdBy', 'name email').lean();
     if (!item) return sendError(res, 'Destination not found', 404);
     return sendSuccess(res, 'Destination details fetched', item);
   } catch (error) {

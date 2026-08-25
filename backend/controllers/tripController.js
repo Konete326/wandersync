@@ -5,7 +5,7 @@ const generateSlug = () => Math.random().toString(36).substring(2, 10);
 
 export const getUserTrips = async (req, res) => {
   try {
-    const trips = await Trip.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const trips = await Trip.find({ user: req.user._id }).sort({ createdAt: -1 }).lean();
     return sendSuccess(res, 'Trips retrieved successfully', trips);
   } catch (error) {
     return sendError(res, error.message, 500);
@@ -14,7 +14,7 @@ export const getUserTrips = async (req, res) => {
 
 export const getTripById = async (req, res) => {
   try {
-    const trip = await Trip.findById(req.params.id);
+    const trip = await Trip.findById(req.params.id).lean();
     if (!trip) {
       return sendError(res, 'Trip not found', 404);
     }
@@ -29,7 +29,7 @@ export const getTripById = async (req, res) => {
 
 export const getPublicTrips = async (req, res) => {
   try {
-    const trips = await Trip.find({ isPublic: true }).populate('user', 'name avatar').sort({ createdAt: -1 }).limit(12);
+    const trips = await Trip.find({ isPublic: true }).populate('user', 'name avatar').sort({ createdAt: -1 }).limit(12).lean();
     return sendSuccess(res, 'Public community trips retrieved', trips);
   } catch (error) {
     return sendError(res, error.message, 500);
@@ -38,7 +38,7 @@ export const getPublicTrips = async (req, res) => {
 
 export const getSharedTrip = async (req, res) => {
   try {
-    const trip = await Trip.findOne({ shareSlug: req.params.shareSlug, isPublic: true }).populate('user', 'name avatar');
+    const trip = await Trip.findOne({ shareSlug: req.params.shareSlug, isPublic: true }).populate('user', 'name avatar').lean();
     if (!trip) {
       return sendError(res, 'Shared trip not found or is private', 404);
     }

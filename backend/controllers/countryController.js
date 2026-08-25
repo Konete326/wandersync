@@ -18,7 +18,7 @@ export const getCountries = async (req, res) => {
       filter.continent = new RegExp(`^${req.query.continent}$`, 'i');
     }
     const total = await Country.countDocuments(filter);
-    const countries = await Country.find(filter).sort({ name: 1 }).skip((page - 1) * limit).limit(limit);
+    const countries = await Country.find(filter).sort({ name: 1 }).skip((page - 1) * limit).limit(limit).lean();
     return sendSuccess(res, 'Countries fetched successfully', {
       countries,
       total,
@@ -33,7 +33,7 @@ export const getCountries = async (req, res) => {
 
 export const getCountryById = async (req, res) => {
   try {
-    const country = await Country.findById(req.params.id);
+    const country = await Country.findById(req.params.id).lean();
     if (!country) return sendError(res, 'Country not found', 404);
     return sendSuccess(res, 'Country details fetched', country);
   } catch (error) {

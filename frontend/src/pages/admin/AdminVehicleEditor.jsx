@@ -31,6 +31,7 @@ import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
 import { VEHICLE_PRESETS } from '@/utils/entityPresetsData';
+import { broadcastRealtimeUpdate } from '@/utils/realtimeSync';
 
 const vehicleTypes = ['SUV', 'Luxury Sedan', 'Van & Minibus', '4x4 Off-Road', 'Convertible', 'Electric'];
 const defaultFeaturesList = ['Air Conditioning', 'GPS Navigation System', 'Luggage Roof Rack', 'Bluetooth & USB Charging', 'Child Safety Seat', 'All-Wheel Drive (AWD)', 'Tinted Windows', 'Comprehensive Insurance'];
@@ -199,9 +200,11 @@ export default function AdminVehicleEditor() {
 
       if (isEditing) {
         await updateVehicle(id, body);
+        broadcastRealtimeUpdate('vehicles');
         showToast('Vehicle updated successfully', 'success');
       } else {
         await createVehicle(body);
+        broadcastRealtimeUpdate('vehicles');
         showToast('New vehicle added to transport fleet', 'success');
       }
       navigate('/admin/vehicles');

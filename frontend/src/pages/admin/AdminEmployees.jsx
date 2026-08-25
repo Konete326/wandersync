@@ -37,6 +37,13 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 
+import {
+  subscribeRealtimeUpdate,
+  broadcastRealtimeUpdate,
+  getCachedData,
+  setCachedData
+} from '@/utils/realtimeSync';
+
 const DEPARTMENTS = [
   'All',
   'Tour Operations',
@@ -71,15 +78,18 @@ export default function AdminEmployees() {
   const { showModal } = useModal();
 
   const [activeTab, setActiveTab] = useState('roster');
-  const [employees, setEmployees] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   const [search, setSearch] = useState('');
   const [selectedDept, setSelectedDept] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [taskPriorityFilter, setTaskPriorityFilter] = useState('All');
   const [taskStatusFilter, setTaskStatusFilter] = useState('All');
+
+  const cacheKey = `employees_${selectedDept}_${selectedStatus}_${taskPriorityFilter}_${taskStatusFilter}_${search}`;
+  const initialData = getCachedData(cacheKey);
+
+  const [employees, setEmployees] = useState(initialData?.employees || []);
+  const [tasks, setTasks] = useState(initialData?.tasks || []);
+  const [loading, setLoading] = useState(!initialData);
 
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
@@ -104,9 +114,13 @@ export default function AdminEmployees() {
     dueDate: ''
   });
 
-  const loadData = async () => {
-    try {
+  const loadData = async (isBackground = false) => {
+    const key = `employees_${selectedDept}_${selectedStatus}_${taskPriorityFilter}_${taskStatusFilter}_${search}`;
+    const cached = getCachedData(key);
+    if (!isBackground && !cached) {
       setLoading(true);
+    }
+    try {
       const [empRes, taskRes] = await Promise.all([
         fetchAdminEmployees({
           search,
@@ -119,10 +133,15 @@ export default function AdminEmployees() {
         })
       ]);
 
-      setEmployees(empRes.data || []);
-      setTasks(taskRes.data || []);
+      const empData = empRes.data || [];
+      const taskData = taskRes.data || [];
+      setEmployees(empData);
+      setTasks(taskData);
+      setCachedData(key, { employees: empData, tasks: taskData });
     } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to load staff records', 'error');
+      if (!isBackground) {
+        showToast(err.response?.data?.message || 'Failed to load staff records', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -131,6 +150,19 @@ export default function AdminEmployees() {
   useEffect(() => {
     loadData();
   }, [selectedDept, selectedStatus, taskPriorityFilter, taskStatusFilter]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('employees', () => {
+      loadData(true);
+    });
+    const timer = setInterval(() => {
+      loadData(true);
+    }, 8000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
+  }, [selectedDept, selectedStatus, taskPriorityFilter, taskStatusFilter, search]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -177,13 +209,15 @@ export default function AdminEmployees() {
     try {
       if (editingEmployee) {
         await updateAdminEmployee(editingEmployee._id, employeeForm);
+        broadcastRealtimeUpdate('employees');
         showToast('Staff member updated successfully', 'success');
       } else {
         await createAdminEmployee(employeeForm);
+        broadcastRealtimeUpdate('employees');
         showToast('New staff member added to roster', 'success');
       }
       setIsEmployeeModalOpen(false);
-      loadData();
+      loadData(true);
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to save staff member', 'error');
     }
@@ -195,12 +229,14 @@ export default function AdminEmployees() {
       message: `Are you sure you want to remove ${emp.name} (${emp.role})? All their delegated tasks will also be deleted.`,
       type: 'danger',
       onConfirm: async () => {
+        setEmployees((prev) => prev.filter((e) => e._id !== emp._id));
         try {
           await deleteAdminEmployee(emp._id);
+          broadcastRealtimeUpdate('employees');
           showToast('Staff member removed', 'success');
-          loadData();
         } catch (err) {
           showToast(err.response?.data?.message || 'Failed to delete staff member', 'error');
+          loadData();
         }
       }
     });

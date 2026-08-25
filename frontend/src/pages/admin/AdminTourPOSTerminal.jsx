@@ -28,6 +28,13 @@ import {
   formatPhoneNumber
 } from '@/utils/countryDetector';
 
+import {
+  subscribeRealtimeUpdate,
+  broadcastRealtimeUpdate,
+  getCachedData,
+  setCachedData
+} from '@/utils/realtimeSync';
+
 const paymentMethods = ['POS Terminal', 'Cash', 'Credit Card', 'Bank Transfer'];
 
 export default function AdminTourPOSTerminal() {
@@ -36,10 +43,13 @@ export default function AdminTourPOSTerminal() {
   const navigate = useNavigate();
   const { showToast } = useModal();
 
-  const [tours, setTours] = useState([]);
-  const [loadingTours, setLoadingTours] = useState(true);
-  const [selectedTour, setSelectedTour] = useState(null);
   const [search, setSearch] = useState('');
+  const cacheKey = `pos_tours_${search}`;
+  const initialData = getCachedData(cacheKey);
+
+  const [tours, setTours] = useState(initialData?.tours || []);
+  const [loadingTours, setLoadingTours] = useState(!initialData);
+  const [selectedTour, setSelectedTour] = useState(initialData?.tours?.[0] || null);
 
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -53,21 +63,32 @@ export default function AdminTourPOSTerminal() {
 
   const [issuedBooking, setIssuedBooking] = useState(null);
 
-  const loadTours = async () => {
-    setLoadingTours(true);
+  const loadTours = async (isBackground = false) => {
+    const key = `pos_tours_${search}`;
+    const cached = getCachedData(key);
+    if (!isBackground && !cached) {
+      setLoadingTours(true);
+    }
     try {
       const res = await fetchGroupTours(1, 30, search, '', 'Open');
       if (res.data?.tours) {
         setTours(res.data.tours);
+        setCachedData(key, res.data);
         if (initialTourId) {
           const found = res.data.tours.find((t) => t._id === initialTourId);
           if (found) setSelectedTour(found);
-        } else if (res.data.tours.length > 0 && !selectedTour) {
-          setSelectedTour(res.data.tours[0]);
+        } else if (res.data.tours.length > 0) {
+          setSelectedTour((curr) => {
+            if (!curr) return res.data.tours[0];
+            const updated = res.data.tours.find((t) => t._id === curr._id);
+            return updated || res.data.tours[0];
+          });
         }
       }
     } catch {
-      showToast('Could not load group tours catalog', 'error');
+      if (!isBackground) {
+        showToast('Could not load group tours catalog', 'error');
+      }
     } finally {
       setLoadingTours(false);
     }
@@ -75,6 +96,19 @@ export default function AdminTourPOSTerminal() {
 
   useEffect(() => {
     loadTours();
+  }, [search]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('group-tours', () => {
+      loadTours(true);
+    });
+    const timer = setInterval(() => {
+      loadTours(true);
+    }, 8000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
   }, [search]);
 
   const unitPrice = selectedTour?.pricePerPerson || 0;
@@ -115,8 +149,9 @@ export default function AdminTourPOSTerminal() {
 
       if (res.data) {
         setIssuedBooking(res.data);
+        broadcastRealtimeUpdate('group-tours');
         showToast('Ticket issued successfully! Ready to print.', 'success');
-        loadTours();
+        loadTours(true);
         setCustomerName('');
         setCustomerEmail('');
         setPhoneNumber('');

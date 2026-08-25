@@ -14,7 +14,7 @@ export const getGroupTours = async (req, res) => {
     if (req.query.country && req.query.country !== 'All') filter.country = new RegExp(`^${req.query.country}$`, 'i');
     if (req.query.status && req.query.status !== 'All') filter.status = req.query.status;
     const total = await GroupTour.countDocuments(filter);
-    const tours = await GroupTour.find(filter).sort({ startDate: 1 }).skip((page - 1) * limit).limit(limit);
+    const tours = await GroupTour.find(filter).sort({ startDate: 1 }).skip((page - 1) * limit).limit(limit).lean();
     return sendSuccess(res, 'Group tours retrieved', { tours, total, page, pages: Math.ceil(total / limit) || 1, limit });
   } catch (error) {
     return sendError(res, error.message, 500);
@@ -23,7 +23,7 @@ export const getGroupTours = async (req, res) => {
 
 export const getGroupTourById = async (req, res) => {
   try {
-    const tour = await GroupTour.findById(req.params.id);
+    const tour = await GroupTour.findById(req.params.id).lean();
     if (!tour) return sendError(res, 'Group tour not found', 404);
     return sendSuccess(res, 'Group tour details', tour);
   } catch (error) {

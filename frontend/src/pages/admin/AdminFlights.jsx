@@ -23,22 +23,33 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 
+import {
+  subscribeRealtimeUpdate,
+  broadcastRealtimeUpdate,
+  getCachedData,
+  setCachedData
+} from '@/utils/realtimeSync';
+
 const cabinClasses = ['All', 'Economy', 'Premium Economy', 'Business Class', 'First Class'];
 
 export default function AdminFlights() {
   const navigate = useNavigate();
   const { showModal, showToast } = useModal();
 
-  const [flights, setFlights] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('All');
   const [selectedCabin, setSelectedCabin] = useState('All');
-  const [countriesList, setCountriesList] = useState([]);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
   const limit = 6;
+
+  const cacheKey = `flights_${selectedCountry}_${selectedCabin}_${page}_${search}`;
+  const initialData = getCachedData(cacheKey);
+
+  const [flights, setFlights] = useState(initialData?.flights || []);
+  const [loading, setLoading] = useState(!initialData);
+  const [countriesList, setCountriesList] = useState([]);
+  const [totalPages, setTotalPages] = useState(initialData?.pages || 1);
+  const [total, setTotal] = useState(initialData?.total || 0);
 
   const loadCountries = async () => {
     try {
@@ -50,8 +61,13 @@ export default function AdminFlights() {
     }
   };
 
-  const loadFlights = async (pageNum = 1) => {
-    setLoading(true);
+  const loadFlights = async (pageNum = 1, isBackground = false) => {
+    const key = `flights_${selectedCountry}_${selectedCabin}_${pageNum}_${search}`;
+    const cached = getCachedData(key);
+    if (!isBackground && !cached) {
+      setLoading(true);
+    }
+
     try {
       const res = await fetchFlights(
         pageNum,
@@ -66,11 +82,14 @@ export default function AdminFlights() {
         setPage(res.data.page || pageNum);
         setTotalPages(res.data.pages || 1);
         setTotal(res.data.total || 0);
+        setCachedData(key, res.data);
       } else {
         setFlights([]);
       }
     } catch {
-      showToast('Could not load flight schedules', 'error');
+      if (!isBackground) {
+        showToast('Could not load flight schedules', 'error');
+      }
       setFlights([]);
     } finally {
       setLoading(false);
@@ -85,24 +104,42 @@ export default function AdminFlights() {
     loadFlights(page);
   }, [page, selectedCountry, selectedCabin]);
 
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('flights', () => {
+      loadFlights(page, true);
+    });
+    const timer = setInterval(() => {
+      loadFlights(page, true);
+    }, 8000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
+  }, [page, selectedCountry, selectedCabin, search]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setPage(1);
     loadFlights(1);
   };
 
-  const handleDelete = (id, flightNumber, airline) => {
+  const handleDelete = (id, flightNumber) => {
     showModal({
-      title: 'Remove Scheduled Flight?',
-      message: `Are you sure you want to delete flight ${airline} (${flightNumber}) from the global schedule? This action cannot be undone.`,
+      title: 'Cancel & Delete Flight',
+      message: `Are you sure you want to permanently cancel and delete flight "${flightNumber}" from the schedule board?`,
       type: 'danger',
+      isConfirm: true,
+      confirmText: 'Delete Flight',
       onConfirm: async () => {
+        setFlights((prev) => prev.filter((f) => f._id !== id));
+        setTotal((prev) => Math.max(0, prev - 1));
         try {
           await deleteFlight(id);
-          showToast(`Flight ${flightNumber} removed successfully`, 'success');
-          loadFlights(page);
+          broadcastRealtimeUpdate('flights');
+          showToast('Flight deleted from schedule board', 'info');
         } catch {
-          showToast('Failed to delete flight', 'error');
+          showToast('Failed to delete flight schedule', 'error');
+          loadFlights(page);
         }
       }
     });

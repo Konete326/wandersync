@@ -32,6 +32,7 @@ import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
 import { HOTEL_PRESETS } from '@/utils/entityPresetsData';
+import { broadcastRealtimeUpdate } from '@/utils/realtimeSync';
 
 const priceRanges = ['$', '$$', '$$$', '$$$$'];
 const defaultAmenitiesList = ['Free High-Speed WiFi', 'Breakfast Included', 'Infinity Pool', 'Spa & Wellness', 'Airport Shuttle', 'Fitness Center', 'Ocean / Skyline View', 'Concierge Service'];
@@ -200,9 +201,11 @@ export default function AdminHotelEditor() {
 
       if (isEditing) {
         await updateHotel(id, body);
+        broadcastRealtimeUpdate('hotels');
         showToast('Hotel updated successfully', 'success');
       } else {
         await createHotel(body);
+        broadcastRealtimeUpdate('hotels');
         showToast('New hotel added to verified catalog', 'success');
       }
       navigate('/admin/hotels');

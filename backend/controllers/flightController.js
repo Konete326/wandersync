@@ -14,7 +14,7 @@ export const getFlights = async (req, res) => {
     if (req.query.destinationCity && req.query.destinationCity !== 'All') filter.destinationCity = new RegExp(`^${req.query.destinationCity}$`, 'i');
     if (req.query.cabinClass && req.query.cabinClass !== 'All') filter.cabinClass = req.query.cabinClass;
     const total = await Flight.countDocuments(filter);
-    const flights = await Flight.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit);
+    const flights = await Flight.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean();
     return sendSuccess(res, 'Flights fetched successfully', { flights, total, page, pages: Math.ceil(total / limit) || 1, limit });
   } catch (error) {
     return sendError(res, error.message, 500);
@@ -23,7 +23,7 @@ export const getFlights = async (req, res) => {
 
 export const getFlightById = async (req, res) => {
   try {
-    const flight = await Flight.findById(req.params.id);
+    const flight = await Flight.findById(req.params.id).lean();
     if (!flight) return sendError(res, 'Flight not found', 404);
     return sendSuccess(res, 'Flight details fetched', flight);
   } catch (error) {

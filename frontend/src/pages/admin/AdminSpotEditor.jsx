@@ -29,6 +29,7 @@ import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
 import { SPOT_PRESETS } from '@/utils/entityPresetsData';
+import { broadcastRealtimeUpdate } from '@/utils/realtimeSync';
 
 const spotCategories = ['Landmark', 'Temple & Shrine', 'Nature & Park', 'Museum', 'Beach', 'Historical Site', 'Viewpoint'];
 
@@ -179,9 +180,11 @@ export default function AdminSpotEditor() {
 
       if (isEditing) {
         await updateSpot(id, body);
+        broadcastRealtimeUpdate('spots');
         showToast('Attraction updated successfully', 'success');
       } else {
         await createSpot(body);
+        broadcastRealtimeUpdate('spots');
         showToast('New attraction added to catalog', 'success');
       }
       navigate('/admin/spots');

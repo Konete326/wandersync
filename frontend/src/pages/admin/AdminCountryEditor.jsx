@@ -32,6 +32,7 @@ import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
 import { WORLD_COUNTRIES, findCountryPreset } from '@/utils/worldCountriesData';
+import { broadcastRealtimeUpdate } from '@/utils/realtimeSync';
 
 const continents = ['Asia', 'Europe', 'North America', 'South America', 'Africa', 'Oceania'];
 
@@ -335,9 +336,11 @@ export default function AdminCountryEditor() {
 
       if (isEditing) {
         await updateCountry(id, body);
+        broadcastRealtimeUpdate('countries');
         showToast('Country details updated successfully', 'success');
       } else {
         await createCountry(body);
+        broadcastRealtimeUpdate('countries');
         showToast('New country added to global directory', 'success');
       }
       navigate('/admin/countries');

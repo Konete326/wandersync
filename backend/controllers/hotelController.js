@@ -19,13 +19,9 @@ export const getHotels = async (req, res) => {
     if (req.query.city && req.query.city !== 'All') filter.city = new RegExp(`^${req.query.city}$`, 'i');
     if (req.query.priceRange && req.query.priceRange !== 'All') filter.priceRange = req.query.priceRange;
     const total = await Hotel.countDocuments(filter);
-    const hotels = await Hotel.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit);
+    const hotels = await Hotel.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean();
     return sendSuccess(res, 'Hotels fetched successfully', {
-      hotels,
-      total,
-      page,
-      pages: Math.ceil(total / limit) || 1,
-      limit
+      hotels, total, page, pages: Math.ceil(total / limit) || 1, limit
     });
   } catch (error) {
     return sendError(res, error.message, 500);
@@ -34,7 +30,7 @@ export const getHotels = async (req, res) => {
 
 export const getHotelById = async (req, res) => {
   try {
-    const hotel = await Hotel.findById(req.params.id);
+    const hotel = await Hotel.findById(req.params.id).lean();
     if (!hotel) return sendError(res, 'Hotel not found', 404);
     return sendSuccess(res, 'Hotel details fetched', hotel);
   } catch (error) {
