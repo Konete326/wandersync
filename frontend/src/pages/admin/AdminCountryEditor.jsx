@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -13,7 +13,11 @@ import {
   Clock,
   Images,
   MapPin,
-  Sparkles
+  Sparkles,
+  ChevronDown,
+  Search,
+  Check,
+  Zap
 } from 'lucide-react';
 import { uploadImage } from '@/services/mediaService';
 import { compressImage } from '@/utils/imageCompressor';
@@ -27,8 +31,73 @@ import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
+import { WORLD_COUNTRIES, findCountryPreset } from '@/utils/worldCountriesData';
 
 const continents = ['Asia', 'Europe', 'North America', 'South America', 'Africa', 'Oceania'];
+
+const popularPresetChips = [
+  'Pakistan',
+  'Japan',
+  'United Arab Emirates',
+  'Switzerland',
+  'Turkey',
+  'Saudi Arabia',
+  'United States',
+  'United Kingdom',
+  'France',
+  'Italy',
+  'Spain'
+];
+
+const CURRENCY_SUGGESTIONS = [
+  'PKR (Rs)',
+  'USD ($)',
+  'EUR (€)',
+  'GBP (£)',
+  'AED (د.إ)',
+  'SAR (﷼)',
+  'TRY (₺)',
+  'JPY (¥)',
+  'CHF (Fr.)',
+  'AUD ($)',
+  'CAD ($)',
+  'SGD ($)',
+  'MYR (RM)',
+  'THB (฿)',
+  'QAR (QR)'
+];
+
+const LANGUAGE_SUGGESTIONS = [
+  'Urdu / English',
+  'English',
+  'Arabic / English',
+  'Japanese',
+  'German / French / Italian',
+  'Turkish',
+  'French',
+  'Spanish',
+  'Italian',
+  'German',
+  'Thai',
+  'Malay / English',
+  'Indonesian',
+  'Mandarin'
+];
+
+const TIMEZONE_SUGGESTIONS = [
+  'UTC+5 (PKT)',
+  'UTC+4 (GST)',
+  'UTC+3 (AST/TRT)',
+  'UTC+0 (GMT)',
+  'UTC+1 (CET)',
+  'UTC+2 (EET)',
+  'UTC+7 (ICT)',
+  'UTC+8 (SGT/MYT)',
+  'UTC+9 (JST)',
+  'UTC+10 (AEST)',
+  'UTC-5 (EST)',
+  'UTC-8 (PST)'
+];
 
 export default function AdminCountryEditor() {
   const { id } = useParams();
@@ -40,6 +109,9 @@ export default function AdminCountryEditor() {
   const [saving, setSaving] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const [countryFilter, setCountryFilter] = useState('');
+  const dropdownRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -57,6 +129,16 @@ export default function AdminCountryEditor() {
 
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState('');
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setCountryDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (isEditing) {
@@ -90,6 +172,34 @@ export default function AdminCountryEditor() {
     }
   }, [id, isEditing]);
 
+  const applyCountryPreset = (preset, notify = true) => {
+    if (!preset) return;
+    setFormData((prev) => ({
+      ...prev,
+      name: preset.name || prev.name,
+      code: preset.code || prev.code,
+      continent: preset.continent || prev.continent,
+      currency: preset.currency || prev.currency,
+      language: preset.language || prev.language,
+      timezone: preset.timezone || prev.timezone,
+      description: preset.description || prev.description,
+      popularCities: preset.popularCities?.length ? preset.popularCities : prev.popularCities
+    }));
+    setCountryDropdownOpen(false);
+    if (notify) {
+      showToast(`Auto-filled country telemetry for ${preset.name}!`, 'success');
+    }
+  };
+
+  const handleCountryNameChange = (val) => {
+    setFormData((prev) => ({ ...prev, name: val }));
+    setCountryFilter(val);
+    const matched = findCountryPreset(val);
+    if (matched && matched.name.toLowerCase() === val.trim().toLowerCase()) {
+      applyCountryPreset(matched, false);
+    }
+  };
+
   const handleCoverChange = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -118,21 +228,21 @@ export default function AdminCountryEditor() {
     }
   };
 
-  const handleRemoveGalleryImage = (idx) => {
+  const handleRemoveGalleryImage = (indexToRemove) => {
     setFormData((prev) => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== idx)
+      images: prev.images.filter((_, idx) => idx !== indexToRemove)
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name) {
+    if (!formData.name.trim()) {
       showToast('Country name is required', 'warning');
       return;
     }
     if (!coverFile && !formData.coverImage) {
-      showToast('Please upload a country cover photo', 'warning');
+      showToast('Please upload a primary cover image for the country', 'warning');
       return;
     }
 
@@ -147,8 +257,8 @@ export default function AdminCountryEditor() {
       body.append('timezone', formData.timezone);
       body.append('description', formData.description);
       body.append('featured', String(formData.featured));
+      body.append('popularCities', JSON.stringify(formData.popularCities.filter((c) => c.name.trim())));
       body.append('images', JSON.stringify(formData.images.filter(Boolean)));
-      body.append('popularCities', JSON.stringify(formData.popularCities.filter((c) => c.name)));
 
       if (coverFile) {
         const compressedCover = await compressImage(coverFile);
@@ -159,14 +269,14 @@ export default function AdminCountryEditor() {
 
       if (isEditing) {
         await updateCountry(id, body);
-        showToast('Country updated successfully', 'success');
+        showToast('Country details updated successfully', 'success');
       } else {
         await createCountry(body);
-        showToast('New country added to global catalog', 'success');
+        showToast('New country added to global directory', 'success');
       }
       navigate('/admin/countries');
     } catch {
-      showToast('Failed to save country', 'error');
+      showToast('Failed to save country record', 'error');
     } finally {
       setSaving(false);
     }
@@ -185,6 +295,11 @@ export default function AdminCountryEditor() {
       popularCities: data.popularCities?.length ? data.popularCities : prev.popularCities
     }));
   };
+
+  const filteredCountriesList = WORLD_COUNTRIES.filter((c) =>
+    c.name.toLowerCase().includes((countryFilter || '').toLowerCase()) ||
+    c.code.toLowerCase().includes((countryFilter || '').toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -210,7 +325,7 @@ export default function AdminCountryEditor() {
               {isEditing ? 'Edit Country & City Details' : 'Add New Country & Regional Hub'}
             </h1>
             <p className="text-[11px] text-muted-foreground">
-              Set country geography, primary cities, and currency
+              Smart auto-populate geography, ISO codes, currencies, and primary cities
             </p>
           </div>
         </div>
@@ -238,31 +353,97 @@ export default function AdminCountryEditor() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
-          <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
-            <Globe className="size-4 text-orange-400" />
-            <h2 className="text-sm font-bold text-foreground">1. Core Country & Media Information</h2>
+          <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
+            <div className="flex items-center gap-2">
+              <Globe className="size-4 text-orange-400" />
+              <h2 className="text-sm font-bold text-foreground">1. Core Country & Geography Telemetry</h2>
+            </div>
+            <span className="text-[10px] text-orange-400/90 bg-orange-500/10 border border-orange-500/30 px-2 py-0.5 rounded-md font-semibold flex items-center gap-1">
+              <Zap className="size-3" />
+              <span>Smart Country Auto-Fill Active</span>
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar py-0.5">
+              <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap mr-1">
+                Quick Select:
+              </span>
+              {popularPresetChips.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => applyCountryPreset(findCountryPreset(chip))}
+                  className={`text-[10px] px-2.5 py-0.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${
+                    formData.name.toLowerCase() === chip.toLowerCase()
+                      ? 'bg-orange-500 text-zinc-950 font-bold border-orange-500 shadow-xs'
+                      : 'bg-[#18181b] hover:bg-orange-500/10 text-muted-foreground hover:text-orange-400 border-border/80 hover:border-orange-500/40'
+                  }`}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-8 space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <ValidatedInput
-                  label="Country Name"
-                  required
-                  validationType="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g. Japan"
-                />
+                <div className="relative space-y-1" ref={dropdownRef}>
+                  <label className="text-[11px] font-bold text-zinc-300 flex items-center justify-between">
+                    <span>Country Name *</span>
+                    <span className="text-[10px] text-orange-400 font-normal">Auto-Fills Form</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => handleCountryNameChange(e.target.value)}
+                      onFocus={() => setCountryDropdownOpen(true)}
+                      placeholder="e.g. Pakistan, Japan, UAE"
+                      className="w-full px-3 py-1.5 pr-8 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setCountryDropdownOpen((prev) => !prev)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
+                    >
+                      <ChevronDown className="size-3.5" />
+                    </button>
+                  </div>
+
+                  {countryDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1 z-30 max-h-56 overflow-y-auto custom-scrollbar bg-[#18181b] border border-orange-500/40 rounded-xl shadow-2xl p-1 space-y-0.5">
+                      {filteredCountriesList.length > 0 ? (
+                        filteredCountriesList.map((c) => (
+                          <button
+                            key={c.code}
+                            type="button"
+                            onClick={() => applyCountryPreset(c)}
+                            className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs flex items-center justify-between hover:bg-orange-500/15 text-foreground hover:text-orange-400 transition-colors cursor-pointer"
+                          >
+                            <span className="font-semibold">{c.name}</span>
+                            <span className="text-[10px] font-mono text-muted-foreground bg-secondary/80 px-1.5 py-0.2 rounded border border-border/60">
+                              {c.code} • {c.continent}
+                            </span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-2 text-center text-[11px] text-muted-foreground">
+                          Custom Country Name (Type manually or use AI)
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 <ValidatedInput
                   label="ISO Code"
                   validationType="countryCode"
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                  placeholder="e.g. JP, IT, FR"
+                  placeholder="e.g. PK, JPN, UAE"
                   className="uppercase font-mono"
                 />
 
@@ -271,10 +452,12 @@ export default function AdminCountryEditor() {
                   <select
                     value={formData.continent}
                     onChange={(e) => setFormData({ ...formData, continent: e.target.value })}
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:border-orange-500/60 cursor-pointer"
                   >
                     {continents.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c} className="bg-[#18181b] text-foreground">
+                        {c}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -285,39 +468,63 @@ export default function AdminCountryEditor() {
                   <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1">
                     <DollarSign className="size-3 text-orange-400" /> Currency
                   </label>
-                  <input
-                    type="text"
-                    value={formData.currency}
-                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    placeholder="e.g. JPY (¥) / EUR (€)"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      list="currency-presets"
+                      value={formData.currency}
+                      onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                      placeholder="e.g. PKR (Rs) / USD ($)"
+                      className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:border-orange-500/60"
+                    />
+                    <datalist id="currency-presets">
+                      {CURRENCY_SUGGESTIONS.map((curr) => (
+                        <option key={curr} value={curr} />
+                      ))}
+                    </datalist>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1">
                     <Languages className="size-3 text-orange-400" /> Primary Language
                   </label>
-                  <input
-                    type="text"
-                    value={formData.language}
-                    onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                    placeholder="e.g. Japanese / English"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      list="language-presets"
+                      value={formData.language}
+                      onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                      placeholder="e.g. Urdu / English"
+                      className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:border-orange-500/60"
+                    />
+                    <datalist id="language-presets">
+                      {LANGUAGE_SUGGESTIONS.map((lang) => (
+                        <option key={lang} value={lang} />
+                      ))}
+                    </datalist>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1">
                     <Clock className="size-3 text-orange-400" /> Timezone
                   </label>
-                  <input
-                    type="text"
-                    value={formData.timezone}
-                    onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                    placeholder="e.g. GMT+9 / UTC+1"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      list="timezone-presets"
+                      value={formData.timezone}
+                      onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                      placeholder="e.g. UTC+5 (PKT)"
+                      className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:border-orange-500/60"
+                    />
+                    <datalist id="timezone-presets">
+                      {TIMEZONE_SUGGESTIONS.map((tz) => (
+                        <option key={tz} value={tz} />
+                      ))}
+                    </datalist>
+                  </div>
                 </div>
               </div>
 
@@ -328,12 +535,11 @@ export default function AdminCountryEditor() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Rich overview detailing climate, highlights, and travel appeal..."
-                  className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none resize-none leading-relaxed"
+                  className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:border-orange-500/60 resize-none leading-relaxed"
                 />
               </div>
             </div>
 
-            
             <div className="md:col-span-4 space-y-1">
               <label className="text-[11px] font-bold text-zinc-300">Country Cover Photo *</label>
               <div className="relative h-44 w-full rounded-xl border border-dashed border-border hover:border-orange-500/40 bg-secondary/30 flex flex-col items-center justify-center overflow-hidden transition-colors">
@@ -359,12 +565,11 @@ export default function AdminCountryEditor() {
             </div>
           </div>
 
-          
           <div className="pt-3 border-t border-border/70 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <Images className="size-3.5 text-orange-400" />
-                <span>Scenic Photos & Landscapes ({formData.images.length})</span>
+                <span>Scenic Multi-Photo Gallery ({formData.images.length})</span>
               </label>
               <label className="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 cursor-pointer">
                 <Plus className="size-3" />
@@ -383,7 +588,7 @@ export default function AdminCountryEditor() {
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
               {formData.images.map((imgUrl, idx) => (
                 <div key={idx} className="relative h-20 rounded-lg overflow-hidden border border-border group">
-                  <img src={imgUrl} alt={`Scenic ${idx + 1}`} className="size-full object-cover" />
+                  <img src={imgUrl} alt={`Country Scenic ${idx + 1}`} className="size-full object-cover" />
                   <button
                     type="button"
                     onClick={() => handleRemoveGalleryImage(idx)}
@@ -397,7 +602,6 @@ export default function AdminCountryEditor() {
           </div>
         </div>
 
-        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-3 shadow-md">
           <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
             <div className="flex items-center gap-2">
@@ -432,7 +636,7 @@ export default function AdminCountryEditor() {
                       updated[i].name = e.target.value;
                       setFormData({ ...formData, popularCities: updated });
                     }}
-                    placeholder="City Name (e.g. Kyoto, Tokyo, Osaka)"
+                    placeholder="City Name (e.g. Islamabad, Kyoto, Dubai)"
                     className="w-full font-bold bg-transparent text-xs text-foreground focus:outline-none"
                   />
                   {formData.popularCities.length > 1 && (
@@ -459,7 +663,7 @@ export default function AdminCountryEditor() {
                     updated[i].description = e.target.value;
                     setFormData({ ...formData, popularCities: updated });
                   }}
-                  placeholder="Short description..."
+                  placeholder="Short highlight description..."
                   className="w-full px-2 py-0.5 rounded bg-secondary/70 border border-border text-[11px] text-foreground focus:outline-none"
                 />
               </div>
@@ -467,7 +671,6 @@ export default function AdminCountryEditor() {
           </div>
         </div>
 
-        
         <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/80">
           <button
             type="button"
