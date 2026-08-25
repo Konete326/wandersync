@@ -13,8 +13,9 @@ const countrySchema = new mongoose.Schema({
   images: { type: [String], default: [] },
   popularCities: [{
     name: { type: String, trim: true },
-    description: { type: String, trim: true },
-    coverImage: { type: String, default: '' }
+    description: { type: String, trim: true, default: '' },
+    coverImage: { type: String, default: '' },
+    images: { type: [String], default: [] }
   }],
   featured: { type: Boolean, default: false },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

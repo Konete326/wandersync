@@ -108,6 +108,7 @@ export default function AdminCountryEditor() {
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [uploadingCityIndex, setUploadingCityIndex] = useState(null);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [countryFilter, setCountryFilter] = useState('');
@@ -123,7 +124,7 @@ export default function AdminCountryEditor() {
     description: '',
     coverImage: '',
     images: [],
-    popularCities: [{ name: '', description: '' }],
+    popularCities: [{ name: '', description: '', images: [] }],
     featured: false
   });
 
@@ -156,7 +157,13 @@ export default function AdminCountryEditor() {
               description: res.data.description || '',
               coverImage: res.data.coverImage || '',
               images: res.data.images || [],
-              popularCities: res.data.popularCities?.length ? res.data.popularCities : [{ name: '', description: '' }],
+              popularCities: res.data.popularCities?.length
+                ? res.data.popularCities.map((c) => ({
+                    name: c.name || '',
+                    description: c.description || '',
+                    images: c.images || (c.coverImage ? [c.coverImage] : [])
+                  }))
+                : [{ name: '', description: '', images: [] }],
               featured: Boolean(res.data.featured)
             });
             setCoverPreview(res.data.coverImage || '');
@@ -183,7 +190,13 @@ export default function AdminCountryEditor() {
       language: preset.language || prev.language,
       timezone: preset.timezone || prev.timezone,
       description: preset.description || prev.description,
-      popularCities: preset.popularCities?.length ? preset.popularCities : prev.popularCities
+      popularCities: preset.popularCities?.length
+        ? preset.popularCities.map((c) => ({
+            name: c.name || '',
+            description: c.description || '',
+            images: c.images || []
+          }))
+        : prev.popularCities
     }));
     setCountryDropdownOpen(false);
     if (notify) {
@@ -233,6 +246,54 @@ export default function AdminCountryEditor() {
       ...prev,
       images: prev.images.filter((_, idx) => idx !== indexToRemove)
     }));
+  };
+
+  const handleAddCityImages = async (cityIndex, files) => {
+    if (!files || !files.length) return;
+    const currentImages = formData.popularCities[cityIndex]?.images || [];
+    const remainingSlots = 3 - currentImages.length;
+    if (remainingSlots <= 0) {
+      showToast('Maximum 3 photos allowed per city', 'warning');
+      return;
+    }
+    const filesToUpload = Array.from(files).slice(0, remainingSlots);
+    setUploadingCityIndex(cityIndex);
+    try {
+      const uploadPromises = filesToUpload.map(async (f) => {
+        const compressed = await compressImage(f);
+        return uploadImage(compressed, 'wandersync/cities');
+      });
+      const results = await Promise.all(uploadPromises);
+      const newUrls = results.map((r) => r.data?.url).filter(Boolean);
+      if (newUrls.length > 0) {
+        setFormData((prev) => {
+          const updatedCities = [...prev.popularCities];
+          const existingImgs = updatedCities[cityIndex].images || [];
+          updatedCities[cityIndex] = {
+            ...updatedCities[cityIndex],
+            images: [...existingImgs, ...newUrls].slice(0, 3)
+          };
+          return { ...prev, popularCities: updatedCities };
+        });
+        showToast(`${newUrls.length} city photo(s) uploaded`, 'success');
+      }
+    } catch {
+      showToast('Failed to upload city photos', 'error');
+    } finally {
+      setUploadingCityIndex(null);
+    }
+  };
+
+  const handleRemoveCityImage = (cityIndex, imgIndexToRemove) => {
+    setFormData((prev) => {
+      const updatedCities = [...prev.popularCities];
+      const existingImgs = updatedCities[cityIndex].images || [];
+      updatedCities[cityIndex] = {
+        ...updatedCities[cityIndex],
+        images: existingImgs.filter((_, idx) => idx !== imgIndexToRemove)
+      };
+      return { ...prev, popularCities: updatedCities };
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -618,7 +679,7 @@ export default function AdminCountryEditor() {
               onClick={() =>
                 setFormData({
                   ...formData,
-                  popularCities: [...formData.popularCities, { name: '', description: '' }]
+                  popularCities: [...formData.popularCities, { name: '', description: '', images: [] }]
                 })
               }
               className="text-xs font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 cursor-pointer"
@@ -627,20 +688,20 @@ export default function AdminCountryEditor() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
             {formData.popularCities.map((city, i) => (
-              <div key={i} className="p-3 rounded-xl bg-secondary/30 border border-border space-y-2 relative">
-                <div className="flex items-center justify-between">
+              <div key={i} className="p-3.5 rounded-xl bg-secondary/30 border border-border space-y-2.5 relative">
+                <div className="flex items-center justify-between gap-2">
                   <input
                     type="text"
                     value={city.name}
                     onChange={(e) => {
                       const updated = [...formData.popularCities];
-                      updated[i].name = e.target.value;
+                      updated[i] = { ...updated[i], name: e.target.value };
                       setFormData({ ...formData, popularCities: updated });
                     }}
                     placeholder="City Name (e.g. Islamabad, Kyoto, Dubai)"
-                    className="w-full font-bold bg-transparent text-xs text-foreground focus:outline-none"
+                    className="w-full font-bold bg-transparent text-xs text-foreground focus:outline-none placeholder-muted-foreground/60"
                   />
                   {formData.popularCities.length > 1 && (
                     <button
@@ -652,23 +713,77 @@ export default function AdminCountryEditor() {
                         })
                       }
                       className="text-muted-foreground hover:text-rose-400 p-0.5 cursor-pointer ml-1"
+                      title="Remove City"
                     >
-                      <X className="size-3" />
+                      <X className="size-3.5" />
                     </button>
                   )}
                 </div>
 
                 <input
                   type="text"
-                  value={city.description}
+                  value={city.description || ''}
                   onChange={(e) => {
                     const updated = [...formData.popularCities];
-                    updated[i].description = e.target.value;
+                    updated[i] = { ...updated[i], description: e.target.value };
                     setFormData({ ...formData, popularCities: updated });
                   }}
-                  placeholder="Short highlight description..."
-                  className="w-full px-2 py-0.5 rounded bg-secondary/70 border border-border text-[11px] text-foreground focus:outline-none"
+                  placeholder="Short highlight description (Optional)..."
+                  className="w-full px-2.5 py-1 rounded bg-secondary/70 border border-border text-[11px] text-foreground focus:outline-none"
                 />
+
+                <div className="space-y-1.5 pt-1.5 border-t border-border/60">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1">
+                      <Images className="size-3 text-orange-400" />
+                      <span>Photos ({city.images?.length || 0}/3)</span>
+                    </span>
+                    {(city.images?.length || 0) < 3 && (
+                      <label className="text-[10px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-0.5 cursor-pointer">
+                        <Plus className="size-2.5" />
+                        <span>{uploadingCityIndex === i ? 'Uploading...' : 'Add (Max 3)'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          disabled={uploadingCityIndex === i}
+                          onChange={(e) => handleAddCityImages(i, e.target.files)}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1.5 min-h-[50px]">
+                    {(city.images || []).map((imgUrl, imgIdx) => (
+                      <div key={imgIdx} className="relative h-14 rounded-lg overflow-hidden border border-border group bg-secondary/40">
+                        <img src={imgUrl} alt={`${city.name || 'City'} ${imgIdx + 1}`} className="size-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCityImage(i, imgIdx)}
+                          className="absolute top-0.5 right-0.5 p-0.5 rounded bg-black/80 text-rose-400 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                          title="Delete photo"
+                        >
+                          <X className="size-2.5" />
+                        </button>
+                      </div>
+                    ))}
+                    {(city.images?.length || 0) < 3 && (
+                      <label className="h-14 rounded-lg border border-dashed border-border hover:border-orange-500/50 bg-secondary/20 flex flex-col items-center justify-center cursor-pointer text-muted-foreground hover:text-orange-400 transition-colors">
+                        <UploadCloud className="size-3.5" />
+                        <span className="text-[9px] font-semibold mt-0.5">+ Photo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          disabled={uploadingCityIndex === i}
+                          onChange={(e) => handleAddCityImages(i, e.target.files)}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
