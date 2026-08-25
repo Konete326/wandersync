@@ -227,8 +227,14 @@ export default function AdminHotelEditor() {
       pricePerNight: data.pricePerNight || prev.pricePerNight,
       priceRange: data.priceRange || (data.pricePerNight > 200 ? '$$$$' : data.pricePerNight > 100 ? '$$$' : '$$'),
       description: data.description || prev.description,
-      amenities: data.amenities?.length ? data.amenities : prev.amenities
+      amenities: data.amenities?.length ? data.amenities : prev.amenities,
+      coverImage: data.coverImage || prev.coverImage,
+      images: data.images?.length ? data.images : prev.images
     }));
+    if (data.coverImage) {
+      setCoverPreview(data.coverImage);
+      setCoverFile(null);
+    }
   };
 
   const applyHotelPreset = (preset) => {

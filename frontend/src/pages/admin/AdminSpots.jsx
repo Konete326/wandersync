@@ -239,7 +239,7 @@ export default function AdminSpots() {
                 <div>
                   <div className="relative h-28 sm:h-32 w-full overflow-hidden">
                     <LazyImage
-                      src={item.coverImage}
+                      src={item.coverImage || item.image || item.images?.[0]}
                       alt={item.name}
                       containerClassName="w-full h-full"
                     />

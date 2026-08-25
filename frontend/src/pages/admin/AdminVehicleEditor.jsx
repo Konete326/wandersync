@@ -225,8 +225,14 @@ export default function AdminVehicleEditor() {
       fuelType: data.fuelType || prev.fuelType,
       pricePerDay: data.pricePerDay || prev.pricePerDay,
       description: data.description || prev.description,
-      features: data.features?.length ? data.features : prev.features
+      features: data.features?.length ? data.features : prev.features,
+      coverImage: data.coverImage || prev.coverImage,
+      images: data.images?.length ? data.images : prev.images
     }));
+    if (data.coverImage) {
+      setCoverPreview(data.coverImage);
+      setCoverFile(null);
+    }
   };
 
   const applyVehiclePreset = (preset) => {

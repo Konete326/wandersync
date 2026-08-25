@@ -244,8 +244,14 @@ export default function AdminGroupTourEditor() {
       totalCapacity: data.maxGroupSize || prev.totalCapacity,
       pricePerPerson: data.discountPrice || data.price || prev.pricePerPerson,
       category: data.category || prev.category,
-      inclusions: data.included?.length ? data.included : prev.inclusions
+      inclusions: data.included?.length ? data.included : prev.inclusions,
+      coverImage: data.coverImage || prev.coverImage,
+      images: data.images?.length ? data.images : prev.images
     }));
+    if (data.coverImage) {
+      setCoverPreview(data.coverImage);
+      setCoverFile(null);
+    }
   };
 
   const applyGroupTourPreset = (preset) => {

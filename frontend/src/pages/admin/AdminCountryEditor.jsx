@@ -405,11 +405,12 @@ export default function AdminCountryEditor() {
       timezone: data.timezone || prev.timezone,
       description: data.description || prev.description,
       coverImage: aiCover,
+      images: data.images?.length ? data.images : prev.images,
       popularCities: data.popularCities?.length
         ? data.popularCities.map((c) => ({
             name: c.name || '',
             description: c.description || '',
-            images: c.images || []
+            images: c.images?.length ? c.images : []
           }))
         : prev.popularCities
     }));

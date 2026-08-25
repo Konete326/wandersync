@@ -237,8 +237,14 @@ export default function AdminFlightEditor() {
       price: data.price || prev.price,
       cabinClass: data.cabinClass || prev.cabinClass,
       duration: data.duration || prev.duration,
-      baggage: data.baggageAllowance || prev.baggage
+      baggage: data.baggageAllowance || prev.baggage,
+      coverImage: data.coverImage || prev.coverImage,
+      images: data.images?.length ? data.images : prev.images
     }));
+    if (data.coverImage) {
+      setCoverPreview(data.coverImage);
+      setCoverFile(null);
+    }
   };
 
   const applyFlightPreset = (preset) => {

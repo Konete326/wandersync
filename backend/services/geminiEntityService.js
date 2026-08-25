@@ -1,14 +1,13 @@
 import { getGeminiModel, AVAILABLE_MODELS, isGeminiConfigured } from '../config/gemini.js';
 import openai, { isOpenAiConfigured, OPENAI_MODEL } from '../config/openai.js';
 import { generateSmartEntityData } from '../utils/smartEntityGenerator.js';
+import { resolveEntityImages, resolveCityImage } from '../utils/realImageTelemetry.js';
 
 const cleanJsonResponse = (text) => {
   if (!text) throw new Error('Empty response');
   const cleaned = text.trim();
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    return JSON.parse(jsonMatch[0]);
-  }
+  if (jsonMatch) return JSON.parse(jsonMatch[0]);
   return JSON.parse(cleaned);
 };
 
@@ -19,7 +18,7 @@ const generateWithOpenAi = async (prompt) => {
   const response = await openai.chat.completions.create({
     model: OPENAI_MODEL,
     messages: [
-      { role: 'system', content: 'You are WanderSync AI Travel Master Generator. Generate rich, detailed, comprehensive JSON only.' },
+      { role: 'system', content: 'You are WanderSync AI Travel Master Generator. Generate rich, authentic JSON only.' },
       { role: 'user', content: prompt }
     ],
     response_format: { type: 'json_object' },
@@ -46,6 +45,30 @@ const generateWithGemini = async (prompt) => {
   throw lastError || new Error('Gemini generation failed');
 };
 
+const attachRealImages = (type, query, data) => {
+  if (!data || typeof data !== 'object') return data;
+  const name = data.name || data.title || query || '';
+  const country = data.country || data.destinationCountry || '';
+  const city = data.city || data.destinationCity || '';
+
+  const { coverImage, images } = resolveEntityImages(type, name, country, city);
+  if (!data.coverImage) data.coverImage = coverImage;
+  if (!data.images || !Array.isArray(data.images) || data.images.length === 0) {
+    data.images = images;
+  }
+
+  if (Array.isArray(data.popularCities)) {
+    data.popularCities = data.popularCities.map((c) => {
+      const cityImg = resolveCityImage(c.name, country || name);
+      return {
+        ...c,
+        images: c.images?.length ? c.images : [cityImg]
+      };
+    });
+  }
+  return data;
+};
+
 export const autofillEntityData = async (type, query) => {
   const schemas = {
     country: `{"name":"Country Name","code":"3-Letter ISO","continent":"Asia|Europe|North America|South America|Africa|Oceania","currency":"Currency Name & Symbol","language":"Official Languages","timezone":"Timezone UTC","description":"Rich 2-3 paragraph captivating overview","popularCities":[{"name":"City Name","description":"Rich detailed city highlight and key sights"}]}`,
@@ -56,23 +79,28 @@ export const autofillEntityData = async (type, query) => {
     groupTour: `{"title":"Tour Package Title","destinationCountry":"Country","destinationCity":"City","durationDays":7,"maxGroupSize":16,"price":890,"discountPrice":750,"category":"Adventure|Cultural|Luxury","description":"Rich comprehensive 7-day tour narrative","included":["4-Star Hotels","Daily Gourmet Breakfast","AC Transport","Certified Guide","All Entry Tickets"],"excluded":["International Flights","Personal Expenses"],"itineraryDays":[{"day":1,"title":"Day 1 Theme","description":"Detailed day description."},{"day":2,"title":"Day 2 Theme","description":"Detailed day description."},{"day":3,"title":"Day 3 Theme","description":"Detailed day description."}]}`
   };
 
-  const prompt = `Generate comprehensive, realistic, high-quality travel metadata for "${type}" matching search query "${query}".
-Return ONLY valid JSON matching this exact structure:
+  const prompt = `Generate authentic, comprehensive travel metadata for "${type}" matching search query "${query}".
+Return ONLY valid JSON matching this schema:
 ${schemas[type] || schemas.country}`;
 
   if (isOpenAiConfigured()) {
     try {
       const data = await generateWithOpenAi(prompt);
-      if (data && typeof data === 'object' && Object.keys(data).length > 2) return data;
+      if (data && typeof data === 'object' && Object.keys(data).length > 2) {
+        return attachRealImages(type, query, data);
+      }
     } catch {}
   }
 
   if (isGeminiConfigured()) {
     try {
       const data = await generateWithGemini(prompt);
-      if (data && typeof data === 'object' && Object.keys(data).length > 2) return data;
+      if (data && typeof data === 'object' && Object.keys(data).length > 2) {
+        return attachRealImages(type, query, data);
+      }
     } catch {}
   }
 
-  return generateSmartEntityData(type, query);
+  const fallback = generateSmartEntityData(type, query);
+  return attachRealImages(type, query, fallback);
 };
