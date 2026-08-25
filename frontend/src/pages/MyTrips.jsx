@@ -4,27 +4,38 @@ import { Compass, Plus, Search, Calendar, MapPin, DollarSign, Trash2, ArrowRight
 import { getMyTrips, deleteTripById } from '../services/tripService';
 import { useModal } from '../context/ModalContext';
 import Loader from '../components/common/Loader';
+import { getCachedData, setCachedData } from '@/utils/realtimeSync';
 
 const MyTrips = () => {
-  const [trips, setTrips] = useState([]);
+  const cacheKey = 'user_my_trips';
+  const initialTrips = getCachedData(cacheKey);
+
+  const [trips, setTrips] = useState(initialTrips || []);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialTrips);
   const { showModal, showToast } = useModal();
   const navigate = useNavigate();
 
-  const loadTrips = async () => {
+  const loadTrips = async (isBackground = false) => {
+    if (!isBackground && !initialTrips) {
+      setLoading(true);
+    }
     try {
       const res = await getMyTrips();
-      setTrips(res.data || []);
+      const tripList = res.data || [];
+      setTrips(tripList);
+      setCachedData(cacheKey, tripList);
     } catch (error) {
-      showToast('Failed to load trips', 'error');
+      if (!isBackground) {
+        showToast('Failed to load trips', 'error');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadTrips();
+    loadTrips(!!initialTrips);
   }, []);
 
   const handleDelete = (tripId, tripTitle, e) => {

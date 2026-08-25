@@ -4,20 +4,27 @@ import { MapPin, Calendar, DollarSign, Download, Compass, Clock } from 'lucide-r
 import { getSharedTripDetails } from '../services/tripService';
 import { exportItineraryToPdf } from '../services/pdfService';
 import Loader from '../components/common/Loader';
+import { getCachedData, setCachedData } from '@/utils/realtimeSync';
 
 const SharedTrip = () => {
   const { shareSlug } = useParams();
-  const [trip, setTrip] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `shared_trip_${shareSlug}`;
+  const initialTrip = getCachedData(cacheKey);
+
+  const [trip, setTrip] = useState(initialTrip || null);
+  const [loading, setLoading] = useState(!initialTrip);
   const [selectedDay, setSelectedDay] = useState(1);
 
   useEffect(() => {
     const loadSharedTrip = async () => {
+      if (!initialTrip) setLoading(true);
       try {
         const res = await getSharedTripDetails(shareSlug);
-        setTrip(res.data);
-      } catch (error) {
-        console.error('Shared trip error', error);
+        if (res.data) {
+          setTrip(res.data);
+          setCachedData(cacheKey, res.data);
+        }
+      } catch {
       } finally {
         setLoading(false);
       }

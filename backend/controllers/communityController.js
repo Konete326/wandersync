@@ -15,7 +15,8 @@ export const getCommunityMessages = async (req, res) => {
     const messages = await Message.find(filter)
       .populate('user', 'name email avatar role')
       .sort({ createdAt: 1 })
-      .limit(limit);
+      .limit(limit)
+      .lean();
     const total = await Message.countDocuments(filter);
     return sendSuccess(res, 'Community messages retrieved', { messages, total });
   } catch (error) {

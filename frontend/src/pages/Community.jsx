@@ -34,6 +34,8 @@ import { compressImage } from '@/utils/imageCompressor';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 
+import { getCachedData, setCachedData } from '@/utils/realtimeSync';
+
 const COMMUNITY_GROUPS = [
   {
     id: 'global-lounge',
@@ -107,11 +109,16 @@ export default function Community() {
   };
 
   const loadMessages = async (silent = false) => {
-    if (!silent) setLoadingMessages(true);
+    const key = `community_msg_${activeGroup.id}`;
+    const cached = getCachedData(key);
+    if (!silent && !cached) setLoadingMessages(true);
+    if (cached && !messages.length) setMessages(cached);
+
     try {
       const res = await fetchCommunityMessages(activeGroup.id, 80);
       if (res.data?.messages) {
         setMessages(res.data.messages);
+        setCachedData(key, res.data.messages);
       } else {
         setMessages([]);
       }
@@ -122,16 +129,21 @@ export default function Community() {
     }
   };
 
-  const loadTrips = async () => {
-    setLoadingTrips(true);
+  const loadTrips = async (silent = false) => {
+    const key = 'community_public_trips';
+    const cached = getCachedData(key);
+    if (!silent && !cached) setLoadingTrips(true);
+    if (cached && !publicTrips.length) setPublicTrips(cached);
+
     try {
       const res = await getPublicCommunityTrips();
       if (res.data) {
         setPublicTrips(res.data);
+        setCachedData(key, res.data);
       }
     } catch {
     } finally {
-      setLoadingTrips(false);
+      if (!silent) setLoadingTrips(false);
     }
   };
 

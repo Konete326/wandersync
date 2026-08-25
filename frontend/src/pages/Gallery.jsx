@@ -17,21 +17,35 @@ import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import Loader from '../components/common/Loader';
 
+import {
+  subscribeRealtimeUpdate,
+  getCachedData,
+  setCachedData
+} from '@/utils/realtimeSync';
+
 export default function Gallery() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { showToast } = useModal();
 
-  const [items, setItems] = useState([]);
   const [activeCountry, setActiveCountry] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
 
-  const loadGallery = async (pageNum = 1, country = 'All') => {
-    setLoading(true);
+  const cacheKey = `user_gallery_${activeCountry}_${page}`;
+  const initialData = getCachedData(cacheKey);
+
+  const [items, setItems] = useState(initialData?.items || []);
+  const [totalPages, setTotalPages] = useState(initialData?.pages || 1);
+  const [total, setTotal] = useState(initialData?.total || 0);
+  const [loading, setLoading] = useState(!initialData);
+
+  const loadGallery = async (pageNum = 1, country = 'All', isBackground = false) => {
+    const key = `user_gallery_${country}_${pageNum}`;
+    const cached = getCachedData(key);
+    if (!isBackground && !cached) {
+      setLoading(true);
+    }
     try {
       const res = await fetchGalleryItems(pageNum, 12, country === 'All' ? '' : country);
       if (res.data?.items) {
@@ -39,11 +53,14 @@ export default function Gallery() {
         setPage(res.data.page || pageNum);
         setTotalPages(res.data.pages || 1);
         setTotal(res.data.total || 0);
+        setCachedData(key, res.data);
       } else {
         setItems([]);
       }
     } catch {
-      showToast('Could not load gallery destinations', 'error');
+      if (!isBackground) {
+        showToast('Could not load gallery destinations', 'error');
+      }
       setItems([]);
     } finally {
       setLoading(false);
@@ -52,6 +69,19 @@ export default function Gallery() {
 
   useEffect(() => {
     loadGallery(page, activeCountry);
+  }, [page, activeCountry]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('gallery', () => {
+      loadGallery(page, activeCountry, true);
+    });
+    const timer = setInterval(() => {
+      loadGallery(page, activeCountry, true);
+    }, 10000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
   }, [page, activeCountry]);
 
   const uniqueCountries = useMemo(() => {

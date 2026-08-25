@@ -10,6 +10,7 @@ import { exportItineraryToPdf } from '../services/pdfService';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import Loader from '../components/common/Loader';
+import { getCachedData, setCachedData } from '@/utils/realtimeSync';
 
 const ItineraryDetails = () => {
   const { id } = useParams();
@@ -17,8 +18,11 @@ const ItineraryDetails = () => {
   const { user } = useAuth();
   const { showModal, showToast } = useModal();
 
-  const [trip, setTrip] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `itinerary_details_${id}`;
+  const initialTrip = getCachedData(cacheKey);
+
+  const [trip, setTrip] = useState(initialTrip || null);
+  const [loading, setLoading] = useState(!initialTrip);
   const [selectedDay, setSelectedDay] = useState(1);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
@@ -28,27 +32,31 @@ const ItineraryDetails = () => {
 
   useEffect(() => {
     const loadTrip = async () => {
+      if (!initialTrip) setLoading(true);
       try {
         const res = await getTripDetails(id);
-        setTrip(res.data);
-        if (res.data.destination?.coordinates?.lat) {
-          try {
-            const wRes = await fetchWeatherForecast(
-              res.data.destination.coordinates.lat,
-              res.data.destination.coordinates.lng
-            );
-            setWeather(wRes.data);
-          } catch (wErr) {
-            console.error('Weather fetch error', wErr);
+        if (res.data) {
+          setTrip(res.data);
+          setCachedData(cacheKey, res.data);
+          if (res.data.destination?.coordinates?.lat) {
+            try {
+              const wRes = await fetchWeatherForecast(
+                res.data.destination.coordinates.lat,
+                res.data.destination.coordinates.lng
+              );
+              setWeather(wRes.data);
+            } catch {}
           }
         }
       } catch (error) {
-        showModal({
-          title: 'Not Found',
-          message: 'Itinerary could not be found or you do not have permission to view it.',
-          type: 'danger',
-          onConfirm: () => navigate('/my-trips')
-        });
+        if (!initialTrip) {
+          showModal({
+            title: 'Not Found',
+            message: 'Itinerary could not be found or you do not have permission to view it.',
+            type: 'danger',
+            onConfirm: () => navigate('/my-trips')
+          });
+        }
       } finally {
         setLoading(false);
       }

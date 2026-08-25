@@ -38,14 +38,18 @@ import { fetchCountries } from '@/services/countryService';
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
+import { getCachedData, setCachedData } from '@/utils/realtimeSync';
 
 export default function DestinationExplorer() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showModal, showToast } = useModal();
 
-  const [loading, setLoading] = useState(true);
-  const [destination, setDestination] = useState(null);
+  const cacheKey = `dest_explorer_${id}`;
+  const initialDest = getCachedData(cacheKey);
+
+  const [loading, setLoading] = useState(!initialDest);
+  const [destination, setDestination] = useState(initialDest || null);
   const [activeTab, setActiveTab] = useState('overview');
 
   const [hotels, setHotels] = useState([]);
@@ -54,7 +58,7 @@ export default function DestinationExplorer() {
   const [flights, setFlights] = useState([]);
   const [countryInfo, setCountryInfo] = useState(null);
 
-  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedCity, setSelectedCity] = useState(initialDest?.city || '');
 
   const [tripDays, setTripDays] = useState(5);
   const [selectedHotel, setSelectedHotel] = useState(null);
@@ -66,19 +70,22 @@ export default function DestinationExplorer() {
 
   useEffect(() => {
     const loadDestinationData = async () => {
-      setLoading(true);
+      if (!initialDest) setLoading(true);
       try {
         const res = await fetchGalleryItemById(id);
         if (res.data) {
           setDestination(res.data);
           setSelectedCity(res.data.city || '');
+          setCachedData(cacheKey, res.data);
         } else {
           showToast('Destination details not found', 'error');
           navigate('/gallery');
         }
       } catch {
-        showToast('Failed to load destination details', 'error');
-        navigate('/gallery');
+        if (!initialDest) {
+          showToast('Failed to load destination details', 'error');
+          navigate('/gallery');
+        }
       } finally {
         setLoading(false);
       }
@@ -94,11 +101,11 @@ export default function DestinationExplorer() {
         const targetCity = selectedCity || destination.city || '';
         
         const [hotelsRes, spotsRes, vehiclesRes, flightsRes, countriesRes] = await Promise.allSettled([
-          fetchHotels(1, 20, '', destination.country, targetCity),
-          fetchSpots(1, 30, '', destination.country, targetCity),
+          fetchHotels(1, 20, destination.country, targetCity),
+          fetchSpots(1, 30, destination.country, targetCity),
           fetchVehicles(1, 20, '', destination.country, targetCity),
           fetchFlights(1, 20, '', destination.country, targetCity),
-          fetchCountries(1, 50, destination.country)
+          fetchCountries(1, 50, '', destination.country)
         ]);
 
         if (hotelsRes.status === 'fulfilled' && hotelsRes.value.data?.hotels) {
