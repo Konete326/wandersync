@@ -188,23 +188,7 @@ export default function AdminSpots() {
               ))}
             </select>
 
-            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-              {spotCategories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setCategory(cat)}
-                  className={`h-[28px] px-2.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer border ${
-                    category === cat
-                      ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 font-bold shadow-xs'
-                      : 'bg-[#18181b]/80 text-muted-foreground hover:text-foreground border-border/80 hover:border-orange-500/30'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            {(search || country !== 'All' || category !== 'All') && (
+            {(search || country !== 'All') && (
               <button
                 type="button"
                 onClick={() => {

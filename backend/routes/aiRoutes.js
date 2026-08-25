@@ -13,7 +13,7 @@ const router = express.Router();
 router.post('/generate-itinerary', protect, generateItinerary);
 router.post('/chat-refine', protect, refineItinerary);
 router.post('/chat', protect, chatAssistant);
-router.post('/autofill-destination', protect, adminOnly, autofillDestination);
-router.post('/autofill-entity', protect, adminOnly, autofillEntity);
+router.post('/autofill-destination', protect, autofillDestination);
+router.post('/autofill-entity', protect, autofillEntity);
 
 export default router;

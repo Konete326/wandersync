@@ -28,7 +28,8 @@ const app = express();
 app.use(helmet());
 app.use(cors({
   origin: true,
-  credentials: true
+  credentials: true,
+  maxAge: 86400
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -1,47 +1,78 @@
-import { getGeminiModel, AVAILABLE_MODELS } from '../config/gemini.js';
+import { getGeminiModel, AVAILABLE_MODELS, isGeminiConfigured } from '../config/gemini.js';
+import openai, { isOpenAiConfigured, OPENAI_MODEL } from '../config/openai.js';
+import { generateSmartEntityData } from '../utils/smartEntityGenerator.js';
 
 const cleanJsonResponse = (text) => {
-  let cleaned = text.trim();
-  if (cleaned.startsWith('```json')) cleaned = cleaned.replace(/^```json/, '').replace(/```$/, '');
-  else if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```/, '').replace(/```$/, '');
-  return JSON.parse(cleaned.trim());
+  if (!text) throw new Error('Empty response');
+  const cleaned = text.trim();
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    return JSON.parse(jsonMatch[0]);
+  }
+  return JSON.parse(cleaned);
 };
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const executePrompt = async (prompt) => {
+const generateWithOpenAi = async (prompt) => {
+  if (!isOpenAiConfigured()) throw new Error('OpenAI not configured');
+  const response = await openai.chat.completions.create({
+    model: OPENAI_MODEL,
+    messages: [
+      { role: 'system', content: 'You are WanderSync AI Travel Master Generator. Generate rich, detailed, comprehensive JSON only.' },
+      { role: 'user', content: prompt }
+    ],
+    response_format: { type: 'json_object' },
+    temperature: 0.7
+  });
+  return JSON.parse(response.choices[0].message.content);
+};
+
+const generateWithGemini = async (prompt) => {
+  if (!isGeminiConfigured()) throw new Error('Gemini not configured');
   let lastError = null;
   for (const modelName of AVAILABLE_MODELS) {
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        const model = getGeminiModel(modelName, true);
-        if (!model) throw new Error('Gemini API key is not configured');
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return cleanJsonResponse(response.text());
-      } catch (error) {
-        lastError = error;
-        if (attempt < 2) await sleep(attempt * 800);
-      }
+    try {
+      const model = getGeminiModel(modelName, true);
+      if (!model) continue;
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return cleanJsonResponse(response.text());
+    } catch (error) {
+      lastError = error;
+      await sleep(300);
     }
   }
-  throw new Error(lastError?.message || 'AI Generation failed');
+  throw lastError || new Error('Gemini generation failed');
 };
 
 export const autofillEntityData = async (type, query) => {
   const schemas = {
-    country: `{"name":"Country Name","code":"3-Letter Code (e.g. JPN, PAK, UAE, FRA)","continent":"One of: Asia, Europe, North America, South America, Africa, Oceania","currency":"e.g. JPY (¥) or USD ($)","language":"Official Language","timezone":"e.g. UTC+9","description":"2-3 paragraph captivating overview of country for tourists","popularCities":[{"name":"City 1","description":"1-2 sentence highlight"},{"name":"City 2","description":"1-2 sentence highlight"},{"name":"City 3","description":"1-2 sentence highlight"}]}`,
-    spot: `{"title":"Spot Name","country":"Country Name","city":"City Name","category":"One of: Historical, Nature, Cultural, Adventure, Urban, Beach, Mountain, Other","description":"Detailed attractive description of spot","bestTimeToVisit":"e.g. Oct - Apr","entryFee":"e.g. $15 or Free","idealDuration":"e.g. 2-3 Hours","address":"Full street / area address","latitude":35.6586,"longitude":139.7454,"highlights":["Key highlight 1","Key highlight 2","Key highlight 3"]}`,
-    hotel: `{"name":"Hotel Name","country":"Country Name","city":"City Name","address":"Accurate location address","rating":4.8,"pricePerNight":180,"starCategory":5,"description":"Luxury property overview","roomTypes":["Deluxe Room","Executive Suite","Family Villa"],"amenities":["Free High-Speed WiFi","Swimming Pool","Spa & Wellness","Complimentary Breakfast","Airport Shuttle","24/7 Room Service"],"checkInTime":"14:00","checkOutTime":"12:00"}`,
-    vehicle: `{"name":"Vehicle Model Name","type":"One of: SUV, Sedan, Luxury, Van, Minibus, Motorcycle","capacity":7,"luggageCapacity":4,"transmission":"One of: Automatic, Manual","fuelType":"One of: Petrol, Diesel, Hybrid, Electric","pricePerDay":90,"description":"Vehicle overview and condition","features":["4WD / AWD","Air Conditioning","GPS Navigation","Bluetooth Audio","Reverse Camera","Leather Seats"]}`,
-    flight: `{"airline":"Airline Name","flightNumber":"e.g. EK-502","departureAirport":"Airport Code & Name","arrivalAirport":"Airport Code & Name","departureCity":"City","arrivalCity":"City","departureCountry":"Country","arrivalCountry":"Country","price":650,"cabinClass":"One of: Economy, Premium Economy, Business, First","duration":"8h 30m","baggageAllowance":"30 kg Check-in + 7 kg Hand Carry"}`,
-    groupTour: `{"title":"Tour Package Title","destinationCountry":"Country","destinationCity":"City / Region","durationDays":7,"maxGroupSize":16,"price":850,"discountPrice":720,"category":"One of: Adventure, Cultural, Luxury, Wildlife, Trekking","description":"Full tour overview narrative","included":["4-Star Hotels","Daily Breakfast & Dinner","AC Transport","Certified Guide","All Entry Passes"],"excluded":["International Flights","Personal Expenses","Travel Insurance"],"itineraryDays":[{"day":1,"title":"Arrival & Welcome","description":"Airport reception and hotel checkin."},{"day":2,"title":"City Exploration","description":"Guided full day landmarks tour."},{"day":3,"title":"Scenic Excursion","description":"Day trip to surrounding natural wonders."}]}`
+    country: `{"name":"Country Name","code":"3-Letter ISO","continent":"Asia|Europe|North America|South America|Africa|Oceania","currency":"Currency Name & Symbol","language":"Official Languages","timezone":"Timezone UTC","description":"Rich 2-3 paragraph captivating overview","popularCities":[{"name":"City Name","description":"Rich detailed city highlight and key sights"}]}`,
+    spot: `{"title":"Attraction Name","country":"Country","city":"City","category":"Landmark|Nature|Historical|Cultural|Adventure|Beach|Mountain","description":"Rich 2-3 paragraph landmark narrative","bestTimeToVisit":"Specific Season / Time Window","entryFee":"Exact price or Free","idealDuration":"2-3 Hours","address":"Precise address / landmark vicinity","highlights":["Highlight 1","Highlight 2","Highlight 3","Highlight 4"]}`,
+    hotel: `{"name":"Hotel Name","country":"Country","city":"City","address":"Precise street address","rating":4.9,"pricePerNight":180,"starCategory":5,"description":"Detailed luxury resort overview","roomTypes":["Deluxe King Suite","Executive Suite","Family Villa"],"amenities":["Free High-Speed WiFi","Infinity Pool","Full Spa & Sauna","Complimentary Breakfast","Airport Shuttle","24/7 Room Service"]}`,
+    vehicle: `{"name":"Vehicle Model","type":"SUV|Sedan|Luxury|Van|Minibus","capacity":7,"luggageCapacity":4,"transmission":"Automatic|Manual","fuelType":"Petrol|Diesel|Hybrid|Electric","pricePerDay":95,"description":"Detailed vehicle condition and road comfort overview","features":["AWD / 4x4","Apple CarPlay / Android Auto","360 Camera","Climate Control","Adaptive Cruise"]}`,
+    flight: `{"airline":"Airline Name","flightNumber":"FL-101","departureAirport":"Airport Name & Code","arrivalAirport":"Airport Name & Code","departureCity":"City","arrivalCity":"City","departureCountry":"Country","arrivalCountry":"Country","price":680,"cabinClass":"Economy|Business|First","duration":"8h 30m","baggageAllowance":"2x 23kg Check-in + 8kg Hand Carry"}`,
+    groupTour: `{"title":"Tour Package Title","destinationCountry":"Country","destinationCity":"City","durationDays":7,"maxGroupSize":16,"price":890,"discountPrice":750,"category":"Adventure|Cultural|Luxury","description":"Rich comprehensive 7-day tour narrative","included":["4-Star Hotels","Daily Gourmet Breakfast","AC Transport","Certified Guide","All Entry Tickets"],"excluded":["International Flights","Personal Expenses"],"itineraryDays":[{"day":1,"title":"Day 1 Theme","description":"Detailed day description."},{"day":2,"title":"Day 2 Theme","description":"Detailed day description."},{"day":3,"title":"Day 3 Theme","description":"Detailed day description."}]}`
   };
 
-  const selectedSchema = schemas[type] || schemas.country;
-  const prompt = `Generate realistic, accurate travel JSON metadata for entity "${type}" based on user query "${query}".
-Return ONLY valid JSON matching this schema:
-${selectedSchema}`;
+  const prompt = `Generate comprehensive, realistic, high-quality travel metadata for "${type}" matching search query "${query}".
+Return ONLY valid JSON matching this exact structure:
+${schemas[type] || schemas.country}`;
 
-  return await executePrompt(prompt);
+  if (isOpenAiConfigured()) {
+    try {
+      const data = await generateWithOpenAi(prompt);
+      if (data && typeof data === 'object' && Object.keys(data).length > 2) return data;
+    } catch {}
+  }
+
+  if (isGeminiConfigured()) {
+    try {
+      const data = await generateWithGemini(prompt);
+      if (data && typeof data === 'object' && Object.keys(data).length > 2) return data;
+    } catch {}
+  }
+
+  return generateSmartEntityData(type, query);
 };

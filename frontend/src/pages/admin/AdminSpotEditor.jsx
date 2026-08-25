@@ -328,8 +328,14 @@ export default function AdminSpotEditor() {
       ticketPrice: data.entryFee || data.ticketPrice || prev.ticketPrice,
       duration: data.idealDuration || data.duration || prev.duration,
       bestTimeToVisit: data.bestTimeToVisit || prev.bestTimeToVisit,
-      address: data.address || prev.address
+      address: data.address || prev.address,
+      coverImage: data.coverImage || prev.coverImage,
+      images: data.images?.length ? data.images : prev.images
     }));
+    if (data.coverImage) {
+      setCoverPreview(data.coverImage);
+      setCoverFile(null);
+    }
   };
 
   const applySpotPreset = (preset) => {
@@ -725,8 +731,9 @@ export default function AdminSpotEditor() {
       <AiAutofillModal
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
+        entityType="spot"
+        onAutofill={handleAiGeneratedData}
         onDataGenerated={handleAiGeneratedData}
-        category="attraction"
         targetName={formData.name || 'Tourist Spot'}
       />
     </div>

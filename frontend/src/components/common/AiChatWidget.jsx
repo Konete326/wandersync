@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   X,
@@ -22,9 +22,8 @@ import {
   Receipt,
   Settings,
   MapPin,
-  Calendar,
-  DollarSign,
-  CheckCircle2
+  GripHorizontal,
+  RotateCcw
 } from 'lucide-react';
 import { chatWithAiAssistant } from '../../services/aiService';
 import { saveTrip } from '../../services/tripService';
@@ -32,7 +31,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 
 const ADMIN_NAVIGATION_MAP = [
-  { keywords: ['country', 'countries', 'regional hub'], path: '/admin/countries/new', label: 'Open Country Studio', icon: GlobeIcon },
+  { keywords: ['country', 'countries', 'regional hub'], path: '/admin/countries/new', label: 'Open Country Studio', icon: Compass },
   { keywords: ['pos', 'terminal', 'tour pos', 'pos booking'], path: '/admin/tour-pos', label: 'Launch POS Terminal', icon: CreditCard },
   { keywords: ['employee', 'staff', 'task', 'delegat', 'team'], path: '/admin/employees', label: 'Open Staff & Tasks', icon: Briefcase },
   { keywords: ['hotel', 'resort', 'stay', 'accommodation'], path: '/admin/hotels/new', label: 'Add New Hotel', icon: Building },
@@ -56,10 +55,6 @@ const USER_NAVIGATION_MAP = [
   { keywords: ['pricing', 'subscription', 'upgrade', 'cost'], path: '/pricing', label: 'View Pricing', icon: CreditCard },
   { keywords: ['how it works', 'guide'], path: '/how-it-works', label: 'How It Works', icon: Compass }
 ];
-
-function GlobeIcon(props) {
-  return <Compass {...props} />;
-}
 
 const adminQuickPrompts = [
   'Add new Country with AI',
@@ -93,6 +88,122 @@ export default function AiChatWidget({ tripContext = null }) {
   const [savingTripId, setSavingTripId] = useState(null);
   const messagesEndRef = useRef(null);
 
+  const [position, setPosition] = useState(() => {
+    try {
+      const saved = localStorage.getItem('wandersync_ai_widget_pos');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          return parsed;
+        }
+      }
+    } catch {}
+    return null;
+  });
+
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
+  const hasMovedRef = useRef(false);
+
+  const getDefaultPosition = useCallback((forOpen = false) => {
+    const width = typeof window !== 'undefined' ? window.innerWidth : 1366;
+    const height = typeof window !== 'undefined' ? window.innerHeight : 768;
+    const widgetW = forOpen ? (width < 640 ? width - 32 : 400) : 56;
+    const widgetH = forOpen ? 540 : 56;
+    return {
+      x: Math.max(16, width - widgetW - 24),
+      y: Math.max(16, height - widgetH - 24)
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setPosition((prev) => {
+        if (!prev) return null;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const widgetW = isOpen ? (width < 640 ? width - 32 : 400) : 56;
+        const widgetH = isOpen ? 540 : 56;
+        return {
+          x: Math.min(Math.max(10, prev.x), Math.max(10, width - widgetW - 10)),
+          y: Math.min(Math.max(10, prev.y), Math.max(10, height - widgetH - 10))
+        };
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isOpen]);
+
+  const onDragStart = (e) => {
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const currentPos = position || getDefaultPosition(isOpen);
+
+    isDraggingRef.current = true;
+    hasMovedRef.current = false;
+    dragStartRef.current = {
+      x: clientX,
+      y: clientY,
+      posX: currentPos.x,
+      posY: currentPos.y
+    };
+
+    window.addEventListener('mousemove', onDragMove);
+    window.addEventListener('mouseup', onDragEnd);
+    window.addEventListener('touchmove', onDragMove, { passive: false });
+    window.addEventListener('touchend', onDragEnd);
+  };
+
+  const onDragMove = (e) => {
+    if (!isDraggingRef.current) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    const deltaX = clientX - dragStartRef.current.x;
+    const deltaY = clientY - dragStartRef.current.y;
+
+    if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+      hasMovedRef.current = true;
+      if (e.cancelable && e.type === 'touchmove') e.preventDefault();
+    }
+
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const widgetW = isOpen ? (width < 640 ? width - 32 : 400) : 56;
+    const widgetH = isOpen ? 540 : 56;
+
+    const newX = Math.min(Math.max(10, dragStartRef.current.posX + deltaX), Math.max(10, width - widgetW - 10));
+    const newY = Math.min(Math.max(10, dragStartRef.current.posY + deltaY), Math.max(10, height - widgetH - 10));
+
+    setPosition({ x: newX, y: newY });
+  };
+
+  const onDragEnd = () => {
+    isDraggingRef.current = false;
+    window.removeEventListener('mousemove', onDragMove);
+    window.removeEventListener('mouseup', onDragEnd);
+    window.removeEventListener('touchmove', onDragMove);
+    window.removeEventListener('touchend', onDragEnd);
+
+    setPosition((pos) => {
+      if (pos) {
+        try {
+          localStorage.setItem('wandersync_ai_widget_pos', JSON.stringify(pos));
+        } catch {}
+      }
+      return pos;
+    });
+  };
+
+  const handleResetPosition = (e) => {
+    e.stopPropagation();
+    try {
+      localStorage.removeItem('wandersync_ai_widget_pos');
+    } catch {}
+    setPosition(null);
+    showToast('AI Widget position reset', 'info');
+  };
+
   const handleSaveGeneratedTrip = async (itinerary) => {
     if (!itinerary) return;
     setSavingTripId(itinerary.title || 'saving');
@@ -120,7 +231,7 @@ export default function AiChatWidget({ tripContext = null }) {
         {
           id: 'admin-welcome',
           sender: 'assistant',
-          text: "Greetings Administrator! I am your WanderSync Operations Copilot. I have command access to guide you, navigate across admin modules, pre-fill catalog forms, and help manage staff tasks. How can I assist your operations?",
+          text: "Greetings Administrator! I am your WanderSync Operations Copilot powered by Gemini 3.6 & GPT-4o. I have command access to guide you, navigate across admin modules, pre-fill catalog forms, and help manage staff tasks. How can I assist your operations?",
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           actions: [
             { label: 'Open Countries Studio', path: '/admin/countries/new' },
@@ -134,7 +245,7 @@ export default function AiChatWidget({ tripContext = null }) {
         {
           id: 'user-welcome',
           sender: 'assistant',
-          text: "Hello! I'm your WanderSync AI Travel Concierge powered by OpenAI GPT-4o & Gemini. Ask me for complete travel plans (e.g. 'Mujhe 5 days ka Tokyo plan bana kar do'), destination advice, or packing tips!",
+          text: "Hello! I'm your WanderSync AI Travel Concierge powered by Gemini 3.6 & OpenAI GPT-4o. Ask me for complete travel plans (e.g. 'Mujhe 5 days ka Tokyo plan bana kar do'), destination advice, or packing tips!",
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           actions: [
             { label: 'Plan a New Trip', path: '/create-trip' },
@@ -244,19 +355,34 @@ export default function AiChatWidget({ tripContext = null }) {
   };
 
   const currentQuickPrompts = isAdmin ? adminQuickPrompts : userQuickPrompts;
+  const currentPos = position || getDefaultPosition(isOpen);
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[100] font-sans select-none pointer-events-auto">
+    <div
+      style={{
+        position: 'fixed',
+        left: `${currentPos.x}px`,
+        top: `${currentPos.y}px`,
+        touchAction: 'none'
+      }}
+      className="z-[100] font-sans select-none pointer-events-auto"
+    >
       {!isOpen && (
         <button
           type="button"
-          onClick={() => setIsOpen(true)}
-          className={`size-13 sm:size-14 rounded-full bg-[#121215] border-2 flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-200 cursor-pointer relative group ${
+          onMouseDown={onDragStart}
+          onTouchStart={onDragStart}
+          onClick={() => {
+            if (!hasMovedRef.current) {
+              setIsOpen(true);
+            }
+          }}
+          className={`size-13 sm:size-14 rounded-full bg-[#121215] border-2 flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-transform duration-150 cursor-grab active:cursor-grabbing relative group ${
             isAdmin
               ? 'border-orange-500/70 text-orange-400 shadow-orange-950/60 hover:border-orange-400'
               : 'border-orange-500/50 text-orange-400 shadow-orange-950/40 hover:border-orange-400'
           }`}
-          title={isAdmin ? 'WanderSync AI Admin Copilot (Click to open)' : 'WanderSync AI Travel Concierge (Click to open)'}
+          title={isAdmin ? 'WanderSync AI Admin Copilot (Drag to move, click to open)' : 'WanderSync AI Travel Concierge (Drag to move, click to open)'}
         >
           {isAdmin ? (
             <Bot className="size-6 text-orange-400 group-hover:rotate-12 transition-transform" />
@@ -269,8 +395,14 @@ export default function AiChatWidget({ tripContext = null }) {
 
       {isOpen && (
         <div className="w-[calc(100vw-2rem)] max-w-[400px] sm:w-[400px] bg-[#121215] border border-orange-500/30 shadow-2xl rounded-2xl overflow-hidden flex flex-col h-[540px] max-h-[82vh] animate-in slide-in-from-bottom-5 duration-200">
-          <div className="px-4 py-3 border-b border-border/80 bg-[#151518] flex justify-between items-center">
+          <div
+            onMouseDown={onDragStart}
+            onTouchStart={onDragStart}
+            className="px-4 py-3 border-b border-border/80 bg-[#151518] flex justify-between items-center cursor-grab active:cursor-grabbing select-none"
+            title="Drag header to move window"
+          >
             <div className="flex items-center gap-2.5">
+              <GripHorizontal className="size-4 text-orange-400/60 shrink-0" />
               <div className="size-7 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
                 {isAdmin ? <Crown className="size-4" /> : <Bot className="size-4" />}
               </div>
@@ -279,10 +411,10 @@ export default function AiChatWidget({ tripContext = null }) {
                   <span>{isAdmin ? 'AI Ops Copilot' : 'AI Travel Concierge'}</span>
                   <span className="bg-orange-500/15 text-orange-400 border border-orange-500/30 text-[9px] px-1.5 py-0.2 rounded-full font-semibold flex items-center gap-1">
                     <span className="size-1.5 bg-orange-400 rounded-full animate-ping" />
-                    <span>{isAdmin ? 'Admin Mode' : 'Gemini 3.7'}</span>
+                    <span>{isAdmin ? 'Admin Mode' : 'Gemini 3.6'}</span>
                   </span>
                 </h2>
-                <p className="text-[10px] text-muted-foreground truncate max-w-[190px]">
+                <p className="text-[10px] text-muted-foreground truncate max-w-[170px]">
                   {isAdmin ? 'Full System Command Access' : 'Intelligent Travel Assistant'}
                 </p>
               </div>
@@ -290,6 +422,15 @@ export default function AiChatWidget({ tripContext = null }) {
 
             <div className="flex items-center gap-1">
               <button
+                type="button"
+                onClick={handleResetPosition}
+                className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-colors cursor-pointer"
+                title="Reset Position"
+              >
+                <RotateCcw className="size-3.5" />
+              </button>
+              <button
+                type="button"
                 onClick={handleClearChat}
                 className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-colors cursor-pointer"
                 title="Clear Chat"
@@ -297,6 +438,7 @@ export default function AiChatWidget({ tripContext = null }) {
                 <Trash2 className="size-3.5" />
               </button>
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
                 className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-colors cursor-pointer"
                 title="Minimize"

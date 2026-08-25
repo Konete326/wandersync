@@ -1,12 +1,13 @@
-import { useState } from 'react';
-import { Sparkles, X, Wand2, Loader2, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Sparkles, X, Wand2, Loader2 } from 'lucide-react';
 import { generateEntityWithAi } from '@/services/aiService';
 import { useModal } from '@/context/ModalContext';
 import GlowingButton from '@/components/common/GlowingButton';
 
 const QUICK_SUGGESTIONS = {
-  country: ['Japan', 'Switzerland', 'Pakistan', 'Italy', 'Iceland', 'United Arab Emirates'],
-  spot: ['Mount Fuji, Japan', 'Eiffel Tower, Paris', 'Hunza Valley, Pakistan', 'Burj Khalifa, Dubai', 'Colosseum, Rome'],
+  country: ['Japan', 'Switzerland', 'Pakistan', 'Italy', 'Iceland', 'United Arab Emirates', 'Turkey', 'Saudi Arabia'],
+  spot: ['Fushimi Inari-taisha, Kyoto', 'Eiffel Tower, Paris', 'Hunza Valley, Pakistan', 'Burj Khalifa, Dubai', 'Colosseum, Rome'],
+  attraction: ['Fushimi Inari-taisha, Kyoto', 'Eiffel Tower, Paris', 'Hunza Valley, Pakistan', 'Burj Khalifa, Dubai', 'Colosseum, Rome'],
   hotel: ['Burj Al Arab, Dubai', 'Marina Bay Sands, Singapore', 'Serena Hotel, Hunza', 'The Plaza, New York'],
   vehicle: ['Toyota Land Cruiser 4x4', 'Mercedes-Benz S-Class', 'Toyota Hiace Grand Cabin 14-Seat', 'Range Rover Sport'],
   flight: ['Emirates DXB to HND', 'Qatar Airways DOH to JFK', 'Turkish Airlines IST to LHR', 'PIA ISB to DXB'],
@@ -14,14 +15,32 @@ const QUICK_SUGGESTIONS = {
   groupTour: ['Hunza & Skardu 7-Day Expedition', 'Swiss Alps & Lakes Tour', 'Classic Italy 8-Day Odyssey', 'Japan Cherry Blossom Tour']
 };
 
-export default function AiAutofillModal({ isOpen, onClose, entityType = 'country', onAutofill }) {
+export default function AiAutofillModal({
+  isOpen,
+  onClose,
+  entityType = 'country',
+  category,
+  onAutofill,
+  onDataGenerated,
+  targetName = '',
+  initialQuery = ''
+}) {
   const { showToast } = useModal();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery || targetName || '');
   const [loading, setLoading] = useState(false);
+
+  const resolvedType = entityType || (category === 'attraction' ? 'spot' : category) || 'country';
+  const apiType = resolvedType === 'attraction' ? 'spot' : resolvedType;
+
+  useEffect(() => {
+    if (isOpen) {
+      setQuery(initialQuery || targetName || '');
+    }
+  }, [isOpen, initialQuery, targetName]);
 
   if (!isOpen) return null;
 
-  const suggestions = QUICK_SUGGESTIONS[entityType] || QUICK_SUGGESTIONS.country;
+  const suggestions = QUICK_SUGGESTIONS[resolvedType] || QUICK_SUGGESTIONS[category] || QUICK_SUGGESTIONS.country;
 
   const handleGenerate = async (searchQuery = query) => {
     const finalQuery = searchQuery.trim();
@@ -32,23 +51,25 @@ export default function AiAutofillModal({ isOpen, onClose, entityType = 'country
 
     setLoading(true);
     try {
-      const res = await generateEntityWithAi(entityType, finalQuery);
-      if (res.data) {
-        onAutofill(res.data);
-        showToast(`AI successfully populated ${entityType} form fields!`, 'success');
+      const res = await generateEntityWithAi(apiType, finalQuery);
+      if (res && res.data) {
+        if (typeof onAutofill === 'function') onAutofill(res.data);
+        if (typeof onDataGenerated === 'function') onDataGenerated(res.data);
+        showToast(`AI successfully generated details for ${finalQuery}!`, 'success');
         onClose();
       } else {
         showToast('AI could not generate data for this query', 'error');
       }
     } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to generate data with AI', 'error');
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to generate data with AI';
+      showToast(errorMsg, 'error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="w-full max-w-lg rounded-2xl bg-[#121215] border border-orange-500/30 p-5 space-y-4 shadow-2xl animate-in fade-in zoom-in duration-200">
         <div className="flex items-center justify-between border-b border-border/80 pb-3">
           <div className="flex items-center gap-2">
@@ -56,9 +77,9 @@ export default function AiAutofillModal({ isOpen, onClose, entityType = 'country
               <Sparkles className="size-4 animate-pulse" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-foreground">AI Smart Auto-Fill</h3>
+              <h3 className="text-sm font-bold text-foreground">AI Smart Auto-Fill Studio</h3>
               <p className="text-[11px] text-muted-foreground">
-                Enter name or location — Gemini AI will populate the complete form.
+                Enter name or location — OpenAI & Gemini AI will populate the form instantly.
               </p>
             </div>
           </div>
@@ -90,7 +111,7 @@ export default function AiAutofillModal({ isOpen, onClose, entityType = 'country
                 disabled={loading}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="e.g. Japan, Hunza Valley, Burj Al Arab, Toyota Land Cruiser..."
+                placeholder="e.g. Fushimi Inari-taisha, Eiffel Tower, Japan, Burj Al Arab..."
                 className="w-full pl-4 pr-11 h-11 rounded-xl bg-[#18181b] border border-border/80 text-xs sm:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/40"
               />
               <Wand2 className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-orange-400/80" />
@@ -141,7 +162,7 @@ export default function AiAutofillModal({ isOpen, onClose, entityType = 'country
               ) : (
                 <>
                   <Sparkles className="size-4" />
-                  <span>Auto-Fill Form</span>
+                  <span>Generate & Fill Form</span>
                 </>
               )}
             </GlowingButton>
