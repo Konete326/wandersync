@@ -84,7 +84,23 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
 }
 
-/* Global Dark & Black Scrollbar */
+select {
+  color-scheme: dark;
+  background-color: #121215;
+  color: #fafafa;
+}
+
+select option {
+  background-color: #121215;
+  color: #fafafa;
+}
+
+select option:checked,
+select option:hover {
+  background-color: #18181b;
+  color: #f97316;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: #27272a #09090b;

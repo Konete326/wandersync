@@ -152,7 +152,7 @@ export default function AdminGroupTours() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search group tour by title, city, country..."
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
           />
         </form>
 
@@ -163,11 +163,11 @@ export default function AdminGroupTours() {
               setSelectedCountry(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground focus:outline-none cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
-            <option value="All">All Destination Countries</option>
+            <option value="All" className="bg-[#121215] text-foreground">All Destination Countries</option>
             {countriesList.map((c) => (
-              <option key={c._id} value={c.name}>{c.name}</option>
+              <option key={c._id} value={c.name} className="bg-[#121215] text-foreground">{c.name}</option>
             ))}
           </select>
 
@@ -177,10 +177,10 @@ export default function AdminGroupTours() {
               setSelectedStatus(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground focus:outline-none cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
             {statusOptions.map((st) => (
-              <option key={st} value={st}>{st === 'All' ? 'All Statuses' : st}</option>
+              <option key={st} value={st} className="bg-[#121215] text-foreground">{st === 'All' ? 'All Statuses' : st}</option>
             ))}
           </select>
         </div>

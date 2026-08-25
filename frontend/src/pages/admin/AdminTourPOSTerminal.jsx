@@ -323,10 +323,10 @@ export default function AdminTourPOSTerminal() {
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full px-2 py-1 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none cursor-pointer h-[30px]"
+                    className="w-full px-2.5 py-1 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer h-[30px]"
                   >
                     {paymentMethods.map((pm) => (
-                      <option key={pm} value={pm}>{pm}</option>
+                      <option key={pm} value={pm} className="bg-[#121215] text-foreground">{pm}</option>
                     ))}
                   </select>
                 </div>

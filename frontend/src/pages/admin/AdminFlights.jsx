@@ -143,34 +143,32 @@ export default function AdminFlights() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search airline, flight code, city..."
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
           />
         </form>
 
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          {/* Destination Country Filter */}
           <select
             value={selectedCountry}
             onChange={(e) => {
               setSelectedCountry(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground focus:outline-none cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
-            <option value="All">All Destination Countries</option>
+            <option value="All" className="bg-[#121215] text-foreground">All Destination Countries</option>
             {countriesList.map((c) => (
-              <option key={c._id} value={c.name}>{c.name}</option>
+              <option key={c._id} value={c.name} className="bg-[#121215] text-foreground">{c.name}</option>
             ))}
           </select>
 
-          {/* Cabin Class Filter */}
           <select
             value={selectedCabin}
             onChange={(e) => {
               setSelectedCabin(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground focus:outline-none cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
             {cabinClasses.map((cls) => (
               <option key={cls} value={cls}>{cls === 'All' ? 'All Cabins' : cls}</option>

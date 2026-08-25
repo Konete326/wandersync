@@ -171,37 +171,35 @@ export default function AdminUsers() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search traveler by name or email..."
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
           />
         </form>
 
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          {/* Role Filter */}
           <select
             value={roleFilter}
             onChange={(e) => {
               setRoleFilter(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground focus:outline-none cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
-            <option value="All">All Roles</option>
-            <option value="admin">👑 Administrators Only</option>
-            <option value="user">🧭 Travelers Only</option>
+            <option value="All" className="bg-[#121215] text-foreground">All Roles</option>
+            <option value="admin" className="bg-[#121215] text-foreground">Administrators Only</option>
+            <option value="user" className="bg-[#121215] text-foreground">Travelers Only</option>
           </select>
 
-          {/* Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground focus:outline-none cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
-            <option value="All">All Statuses</option>
-            <option value="active">Active Accounts</option>
-            <option value="banned">Banned / Suspended</option>
+            <option value="All" className="bg-[#121215] text-foreground">All Statuses</option>
+            <option value="active" className="bg-[#121215] text-foreground">Active Accounts</option>
+            <option value="banned" className="bg-[#121215] text-foreground">Banned / Suspended</option>
           </select>
         </div>
       </div>

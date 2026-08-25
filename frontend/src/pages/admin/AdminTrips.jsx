@@ -185,37 +185,35 @@ export default function AdminTrips() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search destination, title, country..."
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
           />
         </form>
 
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          {/* Visibility Filter */}
           <select
             value={visibility}
             onChange={(e) => {
               setVisibility(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground focus:outline-none cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
-            <option value="all">All Visibilities</option>
-            <option value="public">🌐 Public Trips Only</option>
-            <option value="private">🔒 Private Trips Only</option>
+            <option value="all" className="bg-[#121215] text-foreground">All Visibilities</option>
+            <option value="public" className="bg-[#121215] text-foreground">Public Trips Only</option>
+            <option value="private" className="bg-[#121215] text-foreground">Private Trips Only</option>
           </select>
 
-          {/* Country Filter */}
           <select
             value={selectedCountry}
             onChange={(e) => {
               setSelectedCountry(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground focus:outline-none cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
-            <option value="All">All Countries</option>
+            <option value="All" className="bg-[#121215] text-foreground">All Countries</option>
             {countriesList.map((c) => (
-              <option key={c._id} value={c.name}>{c.name}</option>
+              <option key={c._id} value={c.name} className="bg-[#121215] text-foreground">{c.name}</option>
             ))}
           </select>
         </div>

@@ -138,20 +138,19 @@ export default function AdminSpots() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search spot by name, city, landmark..."
-            className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+            className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
           />
         </form>
 
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-          {/* Dynamic Country Filter */}
           <select
             value={country}
             onChange={(e) => setCountry(e.target.value)}
-            className="bg-secondary/70 border border-border rounded-lg px-2.5 py-1 text-xs text-foreground font-semibold focus:outline-none cursor-pointer"
+            className="bg-[#121215] border border-border/80 rounded-lg px-2.5 py-1 text-xs text-foreground font-semibold focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
-            <option value="All">All Countries</option>
+            <option value="All" className="bg-[#121215] text-foreground">All Countries</option>
             {countriesList.map((c) => (
-              <option key={c._id} value={c.name}>{c.name}</option>
+              <option key={c._id} value={c.name} className="bg-[#121215] text-foreground">{c.name}</option>
             ))}
           </select>
 
