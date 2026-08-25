@@ -15,7 +15,8 @@ import {
   Globe,
   Phone,
   Mail,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Sparkles
 } from 'lucide-react';
 import { uploadImage } from '@/services/mediaService';
 import { compressImage } from '@/utils/imageCompressor';
@@ -29,6 +30,7 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
+import AiAutofillModal from '@/components/admin/AiAutofillModal';
 
 const priceRanges = ['$', '$$', '$$$', '$$$$'];
 const defaultAmenitiesList = ['Free High-Speed WiFi', 'Breakfast Included', 'Infinity Pool', 'Spa & Wellness', 'Airport Shuttle', 'Fitness Center', 'Ocean / Skyline View', 'Concierge Service'];
@@ -43,6 +45,7 @@ export default function AdminHotelEditor() {
   const [saving, setSaving] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [countriesList, setCountriesList] = useState([]);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -208,6 +211,21 @@ export default function AdminHotelEditor() {
     }
   };
 
+  const handleAiAutofill = (data) => {
+    setFormData((prev) => ({
+      ...prev,
+      name: data.name || prev.name,
+      country: data.country || prev.country,
+      city: data.city || prev.city,
+      address: data.address || prev.address,
+      rating: data.rating || prev.rating,
+      pricePerNight: data.pricePerNight || prev.pricePerNight,
+      priceRange: data.priceRange || (data.pricePerNight > 200 ? '$$$$' : data.pricePerNight > 100 ? '$$$' : '$$'),
+      description: data.description || prev.description,
+      amenities: data.amenities?.length ? data.amenities : prev.amenities
+    }));
+  };
+
   if (loading) {
     return (
       <div className="py-20 flex items-center justify-center">
@@ -237,15 +255,26 @@ export default function AdminHotelEditor() {
           </div>
         </div>
 
-        <GlowingButton
-          onClick={handleSubmit}
-          disabled={saving}
-          size="sm"
-          innerClassName="py-1.5 px-3 text-xs font-bold flex items-center gap-1.5"
-        >
-          <Save className="size-3.5 text-orange-400" />
-          <span>{saving ? 'Saving...' : isEditing ? 'Update Hotel' : 'Save Hotel'}</span>
-        </GlowingButton>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsAiModalOpen(true)}
+            className="h-[30px] px-3 rounded-lg bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/40 text-orange-400 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
+          >
+            <Sparkles className="size-3.5 animate-pulse" />
+            <span>Generate by AI</span>
+          </button>
+
+          <GlowingButton
+            onClick={handleSubmit}
+            disabled={saving}
+            size="sm"
+            innerClassName="h-[30px] px-3 text-xs font-bold flex items-center gap-1.5"
+          >
+            <Save className="size-3.5 text-orange-400" />
+            <span>{saving ? 'Saving...' : isEditing ? 'Update Hotel' : 'Save Hotel'}</span>
+          </GlowingButton>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -476,6 +505,13 @@ export default function AdminHotelEditor() {
           </GlowingButton>
         </div>
       </form>
+
+      <AiAutofillModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        entityType="hotel"
+        onAutofill={handleAiAutofill}
+      />
     </div>
   );
 }

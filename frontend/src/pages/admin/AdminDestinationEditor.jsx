@@ -37,6 +37,7 @@ import { useModal } from '@/context/ModalContext';
 import GlowingButton from '@/components/common/GlowingButton';
 import Loader from '@/components/common/Loader';
 import ValidatedInput from '@/components/common/ValidatedInput';
+import AiAutofillModal from '@/components/admin/AiAutofillModal';
 
 const categories = [
   'Landscape',
@@ -57,6 +58,7 @@ export default function AdminDestinationEditor() {
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -257,43 +259,28 @@ export default function AdminDestinationEditor() {
     }));
   };
 
-  const handleAiAutofill = async () => {
-    if (!formData.country || !formData.city) {
-      showToast('Please enter both Country and City first to use AI Autofill', 'warning');
-      return;
-    }
-    setAiLoading(true);
-    try {
-      const res = await autofillDestinationAi(formData.country, formData.city);
-      if (res.data) {
-        setFormData((prev) => ({
-          ...prev,
-          title: res.data.title || prev.title,
-          location: res.data.location || prev.location,
-          category: res.data.category || prev.category,
-          description: res.data.description || prev.description,
-          bestTimeToVisit: res.data.bestTimeToVisit || prev.bestTimeToVisit,
-          idealDuration: res.data.idealDuration || prev.idealDuration,
-          estimatedBudget: res.data.estimatedBudget || prev.estimatedBudget,
-          currency: res.data.currency || prev.currency,
-          language: res.data.language || prev.language,
-          transportation: res.data.transportation || prev.transportation,
-          travelTips: res.data.travelTips?.length ? res.data.travelTips : prev.travelTips,
-          touristPlaces: res.data.touristPlaces?.length
-            ? res.data.touristPlaces.map((p) => ({ ...p, images: p.images || (p.imageUrl ? [p.imageUrl] : []) }))
-            : prev.touristPlaces,
-          hotels: res.data.hotels?.length
-            ? res.data.hotels.map((h) => ({ ...h, images: h.images || (h.imageUrl ? [h.imageUrl] : []) }))
-            : prev.hotels,
-          localFoods: res.data.localFoods?.length ? res.data.localFoods : prev.localFoods
-        }));
-        showToast('Destination details autofilled by Gemini AI! You can customize or upload photos.', 'success');
-      }
-    } catch {
-      showToast('AI Autofill service temporarily busy. Please try again.', 'error');
-    } finally {
-      setAiLoading(false);
-    }
+  const handleAiModalAutofill = (data) => {
+    setFormData((prev) => ({
+      ...prev,
+      title: data.title || prev.title,
+      location: data.location || prev.location,
+      category: data.category || prev.category,
+      description: data.description || prev.description,
+      bestTimeToVisit: data.bestTimeToVisit || prev.bestTimeToVisit,
+      idealDuration: data.idealDuration || prev.idealDuration,
+      estimatedBudget: data.estimatedBudget || prev.estimatedBudget,
+      currency: data.currency || prev.currency,
+      language: data.language || prev.language,
+      transportation: data.transportation || prev.transportation,
+      travelTips: data.travelTips?.length ? data.travelTips : prev.travelTips,
+      touristPlaces: data.touristPlaces?.length
+        ? data.touristPlaces.map((p) => ({ ...p, images: p.images || (p.imageUrl ? [p.imageUrl] : []) }))
+        : prev.touristPlaces,
+      hotels: data.hotels?.length
+        ? data.hotels.map((h) => ({ ...h, images: h.images || (h.imageUrl ? [h.imageUrl] : []) }))
+        : prev.hotels,
+      localFoods: data.localFoods?.length ? data.localFoods : prev.localFoods
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -390,19 +377,18 @@ export default function AdminDestinationEditor() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={handleAiAutofill}
-            disabled={aiLoading}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/30 hover:bg-orange-500/20 transition-all cursor-pointer disabled:opacity-50"
+            onClick={() => setIsAiModalOpen(true)}
+            className="h-[30px] px-3 rounded-lg bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/40 text-orange-400 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
           >
-            <Sparkles className={`size-3.5 ${aiLoading ? 'animate-spin' : ''}`} />
-            <span>{aiLoading ? 'AI Generating...' : 'Gemini Deep Fill'}</span>
+            <Sparkles className="size-3.5 animate-pulse" />
+            <span>Generate by AI</span>
           </button>
 
           <GlowingButton
             onClick={handleSubmit}
             disabled={saving}
             size="sm"
-            innerClassName="py-1.5 px-3 text-xs font-bold flex items-center gap-1.5"
+            innerClassName="h-[30px] px-3 text-xs font-bold flex items-center gap-1.5"
           >
             <Save className="size-3.5 text-orange-400" />
             <span>{saving ? 'Saving...' : isEditing ? 'Update Destination' : 'Publish Destination'}</span>
@@ -1112,6 +1098,13 @@ export default function AdminDestinationEditor() {
           </GlowingButton>
         </div>
       </form>
+
+      <AiAutofillModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        entityType="destination"
+        onAutofill={handleAiModalAutofill}
+      />
     </div>
   );
 }

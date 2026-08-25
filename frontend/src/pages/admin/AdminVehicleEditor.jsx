@@ -14,7 +14,8 @@ import {
   MapPin,
   Globe,
   Fuel,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import { uploadImage } from '@/services/mediaService';
 import { compressImage } from '@/utils/imageCompressor';
@@ -28,6 +29,7 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
+import AiAutofillModal from '@/components/admin/AiAutofillModal';
 
 const vehicleTypes = ['SUV', 'Luxury Sedan', 'Van & Minibus', '4x4 Off-Road', 'Convertible', 'Electric'];
 const defaultFeaturesList = ['Air Conditioning', 'GPS Navigation System', 'Luggage Roof Rack', 'Bluetooth & USB Charging', 'Child Safety Seat', 'All-Wheel Drive (AWD)', 'Tinted Windows', 'Comprehensive Insurance'];
@@ -42,6 +44,7 @@ export default function AdminVehicleEditor() {
   const [saving, setSaving] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [countriesList, setCountriesList] = useState([]);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -207,6 +210,20 @@ export default function AdminVehicleEditor() {
     }
   };
 
+  const handleAiAutofill = (data) => {
+    setFormData((prev) => ({
+      ...prev,
+      name: data.name || prev.name,
+      vehicleType: data.type || prev.vehicleType,
+      capacity: data.capacity ? `${data.capacity} Passengers` : prev.capacity,
+      transmission: data.transmission || prev.transmission,
+      fuelType: data.fuelType || prev.fuelType,
+      pricePerDay: data.pricePerDay || prev.pricePerDay,
+      description: data.description || prev.description,
+      features: data.features?.length ? data.features : prev.features
+    }));
+  };
+
   if (loading) {
     return (
       <div className="py-20 flex items-center justify-center">
@@ -236,15 +253,26 @@ export default function AdminVehicleEditor() {
           </div>
         </div>
 
-        <GlowingButton
-          onClick={handleSubmit}
-          disabled={saving}
-          size="sm"
-          innerClassName="py-1.5 px-3 text-xs font-bold flex items-center gap-1.5"
-        >
-          <Save className="size-3.5 text-orange-400" />
-          <span>{saving ? 'Saving...' : isEditing ? 'Update Vehicle' : 'Save Vehicle'}</span>
-        </GlowingButton>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsAiModalOpen(true)}
+            className="h-[30px] px-3 rounded-lg bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/40 text-orange-400 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
+          >
+            <Sparkles className="size-3.5 animate-pulse" />
+            <span>Generate by AI</span>
+          </button>
+
+          <GlowingButton
+            onClick={handleSubmit}
+            disabled={saving}
+            size="sm"
+            innerClassName="h-[30px] px-3 text-xs font-bold flex items-center gap-1.5"
+          >
+            <Save className="size-3.5 text-orange-400" />
+            <span>{saving ? 'Saving...' : isEditing ? 'Update Vehicle' : 'Save Vehicle'}</span>
+          </GlowingButton>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -507,6 +535,13 @@ export default function AdminVehicleEditor() {
           </GlowingButton>
         </div>
       </form>
+
+      <AiAutofillModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        entityType="vehicle"
+        onAutofill={handleAiAutofill}
+      />
     </div>
   );
 }

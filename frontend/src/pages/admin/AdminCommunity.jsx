@@ -37,43 +37,37 @@ const COMMUNITY_GROUPS = [
     id: 'global-lounge',
     name: 'Global Traveler Lounge',
     desc: 'Worldwide travel banter, stories & wanderlust talk',
-    icon: Globe,
-    badgeColor: 'text-orange-400 border-orange-500/30 bg-orange-500/10'
+    icon: Globe
   },
   {
     id: 'travel-buddies',
     name: 'Travel Buddies & Meetups',
     desc: 'Find travel companions, road trips & solo meetups',
-    icon: Users,
-    badgeColor: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10'
+    icon: Users
   },
   {
     id: 'flights-and-deals',
     name: 'Flights & Airfare Deals',
     desc: 'Aviation routes, airline sales & seat alerts',
-    icon: Plane,
-    badgeColor: 'text-sky-400 border-sky-500/30 bg-sky-500/10'
+    icon: Plane
   },
   {
     id: 'stays-and-hotels',
     name: 'Luxury Resorts & Hotels',
     desc: 'Boutique stays, hotel reviews & accommodation tips',
-    icon: Building,
-    badgeColor: 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+    icon: Building
   },
   {
     id: 'solo-expeditions',
     name: 'Solo Expeditions & Treks',
     desc: 'Hiking trails, backpacker guides & mountain camps',
-    icon: Compass,
-    badgeColor: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
+    icon: Compass
   },
   {
     id: 'photography-visuals',
     name: 'Sceneries & Photography',
     desc: 'Travel snapshots, drone shots & camera presets',
-    icon: ImageIcon,
-    badgeColor: 'text-purple-400 border-purple-500/30 bg-purple-500/10'
+    icon: ImageIcon
   }
 ];
 

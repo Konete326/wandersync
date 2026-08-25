@@ -1,4 +1,5 @@
 import { generateAiItinerary, refineAiItinerary, chatWithGemini, autofillDestinationData } from '../services/geminiService.js';
+import { autofillEntityData } from '../services/geminiEntityService.js';
 import { sendSuccess, sendError } from '../utils/apiResponse.js';
 
 export const generateItinerary = async (req, res) => {
@@ -76,5 +77,19 @@ export const autofillDestination = async (req, res) => {
     return sendSuccess(res, 'Destination AI telemetry retrieved', data);
   } catch (error) {
     return sendError(res, error.message || 'Failed to autofill destination', 500);
+  }
+};
+
+export const autofillEntity = async (req, res) => {
+  try {
+    const { type, query } = req.body;
+    if (!type || !query) {
+      return sendError(res, 'Entity type and search query are required for AI autofill', 400);
+    }
+
+    const data = await autofillEntityData(type, query);
+    return sendSuccess(res, `AI generated ${type} metadata successfully`, data);
+  } catch (error) {
+    return sendError(res, error.message || 'Failed to generate entity with AI', 500);
   }
 };
