@@ -24,6 +24,39 @@ import ValidatedInput from '@/components/common/ValidatedInput';
 
 const paymentMethods = ['POS Terminal', 'Cash', 'Credit Card', 'Bank Transfer'];
 
+const countryCallingCodes = [
+  { code: '+1', country: 'US/CA', mask: '(###) ###-####' },
+  { code: '+44', country: 'UK', mask: '#### ######' },
+  { code: '+92', country: 'PK', mask: '### #######' },
+  { code: '+971', country: 'UAE', mask: '## ### ####' },
+  { code: '+966', country: 'KSA', mask: '## ### ####' },
+  { code: '+91', country: 'IN', mask: '##### #####' },
+  { code: '+61', country: 'AU', mask: '### ### ###' },
+  { code: '+49', country: 'DE', mask: '#### #######' },
+  { code: '+33', country: 'FR', mask: '# ## ## ## ##' },
+  { code: '+81', country: 'JP', mask: '## #### ####' },
+  { code: '+86', country: 'CN', mask: '### #### ####' },
+  { code: '+90', country: 'TR', mask: '### ### ####' },
+  { code: '+60', country: 'MY', mask: '## ### ####' },
+  { code: '+65', country: 'SG', mask: '#### ####' },
+  { code: '+34', country: 'ES', mask: '### ### ###' },
+  { code: '+39', country: 'IT', mask: '### ### ####' }
+];
+
+const formatPhoneNumber = (digits, mask) => {
+  const clean = digits.replace(/\D/g, '');
+  let formatted = '';
+  let cleanIndex = 0;
+  for (let i = 0; i < mask.length && cleanIndex < clean.length; i++) {
+    if (mask[i] === '#') {
+      formatted += clean[cleanIndex++];
+    } else {
+      formatted += mask[i];
+    }
+  }
+  return formatted;
+};
+
 export default function AdminTourPOSTerminal() {
   const [searchParams] = useSearchParams();
   const initialTourId = searchParams.get('tourId');
@@ -37,7 +70,8 @@ export default function AdminTourPOSTerminal() {
 
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+1');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [passengersCount, setPassengersCount] = useState(1);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState('POS Terminal');
@@ -90,13 +124,15 @@ export default function AdminTourPOSTerminal() {
       return;
     }
 
+    const fullPhone = phoneNumber.trim() ? `${phoneCountryCode} ${phoneNumber.trim()}` : '';
+
     setBookingLoading(true);
     try {
       const res = await createPOSBooking({
         tourId: selectedTour._id,
         customerName: customerName.trim(),
         customerEmail: customerEmail.trim(),
-        customerPhone: customerPhone.trim(),
+        customerPhone: fullPhone,
         passengersCount,
         discountAmount: parseFloat(discountAmount) || 0,
         paymentMethod,
@@ -110,7 +146,7 @@ export default function AdminTourPOSTerminal() {
         loadTours();
         setCustomerName('');
         setCustomerEmail('');
-        setCustomerPhone('');
+        setPhoneNumber('');
         setPassengersCount(1);
         setDiscountAmount(0);
         setSpecialRequests('');
@@ -278,15 +314,45 @@ export default function AdminTourPOSTerminal() {
                   className="py-1"
                 />
 
-                <ValidatedInput
-                  label="Contact Phone"
-                  validationType="phone"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder="+1 (555) 0199"
-                  containerClassName="space-y-0.5"
-                  className="py-1"
-                />
+                <div className="space-y-0.5">
+                  <label className="text-[11px] font-bold text-zinc-300 flex items-center justify-between">
+                    <span>Contact Phone</span>
+                    <span className="text-[10px] text-muted-foreground font-normal">(Optional)</span>
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <select
+                      value={phoneCountryCode}
+                      onChange={(e) => {
+                        const newCode = e.target.value;
+                        setPhoneCountryCode(newCode);
+                        const selected = countryCallingCodes.find((c) => c.code === newCode);
+                        if (selected && phoneNumber) {
+                          setPhoneNumber(formatPhoneNumber(phoneNumber, selected.mask));
+                        }
+                      }}
+                      className="w-24 px-1.5 py-1 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer h-[30px] shrink-0 font-mono"
+                    >
+                      {countryCallingCodes.map((c) => (
+                        <option key={c.code} value={c.code} className="bg-[#121215] text-foreground">
+                          {c.code} ({c.country})
+                        </option>
+                      ))}
+                    </select>
+
+                    <input
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => {
+                        const selected = countryCallingCodes.find((c) => c.code === phoneCountryCode) || countryCallingCodes[0];
+                        setPhoneNumber(formatPhoneNumber(e.target.value, selected.mask));
+                      }}
+                      placeholder={
+                        countryCallingCodes.find((c) => c.code === phoneCountryCode)?.mask.replace(/#/g, '0') || '(555) 000-0000'
+                      }
+                      className="w-full px-2.5 py-1 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 h-[30px]"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-0.5">
