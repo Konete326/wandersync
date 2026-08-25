@@ -110,23 +110,46 @@ export default function AdminCountryEditor() {
   const [countryFilter, setCountryFilter] = useState('');
   const dropdownRef = useRef(null);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    code: '',
-    continent: 'Asia',
-    currency: 'USD ($)',
-    language: 'English',
-    timezone: 'UTC+9',
-    description: '',
-    coverImage: '',
-    images: [],
-    popularCities: [{ name: '', description: '', images: [] }],
-    featured: false
+  const [formData, setFormData] = useState(() => {
+    if (!isEditing && WORLD_COUNTRIES.length > 0) {
+      const defaultPreset = WORLD_COUNTRIES[0];
+      return {
+        name: defaultPreset.name,
+        code: defaultPreset.code,
+        continent: defaultPreset.continent,
+        currency: defaultPreset.currency,
+        language: defaultPreset.language,
+        timezone: defaultPreset.timezone,
+        description: defaultPreset.description,
+        coverImage: defaultPreset.coverImage,
+        images: defaultPreset.images,
+        popularCities: defaultPreset.popularCities,
+        featured: false
+      };
+    }
+    return {
+      name: '',
+      code: '',
+      continent: 'Asia',
+      currency: 'USD ($)',
+      language: 'English',
+      timezone: 'UTC+5',
+      description: '',
+      coverImage: '',
+      images: [],
+      popularCities: [{ name: '', description: '', images: [] }],
+      featured: false
+    };
   });
 
   const [coverFile, setCoverFile] = useState(null);
-  const [coverPreview, setCoverPreview] = useState('');
-  const [coverMode, setCoverMode] = useState('upload');
+  const [coverPreview, setCoverPreview] = useState(() => {
+    if (!isEditing && WORLD_COUNTRIES.length > 0) {
+      return WORLD_COUNTRIES[0].coverImage;
+    }
+    return '';
+  });
+  const [coverMode, setCoverMode] = useState('url');
   const coverInputRef = useRef(null);
 
   useEffect(() => {
