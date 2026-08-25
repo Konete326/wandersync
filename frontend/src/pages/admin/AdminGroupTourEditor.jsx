@@ -33,6 +33,7 @@ import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
 import { detectLocalCallingCode } from '@/utils/countryDetector';
+import { GROUP_TOUR_PRESETS } from '@/utils/entityPresetsData';
 
 const tourCategories = ['Cultural & Adventure', 'Family Expedition', 'Honeymoon Special', 'Pilgrimage & Sacred', 'Nature & Safari', 'Corporate Retreat'];
 const tourStatuses = ['Open', 'Filling Fast', 'Sold Out', 'In Progress', 'Completed'];
@@ -243,6 +244,25 @@ export default function AdminGroupTourEditor() {
     }));
   };
 
+  const applyGroupTourPreset = (preset) => {
+    if (!preset) return;
+    setFormData((prev) => ({
+      ...prev,
+      title: preset.title || prev.title,
+      tagline: preset.tagline || prev.tagline,
+      category: preset.category || prev.category,
+      country: preset.country || prev.country,
+      city: preset.city || prev.city,
+      durationDays: preset.durationDays || prev.durationDays,
+      totalCapacity: preset.totalCapacity || prev.totalCapacity,
+      pricePerPerson: preset.pricePerPerson || prev.pricePerPerson,
+      tourGuideName: preset.tourGuideName || prev.tourGuideName,
+      tourGuidePhone: preset.tourGuidePhone || prev.tourGuidePhone,
+      inclusions: preset.inclusions?.length ? preset.inclusions : prev.inclusions
+    }));
+    showToast(`Auto-filled package for ${preset.title}!`, 'success');
+  };
+
   if (loading) {
     return (
       <div className="py-24 flex items-center justify-center">
@@ -295,11 +315,37 @@ export default function AdminGroupTourEditor() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
-          <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
-            <Compass className="size-4 text-orange-400" />
-            <h2 className="text-sm font-bold text-foreground">1. Group Tour Core Details</h2>
+          <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
+            <div className="flex items-center gap-2">
+              <Compass className="size-4 text-orange-400" />
+              <h2 className="text-sm font-bold text-foreground">1. Group Tour Core Details</h2>
+            </div>
+            <span className="text-[10px] text-orange-400/90 bg-orange-500/10 border border-orange-500/30 px-2 py-0.5 rounded-md font-semibold">
+              Instant Preset Auto-Fill
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar py-0.5">
+              <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap mr-1">
+                Quick Presets:
+              </span>
+              {GROUP_TOUR_PRESETS.map((tour) => (
+                <button
+                  key={tour.title}
+                  type="button"
+                  onClick={() => applyGroupTourPreset(tour)}
+                  className={`text-[10px] px-2.5 py-0.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${
+                    formData.title.toLowerCase() === tour.title.toLowerCase()
+                      ? 'bg-orange-500 text-zinc-950 font-bold border-orange-500 shadow-xs'
+                      : 'bg-[#18181b] hover:bg-orange-500/10 text-muted-foreground hover:text-orange-400 border-border/80 hover:border-orange-500/40'
+                  }`}
+                >
+                  {tour.country}: {tour.durationDays}D Expedition
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">

@@ -31,6 +31,7 @@ import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
+import { HOTEL_PRESETS } from '@/utils/entityPresetsData';
 
 const priceRanges = ['$', '$$', '$$$', '$$$$'];
 const defaultAmenitiesList = ['Free High-Speed WiFi', 'Breakfast Included', 'Infinity Pool', 'Spa & Wellness', 'Airport Shuttle', 'Fitness Center', 'Ocean / Skyline View', 'Concierge Service'];
@@ -226,6 +227,23 @@ export default function AdminHotelEditor() {
     }));
   };
 
+  const applyHotelPreset = (preset) => {
+    if (!preset) return;
+    setFormData((prev) => ({
+      ...prev,
+      name: preset.name || prev.name,
+      country: preset.country || prev.country,
+      city: preset.city || prev.city,
+      address: preset.address || prev.address,
+      rating: preset.rating || prev.rating,
+      pricePerNight: preset.pricePerNight || prev.pricePerNight,
+      priceRange: preset.priceRange || '$$$$',
+      description: preset.description || prev.description,
+      amenities: preset.amenities?.length ? preset.amenities : prev.amenities
+    }));
+    showToast(`Auto-filled details for ${preset.name}!`, 'success');
+  };
+
   if (loading) {
     return (
       <div className="py-20 flex items-center justify-center">
@@ -278,11 +296,37 @@ export default function AdminHotelEditor() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
-          <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
-            <Building className="size-4 text-orange-400" />
-            <h2 className="text-sm font-bold text-foreground">1. Hotel Details & Pricing</h2>
+          <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
+            <div className="flex items-center gap-2">
+              <Building className="size-4 text-orange-400" />
+              <h2 className="text-sm font-bold text-foreground">1. Hotel Details & Pricing</h2>
+            </div>
+            <span className="text-[10px] text-orange-400/90 bg-orange-500/10 border border-orange-500/30 px-2 py-0.5 rounded-md font-semibold">
+              Instant Preset Auto-Fill
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar py-0.5">
+              <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap mr-1">
+                Quick Presets:
+              </span>
+              {HOTEL_PRESETS.map((hotel) => (
+                <button
+                  key={hotel.name}
+                  type="button"
+                  onClick={() => applyHotelPreset(hotel)}
+                  className={`text-[10px] px-2.5 py-0.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${
+                    formData.name.toLowerCase() === hotel.name.toLowerCase()
+                      ? 'bg-orange-500 text-zinc-950 font-bold border-orange-500 shadow-xs'
+                      : 'bg-[#18181b] hover:bg-orange-500/10 text-muted-foreground hover:text-orange-400 border-border/80 hover:border-orange-500/40'
+                  }`}
+                >
+                  {hotel.name} ({hotel.city})
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">

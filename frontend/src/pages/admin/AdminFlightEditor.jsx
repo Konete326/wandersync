@@ -31,6 +31,7 @@ import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
+import { FLIGHT_PRESETS } from '@/utils/entityPresetsData';
 
 const cabinClasses = ['Economy', 'Premium Economy', 'Business Class', 'First Class'];
 const flightStatuses = ['Scheduled', 'Available', 'Filling Fast', 'Boarding', 'Delayed'];
@@ -236,6 +237,30 @@ export default function AdminFlightEditor() {
     }));
   };
 
+  const applyFlightPreset = (preset) => {
+    if (!preset) return;
+    setFormData((prev) => ({
+      ...prev,
+      airline: preset.airline || prev.airline,
+      flightNumber: preset.flightNumber || prev.flightNumber,
+      aircraft: preset.aircraft || prev.aircraft,
+      originCountry: preset.originCountry || prev.originCountry,
+      originCity: preset.originCity || prev.originCity,
+      originAirport: preset.originAirport || prev.originAirport,
+      destinationCountry: preset.destinationCountry || prev.destinationCountry,
+      destinationCity: preset.destinationCity || prev.destinationCity,
+      destinationAirport: preset.destinationAirport || prev.destinationAirport,
+      cabinClass: preset.cabinClass || prev.cabinClass,
+      departureTime: preset.departureTime || prev.departureTime,
+      arrivalTime: preset.arrivalTime || prev.arrivalTime,
+      duration: preset.duration || prev.duration,
+      price: preset.price || prev.price,
+      baggage: preset.baggage || prev.baggage,
+      status: preset.status || prev.status
+    }));
+    showToast(`Auto-filled schedule for ${preset.airline} (${preset.flightNumber})!`, 'success');
+  };
+
   if (loading) {
     return (
       <div className="py-24 flex items-center justify-center">
@@ -288,11 +313,37 @@ export default function AdminFlightEditor() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
-          <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
-            <Plane className="size-4 text-orange-400" />
-            <h2 className="text-sm font-bold text-foreground">1. Airline & Aircraft Information</h2>
+          <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
+            <div className="flex items-center gap-2">
+              <Plane className="size-4 text-orange-400" />
+              <h2 className="text-sm font-bold text-foreground">1. Airline & Aircraft Information</h2>
+            </div>
+            <span className="text-[10px] text-orange-400/90 bg-orange-500/10 border border-orange-500/30 px-2 py-0.5 rounded-md font-semibold">
+              Instant Preset Auto-Fill
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar py-0.5">
+              <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap mr-1">
+                Quick Presets:
+              </span>
+              {FLIGHT_PRESETS.map((f) => (
+                <button
+                  key={f.flightNumber}
+                  type="button"
+                  onClick={() => applyFlightPreset(f)}
+                  className={`text-[10px] px-2.5 py-0.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${
+                    formData.flightNumber.toLowerCase() === f.flightNumber.toLowerCase()
+                      ? 'bg-orange-500 text-zinc-950 font-bold border-orange-500 shadow-xs'
+                      : 'bg-[#18181b] hover:bg-orange-500/10 text-muted-foreground hover:text-orange-400 border-border/80 hover:border-orange-500/40'
+                  }`}
+                >
+                  {f.airline} ({f.flightNumber})
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">

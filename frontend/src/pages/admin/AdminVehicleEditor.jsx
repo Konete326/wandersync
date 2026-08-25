@@ -30,6 +30,7 @@ import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
+import { VEHICLE_PRESETS } from '@/utils/entityPresetsData';
 
 const vehicleTypes = ['SUV', 'Luxury Sedan', 'Van & Minibus', '4x4 Off-Road', 'Convertible', 'Electric'];
 const defaultFeaturesList = ['Air Conditioning', 'GPS Navigation System', 'Luggage Roof Rack', 'Bluetooth & USB Charging', 'Child Safety Seat', 'All-Wheel Drive (AWD)', 'Tinted Windows', 'Comprehensive Insurance'];
@@ -224,6 +225,23 @@ export default function AdminVehicleEditor() {
     }));
   };
 
+  const applyVehiclePreset = (preset) => {
+    if (!preset) return;
+    setFormData((prev) => ({
+      ...prev,
+      name: preset.name || prev.name,
+      vehicleType: preset.vehicleType || prev.vehicleType,
+      capacity: preset.capacity || prev.capacity,
+      transmission: preset.transmission || prev.transmission,
+      fuelType: preset.fuelType || prev.fuelType,
+      pricePerDay: preset.pricePerDay || prev.pricePerDay,
+      driverIncluded: preset.driverIncluded !== undefined ? preset.driverIncluded : prev.driverIncluded,
+      description: preset.description || prev.description,
+      features: preset.features?.length ? preset.features : prev.features
+    }));
+    showToast(`Auto-filled details for ${preset.name}!`, 'success');
+  };
+
   if (loading) {
     return (
       <div className="py-20 flex items-center justify-center">
@@ -276,11 +294,37 @@ export default function AdminVehicleEditor() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
-          <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
-            <Car className="size-4 text-orange-400" />
-            <h2 className="text-sm font-bold text-foreground">1. Vehicle Specifications & Pricing</h2>
+          <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
+            <div className="flex items-center gap-2">
+              <Car className="size-4 text-orange-400" />
+              <h2 className="text-sm font-bold text-foreground">1. Vehicle Specifications & Pricing</h2>
+            </div>
+            <span className="text-[10px] text-orange-400/90 bg-orange-500/10 border border-orange-500/30 px-2 py-0.5 rounded-md font-semibold">
+              Instant Preset Auto-Fill
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar py-0.5">
+              <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap mr-1">
+                Quick Presets:
+              </span>
+              {VEHICLE_PRESETS.map((v) => (
+                <button
+                  key={v.name}
+                  type="button"
+                  onClick={() => applyVehiclePreset(v)}
+                  className={`text-[10px] px-2.5 py-0.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${
+                    formData.name.toLowerCase() === v.name.toLowerCase()
+                      ? 'bg-orange-500 text-zinc-950 font-bold border-orange-500 shadow-xs'
+                      : 'bg-[#18181b] hover:bg-orange-500/10 text-muted-foreground hover:text-orange-400 border-border/80 hover:border-orange-500/40'
+                  }`}
+                >
+                  {v.name}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
