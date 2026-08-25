@@ -18,6 +18,7 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import CardGallerySlider from '@/components/common/CardGallerySlider';
+import LiveWeatherBadge from '@/components/common/LiveWeatherBadge';
 import { getCountryFlag } from '@/utils/worldCountriesData';
 
 import {
@@ -228,12 +229,17 @@ export default function AdminCountries() {
                     alt={item.name}
                     containerClassName="h-44 sm:h-48 w-full"
                     overlayChildren={
-                      <div className="absolute top-2.5 left-2.5 z-10 pointer-events-none">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/75 backdrop-blur-md text-white border border-white/15 flex items-center gap-1.5 shadow-xs">
-                          <span className="text-sm leading-none">{getCountryFlag(item.code || item.name)}</span>
-                          <span className="uppercase text-[9px]">{item.continent}</span>
-                        </span>
-                      </div>
+                      <>
+                        <div className="absolute top-2.5 left-2.5 z-10 pointer-events-none">
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/75 backdrop-blur-md text-white border border-white/15 flex items-center gap-1.5 shadow-xs">
+                            <span className="text-sm leading-none">{getCountryFlag(item.code || item.name)}</span>
+                            <span className="uppercase text-[9px]">{item.continent}</span>
+                          </span>
+                        </div>
+                        <div className="absolute top-2.5 right-2.5 z-10">
+                          <LiveWeatherBadge locationName={item.name} />
+                        </div>
+                      </>
                     }
                   />
 

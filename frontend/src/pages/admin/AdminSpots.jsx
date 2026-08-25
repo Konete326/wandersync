@@ -20,6 +20,7 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import CardGallerySlider from '@/components/common/CardGallerySlider';
+import LiveWeatherBadge from '@/components/common/LiveWeatherBadge';
 
 import {
   subscribeRealtimeUpdate,
@@ -241,18 +242,21 @@ export default function AdminSpots() {
                     coverImage={item.coverImage || item.image || item.images?.[0]}
                     images={item.images}
                     alt={item.name}
-                    containerClassName="h-28 sm:h-32 w-full"
+                    containerClassName="h-32 sm:h-36 w-full"
                     overlayChildren={
-                      <div className="absolute top-2 left-2 right-2 flex items-center justify-between z-10 pointer-events-none">
-                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-black/70 backdrop-blur-md text-white border border-white/10 flex items-center gap-1">
+                      <div className="absolute top-2 left-2 right-2 flex items-center justify-between z-10">
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-black/70 backdrop-blur-md text-white border border-white/10 flex items-center gap-1 pointer-events-none">
                           <MapPin className="size-2.5 text-orange-400" />
-                          <span>{item.city}, {item.country}</span>
+                          <span>{item.city || item.country}</span>
                         </span>
-                        {item.ticketPrice && (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-orange-500 text-zinc-950">
-                            {item.ticketPrice}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1.5">
+                          <LiveWeatherBadge locationName={item.city || item.country} lat={item.latitude} lng={item.longitude} />
+                          {item.ticketPrice && (
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-orange-500 text-zinc-950 pointer-events-none">
+                              {item.ticketPrice}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     }
                   />
