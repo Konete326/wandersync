@@ -260,10 +260,10 @@ export default function Gallery() {
                           setPage(p);
                           loadGallery(p, activeCountry);
                         }}
-                        className={`size-7 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors cursor-pointer ${
+                        className={`size-7 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors cursor-pointer border ${
                           page === p
-                            ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm shadow-orange-500/20'
-                            : 'bg-secondary/40 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
+                            ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 font-bold shadow-xs'
+                            : 'bg-secondary/40 text-muted-foreground hover:text-foreground border-border hover:border-orange-500/30'
                         }`}
                       >
                         {p}

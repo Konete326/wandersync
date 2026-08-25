@@ -191,10 +191,10 @@ export default function AdminSpots() {
               <button
                 key={cat}
                 onClick={() => setCategory(cat)}
-                className={`h-[30px] px-2.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                className={`h-[30px] px-2.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer border ${
                   category === cat
-                    ? 'bg-orange-500 text-zinc-950 font-bold shadow-xs shadow-orange-500/20'
-                    : 'bg-[#18181b]/80 text-muted-foreground hover:text-foreground border border-border/80 hover:border-orange-500/30'
+                    ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 font-bold shadow-xs'
+                    : 'bg-[#18181b]/80 text-muted-foreground hover:text-foreground border-border/80 hover:border-orange-500/30'
                 }`}
               >
                 {cat}

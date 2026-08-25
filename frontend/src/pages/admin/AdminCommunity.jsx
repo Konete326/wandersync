@@ -250,7 +250,28 @@ export default function AdminCommunity() {
         </div>
       </div>
 
-      <div className="rounded-2xl bg-[#121215] border border-border/80 overflow-hidden shadow-lg h-[calc(100vh-210px)] min-h-[560px] flex flex-col md:flex-row">
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+        {COMMUNITY_GROUPS.map((grp) => {
+          const isSelected = activeGroup.id === grp.id;
+          const Icon = grp.icon;
+          return (
+            <button
+              key={grp.id}
+              onClick={() => handleGroupSelect(grp)}
+              className={`h-[32px] px-3 rounded-xl border text-xs font-bold flex items-center gap-2 shrink-0 transition-all cursor-pointer shadow-xs ${
+                isSelected
+                  ? 'border-orange-500/60 bg-orange-500/10 text-orange-400'
+                  : 'border-border/80 bg-[#121215] text-muted-foreground hover:text-foreground hover:border-orange-500/30 font-medium'
+              }`}
+            >
+              <Icon className="size-3.5" />
+              <span>{grp.name}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="rounded-2xl bg-[#121215] border border-border/80 overflow-hidden shadow-lg h-[calc(100vh-250px)] min-h-[520px] flex flex-col md:flex-row">
         <div
           className={`w-full md:w-80 lg:w-96 border-r border-border/80 flex flex-col bg-[#0f0f12] shrink-0 ${
             mobileShowChat ? 'hidden md:flex' : 'flex'
@@ -284,14 +305,18 @@ export default function AdminCommunity() {
                 <button
                   key={grp.id}
                   onClick={() => handleGroupSelect(grp)}
-                  className={`w-full p-3 text-left flex items-start gap-3 transition-colors cursor-pointer ${
+                  className={`w-full p-3 text-left flex items-start gap-3 transition-colors cursor-pointer group ${
                     isSelected
                       ? 'bg-orange-500/10 border-l-2 border-orange-500'
                       : 'hover:bg-secondary/40'
                   }`}
                 >
                   <div
-                    className={`size-10 rounded-xl border flex items-center justify-center shrink-0 shadow-xs ${grp.badgeColor}`}
+                    className={`size-10 rounded-xl border flex items-center justify-center shrink-0 shadow-xs transition-all ${
+                      isSelected
+                        ? 'border-orange-500/60 bg-orange-500/15 text-orange-400 shadow-sm shadow-orange-950/40'
+                        : 'border-border/80 bg-[#18181b] text-muted-foreground group-hover:border-orange-500/30 group-hover:text-foreground'
+                    }`}
                   >
                     <Icon className="size-5" />
                   </div>
@@ -333,9 +358,7 @@ export default function AdminCommunity() {
                 <ArrowLeft className="size-4" />
               </button>
 
-              <div
-                className={`size-9 rounded-xl border flex items-center justify-center shrink-0 ${activeGroup.badgeColor}`}
-              >
+              <div className="size-9 rounded-xl border border-orange-500/40 bg-orange-500/10 text-orange-400 flex items-center justify-center shrink-0">
                 <ActiveIcon className="size-4" />
               </div>
 

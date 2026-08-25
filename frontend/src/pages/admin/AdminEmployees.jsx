@@ -384,10 +384,10 @@ export default function AdminEmployees() {
       <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#121215] border border-border/80 w-fit">
         <button
           onClick={() => setActiveTab('roster')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
             activeTab === 'roster'
-              ? 'bg-orange-500 text-zinc-950 shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+              ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 shadow-xs'
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
           }`}
         >
           <Users className="size-3.5" />
@@ -396,10 +396,10 @@ export default function AdminEmployees() {
 
         <button
           onClick={() => setActiveTab('tasks')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
             activeTab === 'tasks'
-              ? 'bg-orange-500 text-zinc-950 shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+              ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 shadow-xs'
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
           }`}
         >
           <CheckSquare className="size-3.5" />

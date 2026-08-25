@@ -299,10 +299,10 @@ export default function Community() {
           <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#18181b] border border-border/80 self-stretch sm:self-auto">
             <button
               onClick={() => setActiveTab('chat')}
-              className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border ${
                 activeTab === 'chat'
-                  ? 'bg-orange-500 text-zinc-950 shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                  ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 shadow-xs'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
               }`}
             >
               <MessageSquare className="size-3.5" />
@@ -311,10 +311,10 @@ export default function Community() {
 
             <button
               onClick={() => setActiveTab('itineraries')}
-              className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border ${
                 activeTab === 'itineraries'
-                  ? 'bg-orange-500 text-zinc-950 shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                  ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 shadow-xs'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
               }`}
             >
               <Compass className="size-3.5" />
