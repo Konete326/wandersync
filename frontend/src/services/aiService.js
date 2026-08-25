@@ -15,7 +15,7 @@ export const generateAiItinerary = async (tripParams) => {
   return response.data;
 };
 
-export const chatWithAiAssistant = async (message, history = [], tripContext = null) => {
-  const response = await api.post('/ai/chat', { message, history, tripContext });
+export const chatWithAiAssistant = async (message, history = [], tripContext = null, isAdmin = false) => {
+  const response = await api.post('/ai/chat', { message, history, tripContext, isAdmin });
   return response.data;
 };

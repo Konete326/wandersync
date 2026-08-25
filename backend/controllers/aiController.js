@@ -54,12 +54,13 @@ export const refineItinerary = async (req, res) => {
 
 export const chatAssistant = async (req, res) => {
   try {
-    const { message, history, tripContext } = req.body;
+    const { message, history, tripContext, isAdmin } = req.body;
     if (!message) {
       return sendError(res, 'Message is required', 400);
     }
 
-    const reply = await chatWithGemini(message, history || [], tripContext || null);
+    const isUserAdmin = req.user?.role === 'admin' || Boolean(isAdmin);
+    const reply = await chatWithGemini(message, history || [], tripContext || null, isUserAdmin);
     return sendSuccess(res, 'Assistant response generated', { reply });
   } catch (error) {
     return sendError(res, error.message || 'Failed to chat with AI assistant', 500);

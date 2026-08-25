@@ -8,6 +8,7 @@ import Loader from './components/common/Loader';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import PublicRoute from './components/common/PublicRoute';
 import ClientRoute from './components/common/ClientRoute';
+import AiChatWidget from './components/common/AiChatWidget';
 
 const Home = lazy(() => import('./pages/Home'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
@@ -33,31 +34,37 @@ function AppLayout() {
 
   if (isAdminRoute) {
     return (
-      <Routes>
-        <Route
-          path="/admin/*"
-          element={
-            <ProtectedRoute requireAdmin={true}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+      <>
+        <Routes>
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+        <AiChatWidget />
+      </>
     );
   }
 
   if (isHomePage) {
     return (
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <ClientRoute>
-              <Home />
-            </ClientRoute>
-          }
-        />
-      </Routes>
+      <>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <ClientRoute>
+                <Home />
+              </ClientRoute>
+            }
+          />
+        </Routes>
+        <AiChatWidget />
+      </>
     );
   }
 
@@ -181,6 +188,7 @@ function AppLayout() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+      <AiChatWidget />
     </div>
   );
 }

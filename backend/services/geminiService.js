@@ -54,24 +54,24 @@ JSON schema:
   "transportation": "e.g. JR Metro & Taxis",
   "travelTips": ["Tip 1", "Tip 2", "Tip 3"],
   "touristPlaces": [
-    { "name": "Attraction 1", "imageUrl": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80", "description": "Highlight info", "ticketPrice": "$15", "duration": "2-3 hours" },
-    { "name": "Attraction 2", "imageUrl": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=80", "description": "Highlight info", "ticketPrice": "Free", "duration": "1-2 hours" }
+    { "name": "Attraction 1", "imageUrl": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80", "description": "Highlight info", "ticketPrice": "$15", "duration": "2-3 hours" }
   ],
   "hotels": [
-    { "name": "Luxury Hotel 1", "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=80", "rating": 4.9, "priceRange": "$$$$", "pricePerNight": "$280/night", "amenities": ["Free WiFi", "Infinity Pool", "Breakfast Included"] },
-    { "name": "Boutique Hotel 2", "imageUrl": "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&auto=format&fit=crop&q=80", "rating": 4.7, "priceRange": "$$$", "pricePerNight": "$165/night", "amenities": ["Free WiFi", "Central Location"] }
+    { "name": "Luxury Hotel 1", "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=80", "rating": 4.9, "priceRange": "$$$$", "pricePerNight": "$280/night", "amenities": ["Free WiFi", "Infinity Pool"] }
   ],
   "localFoods": [
-    { "name": "Local Signature Dish 1", "description": "Crispy traditional specialty", "price": "$12" },
-    { "name": "Popular Street Food 2", "description": "Famous regional snack", "price": "$8" }
+    { "name": "Local Signature Dish 1", "description": "Regional specialty", "price": "$12" }
   ]
 }`;
   return await executeWithRetryAndFallback(prompt, true);
 };
 
-export const chatWithGemini = async (message, history = [], tripContext = null) => {
-  let prompt = `You are WanderSync AI Travel Concierge, an expert global travel advisor.\n`;
-  if (tripContext) prompt += `\nACTIVE ITINERARY CONTEXT: ${tripContext.destination || 'N/A'}, ${tripContext.durationDays || 'N/A'} Days.\n`;
+export const chatWithGemini = async (message, history = [], tripContext = null, isAdmin = false) => {
+  let prompt = isAdmin
+    ? `You are WanderSync AI Operations Copilot & Agency Commander. You have full command access across the WanderSync system (Group Tours, Tour POS Terminal, Trips Maestro, Travelers, Staff & Task Delegation, Travel Catalog [Countries, Spots, Hotels, Vehicles, Flights, Media], AI Analytics, Expenses, and System Settings).
+Assist the administrator with operations, catalog navigation, task delegation, and metric analytics. Provide clear, actionable operational advice.\n`
+    : `You are WanderSync AI Travel Concierge, an expert global travel advisor.\n`;
+  if (tripContext) prompt += `\nACTIVE CONTEXT: ${typeof tripContext === 'string' ? tripContext : JSON.stringify(tripContext)}\n`;
   if (history && history.length > 0) prompt += `\nHISTORY:\n` + history.slice(-6).map((h) => `${h.sender === 'user' ? 'User' : 'Assistant'}: ${h.text}`).join('\n') + `\n`;
   prompt += `\nUser's Message: ${message}\nAssistant:`;
   return await executeWithRetryAndFallback(prompt, false);
