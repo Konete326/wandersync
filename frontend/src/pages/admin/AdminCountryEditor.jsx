@@ -225,8 +225,8 @@ export default function AdminCountryEditor() {
       }));
     }
 
-    const matched = findCountryPreset(val);
-    if (matched && matched.name.toLowerCase() === val.trim().toLowerCase()) {
+    const matched = findCountryPreset(val) || (detected ? findCountryPreset(detected.name) : null);
+    if (matched) {
       applyCountryPreset(matched, false);
     }
   };
@@ -397,26 +397,37 @@ export default function AdminCountryEditor() {
   };
 
   const handleAiAutofill = (data) => {
-    const aiCover = data.coverImage || formData.coverImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&auto=format&fit=crop&q=80';
+    const matchedPreset = findCountryPreset(data.name || formData.name);
+    const aiCover = data.coverImage || matchedPreset?.coverImage || formData.coverImage;
+    const aiImages = (data.images && data.images.length > 0) ? data.images : (matchedPreset?.images || formData.images);
+
+    const resolvedCities = (data.popularCities && data.popularCities.length > 0)
+      ? data.popularCities.map((c, i) => {
+          const matchedCityPreset = matchedPreset?.popularCities?.find(
+            (p) => p.name.toLowerCase() === c.name?.toLowerCase()
+          ) || matchedPreset?.popularCities?.[i];
+          return {
+            name: c.name || '',
+            description: c.description || matchedCityPreset?.description || '',
+            images: (c.images && c.images.length > 0) ? c.images : (matchedCityPreset?.images || [])
+          };
+        })
+      : (matchedPreset?.popularCities || formData.popularCities);
+
     setFormData((prev) => ({
       ...prev,
       name: data.name || prev.name,
-      code: data.code || prev.code,
-      continent: data.continent || prev.continent,
-      currency: data.currency || prev.currency,
-      language: data.language || prev.language,
-      timezone: data.timezone || prev.timezone,
-      description: data.description || prev.description,
+      code: data.code || matchedPreset?.code || prev.code,
+      continent: data.continent || matchedPreset?.continent || prev.continent,
+      currency: data.currency || matchedPreset?.currency || prev.currency,
+      language: data.language || matchedPreset?.language || prev.language,
+      timezone: data.timezone || matchedPreset?.timezone || prev.timezone,
+      description: data.description || matchedPreset?.description || prev.description,
       coverImage: aiCover,
-      images: data.images?.length ? data.images : prev.images,
-      popularCities: data.popularCities?.length
-        ? data.popularCities.map((c) => ({
-            name: c.name || '',
-            description: c.description || '',
-            images: c.images?.length ? c.images : []
-          }))
-        : prev.popularCities
+      images: aiImages,
+      popularCities: resolvedCities
     }));
+
     if (aiCover) {
       setCoverPreview(aiCover);
       setCoverFile(null);
