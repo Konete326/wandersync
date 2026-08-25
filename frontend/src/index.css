@@ -70,14 +70,21 @@
   --font-sans: 'Plus Jakarta Sans', sans-serif;
 }
 
-html,
+html {
+  color-scheme: dark;
+  background-color: #09090b;
+  color: #fafafa;
+  font-family: var(--font-sans);
+  min-height: 100vh;
+}
+
 body {
   color-scheme: dark;
   background-color: #09090b;
   color: #fafafa;
   font-family: var(--font-sans);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 h1, h2, h3, h4, h5, h6 {
