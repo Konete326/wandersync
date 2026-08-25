@@ -18,6 +18,7 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import LazyImage from '@/components/common/LazyImage';
+import { getCountryFlag } from '@/utils/worldCountriesData';
 
 import {
   subscribeRealtimeUpdate,
@@ -229,8 +230,9 @@ export default function AdminCountries() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#121215] via-black/20 to-transparent pointer-events-none" />
                     <div className="absolute top-2 left-2 right-2 flex items-center justify-between z-10">
-                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-black/70 backdrop-blur-md text-white border border-white/10">
-                        {item.continent}
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-black/75 backdrop-blur-md text-white border border-white/15 flex items-center gap-1.5 shadow-xs">
+                        <span className="text-sm leading-none">{getCountryFlag(item.code || item.name)}</span>
+                        <span className="uppercase text-[9px]">{item.continent}</span>
                       </span>
                       {item.code && (
                         <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-orange-500 text-zinc-950">

@@ -243,3 +243,17 @@ export const findCountryPreset = (searchQuery) => {
     WORLD_COUNTRIES.find((c) => c.name.toLowerCase().includes(q))
   );
 };
+
+export const getCountryFlag = (countryInput = '') => {
+  if (!countryInput || typeof countryInput !== 'string') return '🌍';
+  const detected = detectCountryTelemetry(countryInput);
+  let code = detected?.code || countryInput.trim().toUpperCase().slice(0, 2);
+  if (code.length === 3) {
+    const iso2Map = { PAK: 'PK', JPN: 'JP', ARE: 'AE', SAU: 'SA', CHE: 'CH', TUR: 'TR', USA: 'US', GBR: 'GB', FRA: 'FR', ITA: 'IT', ESP: 'ES', DEU: 'DE', CAN: 'CA', AUS: 'AU', CHN: 'CN', IND: 'IN', SGP: 'SG', MYS: 'MY', THA: 'TH', IDN: 'ID', QAT: 'QA', OMN: 'OM', KWT: 'KW', BHR: 'BH', EGY: 'EG', MAR: 'MA', ZAF: 'ZA', NZL: 'NZ', NLD: 'NL', GRC: 'GR', PRT: 'PT', AUT: 'AT', NOR: 'NO', SWE: 'SE', DNK: 'DK', FIN: 'FI', BRA: 'BR', MEX: 'MX', ARG: 'AR', MDV: 'MV', LKA: 'LK', NPL: 'NP', VNM: 'VN', KOR: 'KR', AZE: 'AZ', GEO: 'GE', JOR: 'JO', LBN: 'LB', KEN: 'KE' };
+    code = iso2Map[code] || code.slice(0, 2);
+  }
+  if (code && code.length === 2 && /^[A-Z]{2}$/.test(code)) {
+    return String.fromCodePoint(127397 + code.charCodeAt(0), 127397 + code.charCodeAt(1));
+  }
+  return '🌍';
+};

@@ -35,7 +35,8 @@ import {
   WORLD_COUNTRIES,
   GLOBAL_COUNTRY_DICTIONARY,
   findCountryPreset,
-  detectCountryTelemetry
+  detectCountryTelemetry,
+  getCountryFlag
 } from '@/utils/worldCountriesData';
 import { broadcastRealtimeUpdate } from '@/utils/realtimeSync';
 
@@ -698,13 +699,24 @@ export default function AdminCountryEditor() {
                   {coverPreview ? (
                     <div className="relative h-36 w-full rounded-xl overflow-hidden border border-border bg-secondary/30">
                       <img src={coverPreview} alt="Cover Preview" className="size-full object-cover" />
+                      <div className="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg bg-black/75 backdrop-blur-md border border-white/15 flex items-center gap-1.5 shadow-md pointer-events-none">
+                        <span className="text-base leading-none">{getCountryFlag(formData.code || formData.name)}</span>
+                        <span className="text-[11px] font-bold text-white tracking-wide">
+                          {formData.name || 'Country'}
+                        </span>
+                        {formData.code && (
+                          <span className="text-[9px] font-mono font-bold text-orange-400 bg-orange-500/20 px-1 py-0.2 rounded border border-orange-500/30">
+                            {formData.code}
+                          </span>
+                        )}
+                      </div>
                       <button
                         type="button"
                         onClick={() => {
                           setCoverPreview('');
                           setFormData((prev) => ({ ...prev, coverImage: '' }));
                         }}
-                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/80 hover:bg-rose-500 text-white cursor-pointer transition-colors"
+                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/80 hover:bg-rose-500 text-white cursor-pointer transition-colors z-20"
                         title="Clear URL"
                       >
                         <Trash2 className="size-3.5" />
@@ -728,7 +740,18 @@ export default function AdminCountryEditor() {
                   {coverPreview ? (
                     <div className="relative size-full group">
                       <img src={coverPreview} alt="Cover Preview" className="size-full object-cover" />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
+                      <div className="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg bg-black/75 backdrop-blur-md border border-white/15 flex items-center gap-1.5 shadow-md pointer-events-none">
+                        <span className="text-base leading-none">{getCountryFlag(formData.code || formData.name)}</span>
+                        <span className="text-[11px] font-bold text-white tracking-wide">
+                          {formData.name || 'Country'}
+                        </span>
+                        {formData.code && (
+                          <span className="text-[9px] font-mono font-bold text-orange-400 bg-orange-500/20 px-1 py-0.2 rounded border border-orange-500/30">
+                            {formData.code}
+                          </span>
+                        )}
+                      </div>
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2 z-20">
                         <button
                           type="button"
                           onClick={() => coverInputRef.current?.click()}
