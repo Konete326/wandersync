@@ -157,9 +157,9 @@ export default function AdminTourPOSTerminal() {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-        <div className="lg:col-span-7 space-y-2">
-          <div className="relative">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+        <div className="lg:col-span-7 flex flex-col h-[calc(100vh-140px)] min-h-[500px]">
+          <div className="relative mb-2 shrink-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
             <input
               type="text"
@@ -171,16 +171,16 @@ export default function AdminTourPOSTerminal() {
           </div>
 
           {loadingTours ? (
-            <div className="py-16 flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center">
               <Loader text="Loading tour packages..." />
             </div>
           ) : tours.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-[#121215] border border-border text-center space-y-2">
+            <div className="p-8 rounded-2xl bg-[#121215] border border-border text-center space-y-2 flex-1 flex flex-col items-center justify-center">
               <Compass className="size-8 text-muted-foreground/40 mx-auto" />
               <p className="text-xs text-muted-foreground">No active group tours found.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[calc(100vh-11rem)] overflow-y-auto pr-1">
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-1.5 grid grid-cols-1 sm:grid-cols-2 gap-2.5 content-start">
               {tours.map((t) => {
                 const isSelected = selectedTour?._id === t._id;
                 const remSeats = Math.max(0, t.totalCapacity - t.bookedSeats);
@@ -235,8 +235,8 @@ export default function AdminTourPOSTerminal() {
           )}
         </div>
 
-        <div className="lg:col-span-5">
-          <form onSubmit={handleCompleteBooking} className="p-3.5 rounded-2xl bg-[#121215] border border-orange-500/30 shadow-xl space-y-2.5">
+        <div className="lg:col-span-5 lg:sticky lg:top-16">
+          <form onSubmit={handleCompleteBooking} className="p-3.5 rounded-2xl bg-[#121215] border border-orange-500/30 shadow-xl space-y-2.5 max-h-[calc(100vh-140px)] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-border/70 pb-2">
               <div className="flex items-center gap-1.5">
                 <CreditCard className="size-3.5 text-orange-400" />
