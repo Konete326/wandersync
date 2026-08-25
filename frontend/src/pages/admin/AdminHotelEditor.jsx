@@ -33,6 +33,7 @@ import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
 import { HOTEL_PRESETS } from '@/utils/entityPresetsData';
 import { broadcastRealtimeUpdate } from '@/utils/realtimeSync';
+import { getCitySuggestions } from '@/utils/worldCountriesData';
 
 const priceRanges = ['$', '$$', '$$$', '$$$$'];
 const defaultAmenitiesList = ['Free High-Speed WiFi', 'Breakfast Included', 'Infinity Pool', 'Spa & Wellness', 'Airport Shuttle', 'Fitness Center', 'Ocean / Skyline View', 'Concierge Service'];
@@ -363,14 +364,38 @@ export default function AdminHotelEditor() {
                   </datalist>
                 </div>
 
-                <ValidatedInput
-                  label="City"
-                  required
-                  validationType="name"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  placeholder="e.g. Kyoto"
-                />
+                <div>
+                  <ValidatedInput
+                    label="City"
+                    required
+                    validationType="name"
+                    list="hotel-city-options"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    placeholder="e.g. Kyoto"
+                  />
+                  <datalist id="hotel-city-options">
+                    {getCitySuggestions(formData.country).map((cityName) => (
+                      <option key={cityName} value={cityName} />
+                    ))}
+                  </datalist>
+                  <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-1">
+                    {getCitySuggestions(formData.country).slice(0, 3).map((cityName) => (
+                      <button
+                        key={cityName}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, city: cityName })}
+                        className={`px-1.5 py-0.2 rounded text-[9px] font-medium border transition-all cursor-pointer shrink-0 ${
+                          formData.city.toLowerCase() === cityName.toLowerCase()
+                            ? 'bg-orange-500 text-zinc-950 font-bold border-orange-500'
+                            : 'bg-secondary/60 hover:bg-orange-500/10 text-muted-foreground hover:text-orange-400 border-border'
+                        }`}
+                      >
+                        {cityName}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <ValidatedInput
                   label="Area / Neighborhood"

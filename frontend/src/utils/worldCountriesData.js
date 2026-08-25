@@ -586,3 +586,32 @@ export const getCountryFlag = (countryInput = '') => {
   }
   return '🌍';
 };
+
+export const getCitySuggestions = (countryInput = '') => {
+  if (!countryInput || typeof countryInput !== 'string') {
+    return [
+      'Islamabad', 'Lahore', 'Karachi', 'Hunza Valley',
+      'Tokyo', 'Kyoto', 'Osaka', 'Sapporo',
+      'Dubai', 'Abu Dhabi', 'Sharjah',
+      'Zurich', 'Geneva', 'Lucerne', 'Zermatt',
+      'Paris', 'Nice', 'Lyon',
+      'Rome', 'Florence', 'Venice',
+      'Istanbul', 'Cappadocia',
+      'Riyadh', 'Jeddah',
+      'London', 'Edinburgh',
+      'New York City', 'Los Angeles',
+      'Barcelona', 'Madrid'
+    ];
+  }
+  const countryPreset = findCountryPreset(countryInput);
+  if (countryPreset && Array.isArray(countryPreset.popularCities) && countryPreset.popularCities.length > 0) {
+    return countryPreset.popularCities.map((c) => c.name);
+  }
+  return [
+    'Islamabad', 'Lahore', 'Karachi', 'Hunza Valley',
+    'Tokyo', 'Kyoto', 'Osaka', 'Dubai', 'Abu Dhabi',
+    'Zurich', 'Geneva', 'Paris', 'Rome', 'Istanbul',
+    'Riyadh', 'Jeddah', 'London', 'New York City', 'Barcelona'
+  ];
+};
+
