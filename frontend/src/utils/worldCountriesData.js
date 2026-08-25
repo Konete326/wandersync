@@ -6,13 +6,20 @@ export const WORLD_COUNTRIES = [
     currency: 'PKR (Rs)',
     language: 'Urdu / English',
     timezone: 'UTC+5 (PKT)',
-    coverImage: 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=1200&auto=format&fit=crop&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?w=1200&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1627894483216-2138af692e32?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1548013146-72479768bada?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1596401057633-54a8fe8ef647?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=800&auto=format&fit=crop&q=80'
+    ],
     description: 'Pakistan is an extraordinary travel destination blessed with majestic Himalayan, Karakoram, and Hindu Kush peaks, ancient Indus Valley ruins, vibrant Mughal heritage, and warm hospitality.',
     popularCities: [
       { name: 'Islamabad', description: 'Serene green capital nestled at the foothills of Margalla Hills', images: ['https://images.unsplash.com/photo-1627993077395-538a7c2b3e40?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Lahore', description: 'Cultural heartland with historic Mughal fort, badshahi mosque, and culinary streets', images: ['https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800&auto=format&fit=crop&q=80'] },
+      { name: 'Lahore', description: 'Cultural heartland with historic Mughal fort, Badshahi mosque, and food streets', images: ['https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800&auto=format&fit=crop&q=80'] },
       { name: 'Hunza Valley', description: 'Pristine mountain kingdom with turquoise Attabad Lake and ancient forts', images: ['https://images.unsplash.com/photo-1548013146-72479768bada?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Karachi', description: 'Bustling Arabian Sea coastal metropolis and commercial hub', images: ['https://images.unsplash.com/photo-1596401057633-54a8fe8ef647?w=800&auto=format&fit=crop&q=80'] }
+      { name: 'Karachi', description: 'Bustling Arabian Sea coastal metropolis and financial center', images: ['https://images.unsplash.com/photo-1596401057633-54a8fe8ef647?w=800&auto=format&fit=crop&q=80'] }
     ]
   },
   {
@@ -23,6 +30,13 @@ export const WORLD_COUNTRIES = [
     language: 'Japanese',
     timezone: 'UTC+9 (JST)',
     coverImage: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1492571350019-22de08371fd3?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1528164344705-475426879c0d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1505069446780-45437142646c?w=800&auto=format&fit=crop&q=80'
+    ],
     description: 'Japan seamlessly blends ancient traditions with hyper-modern innovation, boasting historic Shinto shrines, tranquil Zen gardens, cherry blossoms, Mount Fuji, and world-renowned culinary artistry.',
     popularCities: [
       { name: 'Tokyo', description: 'Electric neon megalopolis featuring world-class dining, fashion, and tech', images: ['https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80'] },
@@ -39,6 +53,13 @@ export const WORLD_COUNTRIES = [
     language: 'Arabic / English',
     timezone: 'UTC+4 (GST)',
     coverImage: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1518684079-3c830dcef090?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1526495124232-a04e1849168c?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1546412414-e1885259563a?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1580674285054-bed31e145f59?w=800&auto=format&fit=crop&q=80'
+    ],
     description: 'The UAE is a global oasis of futuristic skyscrapers, ultra-luxury resorts, pristine Arabian Gulf beaches, and authentic desert safari adventures.',
     popularCities: [
       { name: 'Dubai', description: 'Home to Burj Khalifa, Palm Jumeirah, and futuristic world attractions', images: ['https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&auto=format&fit=crop&q=80'] },
@@ -54,11 +75,63 @@ export const WORLD_COUNTRIES = [
     language: 'German / French / Italian',
     timezone: 'UTC+1 (CET)',
     coverImage: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=1200&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1515488764276-beab7607c1e6?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1573155993874-d5d48af862ba?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1527668752968-14dc70a27c95?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1491557345352-5929e343eb89?w=800&auto=format&fit=crop&q=80'
+    ],
     description: 'Switzerland offers postcard-perfect alpine panoramas, crystal-clear glacial lakes, world-class ski slopes, panoramic scenic trains, and luxury Swiss craftsmanship.',
     popularCities: [
       { name: 'Zurich', description: 'Cosmopolitan banking and art hub on the shores of Lake Zurich', images: ['https://images.unsplash.com/photo-1515488764276-beab7607c1e6?w=800&auto=format&fit=crop&q=80'] },
       { name: 'Geneva', description: 'Global diplomatic capital with iconic Jet dEau and Lake Geneva views', images: ['https://images.unsplash.com/photo-1573155993874-d5d48af862ba?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Lucerne', description: 'Medieval bridge city surrounded by dramatic Swiss Alps', images: ['https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=800&auto=format&fit=crop&q=80'] }
+      { name: 'Lucerne', description: 'Medieval bridge city surrounded by dramatic Swiss Alps', images: ['https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=800&auto=format&fit=crop&q=80'] },
+      { name: 'Zermatt', description: 'Car-free alpine village beneath the iconic Matterhorn peak', images: ['https://images.unsplash.com/photo-1527668752968-14dc70a27c95?w=800&auto=format&fit=crop&q=80'] }
+    ]
+  },
+  {
+    name: 'France',
+    code: 'FRA',
+    continent: 'Europe',
+    currency: 'EUR (€)',
+    language: 'French',
+    timezone: 'UTC+1 (CET)',
+    coverImage: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1509299349698-dd22323b5963?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1471623320832-752e8bbf8413?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1522093007474-d86e9bf7ba6f?w=800&auto=format&fit=crop&q=80'
+    ],
+    description: 'France captivates travelers with romantic Parisian boulevards, world-class gastronomy, sun-drenched French Riviera beaches, and historic Loire Valley chateaux.',
+    popularCities: [
+      { name: 'Paris', description: 'City of Light with the Eiffel Tower, Louvre, and haute cuisine', images: ['https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&auto=format&fit=crop&q=80'] },
+      { name: 'Nice', description: 'French Riviera jewel with palm-lined Mediterranean promenades', images: ['https://images.unsplash.com/photo-1533105079780-92b9be482077?w=800&auto=format&fit=crop&q=80'] },
+      { name: 'Lyon', description: 'UNESCO world heritage gastronomy capital and historic silk district', images: ['https://images.unsplash.com/photo-1524850011238-e3d235c7d4c9?w=800&auto=format&fit=crop&q=80'] }
+    ]
+  },
+  {
+    name: 'Italy',
+    code: 'ITA',
+    continent: 'Europe',
+    currency: 'EUR (€)',
+    language: 'Italian',
+    timezone: 'UTC+1 (CET)',
+    coverImage: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=1200&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1543429776-2782fc8e1acd?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1514890547357-a9ee288728e0?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&auto=format&fit=crop&q=80'
+    ],
+    description: 'Italy is an open-air museum of ancient Roman ruins, Renaissance masterpieces, romantic Venetian canals, scenic Amalfi Coast cliffs, and authentic cuisine.',
+    popularCities: [
+      { name: 'Rome', description: 'Eternal City with the Colosseum, Vatican City, and Trevi Fountain', images: ['https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&auto=format&fit=crop&q=80'] },
+      { name: 'Florence', description: 'Renaissance capital of the Uffizi Gallery and Brunelleschi Duomo', images: ['https://images.unsplash.com/photo-1543429776-2782fc8e1acd?w=800&auto=format&fit=crop&q=80'] },
+      { name: 'Venice', description: 'Romantic canal city of gondolas and St. Marks Basilica', images: ['https://images.unsplash.com/photo-1514890547357-a9ee288728e0?w=800&auto=format&fit=crop&q=80'] }
     ]
   },
   {
@@ -69,6 +142,13 @@ export const WORLD_COUNTRIES = [
     language: 'Turkish',
     timezone: 'UTC+3 (TRT)',
     coverImage: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=1200&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1609137144822-26155998a44c?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1567684014761-b65e2e59b9eb?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1527838832700-5059252407fa?w=800&auto=format&fit=crop&q=80'
+    ],
     description: 'Turkey bridges East and West with rich Byzantine and Ottoman history, hot air balloon flights over Cappadocia, turquoise Mediterranean coastlines, and bustling spice bazaars.',
     popularCities: [
       { name: 'Istanbul', description: 'Historic transcontinental city of Hagia Sophia and Bosphorus strait', images: ['https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800&auto=format&fit=crop&q=80'] },
@@ -83,6 +163,13 @@ export const WORLD_COUNTRIES = [
     language: 'Arabic',
     timezone: 'UTC+3 (AST)',
     coverImage: 'https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?w=1200&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1578895101408-1a36b834405b?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1565552645632-d725f8bfc19a?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1518684079-3c830dcef090?w=800&auto=format&fit=crop&q=80'
+    ],
     description: 'Saudi Arabia features spiritual sanctuaries, ancient UNESCO tombs in AlUla, Red Sea coral reefs, and futuristic mega-developments.',
     popularCities: [
       { name: 'Riyadh', description: 'Dynamic capital city blending historic Diriyah with modern skyline', images: ['https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?w=800&auto=format&fit=crop&q=80'] },
@@ -97,6 +184,13 @@ export const WORLD_COUNTRIES = [
     language: 'English',
     timezone: 'UTC+0 (GMT)',
     coverImage: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1200&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1529655683826-aba9b3e77383?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=800&auto=format&fit=crop&q=80'
+    ],
     description: 'The United Kingdom offers iconic royal landmarks, rolling green countryside, historic castles, world-leading West End theater, and quintessential British charm.',
     popularCities: [
       { name: 'London', description: 'World capital featuring Big Ben, Tower Bridge, and West End', images: ['https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&auto=format&fit=crop&q=80'] },
@@ -111,37 +205,17 @@ export const WORLD_COUNTRIES = [
     language: 'English',
     timezone: 'UTC-5 (EST)',
     coverImage: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=1200&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&auto=format&fit=crop&q=80'
+    ],
     description: 'The United States spans iconic national parks, legendary metropolitan skylines, coastal highways, and diverse entertainment capitals.',
     popularCities: [
       { name: 'New York City', description: 'Global metropolis of Times Square, Central Park, and Broadway', images: ['https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&auto=format&fit=crop&q=80'] },
       { name: 'Los Angeles', description: 'Entertainment capital of Hollywood, beaches, and year-round sunshine', images: ['https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=800&auto=format&fit=crop&q=80'] }
-    ]
-  },
-  {
-    name: 'France',
-    code: 'FRA',
-    continent: 'Europe',
-    currency: 'EUR (€)',
-    language: 'French',
-    timezone: 'UTC+1 (CET)',
-    coverImage: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&auto=format&fit=crop&q=80',
-    description: 'France captivates travelers with romantic Parisian boulevards, world-class gastronomy, sun-drenched French Riviera beaches, and historic Loire Valley chateaux.',
-    popularCities: [
-      { name: 'Paris', description: 'City of Light with the Eiffel Tower, Louvre, and haute cuisine', images: ['https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&auto=format&fit=crop&q=80'] }
-    ]
-  },
-  {
-    name: 'Italy',
-    code: 'ITA',
-    continent: 'Europe',
-    currency: 'EUR (€)',
-    language: 'Italian',
-    timezone: 'UTC+1 (CET)',
-    coverImage: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=1200&auto=format&fit=crop&q=80',
-    description: 'Italy is an open-air museum of ancient Roman ruins, Renaissance masterpieces, romantic Venetian canals, scenic Amalfi Coast cliffs, and authentic cuisine.',
-    popularCities: [
-      { name: 'Rome', description: 'Eternal City with the Colosseum, Vatican City, and Trevi Fountain', images: ['https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Florence', description: 'Renaissance capital of the Uffizi Gallery and Brunelleschi Duomo', images: ['https://images.unsplash.com/photo-1543429776-2782fc8e1acd?w=800&auto=format&fit=crop&q=80'] }
     ]
   },
   {
@@ -152,6 +226,13 @@ export const WORLD_COUNTRIES = [
     language: 'Spanish',
     timezone: 'UTC+1 (CET)',
     coverImage: 'https://images.unsplash.com/photo-1543783207-ec64e4d95325?w=1200&auto=format&fit=crop&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1583422409516-2895a77efded?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1509840841025-9088ba78a826?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1511527661048-7fe73d85e9a4?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1543783207-ec64e4d95325?w=800&auto=format&fit=crop&q=80'
+    ],
     description: 'Spain boasts Antoni Gaudi architecture, sunny Mediterranean shores, passionate flamenco performances, and historic Andalusian Moorish palaces.',
     popularCities: [
       { name: 'Barcelona', description: 'Catalan capital famous for Sagrada Familia and beachfront promenade', images: ['https://images.unsplash.com/photo-1583422409516-2895a77efded?w=800&auto=format&fit=crop&q=80'] },

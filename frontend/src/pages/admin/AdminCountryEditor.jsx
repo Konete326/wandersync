@@ -31,6 +31,7 @@ import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
+import LazyImage from '@/components/common/LazyImage';
 import {
   WORLD_COUNTRIES,
   GLOBAL_COUNTRY_DICTIONARY,
@@ -188,11 +189,12 @@ export default function AdminCountryEditor() {
       timezone: preset.timezone || prev.timezone,
       description: preset.description || prev.description,
       coverImage: preset.coverImage || prev.coverImage,
+      images: preset.images?.length ? preset.images : prev.images,
       popularCities: preset.popularCities?.length
         ? preset.popularCities.map((c) => ({
             name: c.name || '',
             description: c.description || '',
-            images: c.images || []
+            images: Array.isArray(c.images) && c.images.length ? c.images : []
           }))
         : prev.popularCities
     }));
@@ -811,12 +813,18 @@ export default function AdminCountryEditor() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
               {formData.images.map((imgUrl, idx) => (
-                <div key={idx} className="relative h-20 rounded-lg overflow-hidden border border-border group">
-                  <img src={imgUrl} alt={`Country Scenic ${idx + 1}`} className="size-full object-cover" />
+                <div key={idx} className="relative h-20 rounded-lg overflow-hidden border border-border group bg-secondary/30">
+                  <LazyImage
+                    src={imgUrl}
+                    alt={`${formData.name || 'Country'} Scenic ${idx + 1}`}
+                    containerClassName="w-full h-full"
+                    className="size-full object-cover"
+                  />
                   <button
                     type="button"
                     onClick={() => handleRemoveGalleryImage(idx)}
-                    className="absolute top-1 right-1 p-1 rounded bg-black/70 text-rose-400 opacity-0 group-hover:opacity-100 cursor-pointer"
+                    className="absolute top-1 right-1 p-1 rounded-md bg-black/80 text-rose-400 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity z-10"
+                    title="Remove scenic photo"
                   >
                     <X className="size-3" />
                   </button>
@@ -917,11 +925,16 @@ export default function AdminCountryEditor() {
                   <div className="grid grid-cols-3 gap-1.5 min-h-[50px]">
                     {(city.images || []).map((imgUrl, imgIdx) => (
                       <div key={imgIdx} className="relative h-14 rounded-lg overflow-hidden border border-border group bg-secondary/40">
-                        <img src={imgUrl} alt={`${city.name || 'City'} ${imgIdx + 1}`} className="size-full object-cover" />
+                        <LazyImage
+                          src={imgUrl}
+                          alt={`${city.name || 'City'} ${imgIdx + 1}`}
+                          containerClassName="w-full h-full"
+                          className="size-full object-cover"
+                        />
                         <button
                           type="button"
                           onClick={() => handleRemoveCityImage(i, imgIdx)}
-                          className="absolute top-0.5 right-0.5 p-0.5 rounded bg-black/80 text-rose-400 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                          className="absolute top-0.5 right-0.5 p-0.5 rounded bg-black/80 text-rose-400 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity z-10"
                           title="Delete photo"
                         >
                           <X className="size-2.5" />
