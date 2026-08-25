@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Collapsible,
@@ -17,11 +17,28 @@ import {
 } from '@/components/ui/sidebar';
 import { ChevronDown, ChevronRightIcon } from 'lucide-react';
 
-export function NavGroup({ label, items, defaultOpen = true }) {
+export function NavGroup({ label, items, defaultOpen = false }) {
   const location = useLocation();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  const hasActiveChild = items.some((item) => {
+    if (location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path))) {
+      return true;
+    }
+    if (item.subItems?.some((sub) => location.pathname === sub.path)) {
+      return true;
+    }
+    return false;
+  });
+
+  const [isOpen, setIsOpen] = useState(defaultOpen || hasActiveChild);
+
+  useEffect(() => {
+    if (hasActiveChild) {
+      setIsOpen(true);
+    }
+  }, [hasActiveChild]);
 
   return (
     <SidebarGroup className="py-1 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:py-1">

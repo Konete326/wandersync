@@ -149,7 +149,7 @@ export default function AdminTourPOSTerminal() {
           </button>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-foreground leading-tight flex items-center gap-2">
-              <CreditCard className="size-4 text-emerald-400" />
+              <CreditCard className="size-4 text-orange-400" />
               <span>Agency Tour POS & Quick Booking Terminal</span>
             </h1>
             <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -250,10 +250,10 @@ export default function AdminTourPOSTerminal() {
           <form onSubmit={handleCompleteBooking} className="p-5 rounded-2xl bg-[#121215] border border-orange-500/30 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-border/80 pb-3">
               <div className="flex items-center gap-2">
-                <CreditCard className="size-4 text-emerald-400" />
+                <CreditCard className="size-4 text-orange-400" />
                 <h3 className="text-sm font-bold text-foreground">POS Terminal Billing</h3>
               </div>
-              <span className="text-xs font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+              <span className="text-xs font-mono text-orange-400 font-bold bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20">
                 Live Terminal
               </span>
             </div>
@@ -392,7 +392,6 @@ export default function AdminTourPOSTerminal() {
               </div>
             </div>
 
-            {/* Submit Button */}
             <GlowingButton
               type="submit"
               disabled={bookingLoading || !selectedTour || remainingSeats <= 0}
@@ -401,7 +400,7 @@ export default function AdminTourPOSTerminal() {
               innerClassName="py-2.5 text-xs font-extrabold flex items-center justify-center gap-2"
             >
               <Sparkles className="size-4 text-orange-400" />
-              <span>{bookingLoading ? 'Processing Ticket...' : '⚡ Issue Ticket & Complete POS Booking'}</span>
+              <span>{bookingLoading ? 'Processing Ticket...' : 'Issue Ticket & Complete POS Booking'}</span>
             </GlowingButton>
           </form>
         </div>

@@ -1,4 +1,4 @@
-export default function Loader({ text = 'Loading WanderSync...', size = 'md' }) {
+export default function Loader({ text = '', size = 'md' }) {
   const scale = size === 'sm' ? 'scale-75' : size === 'lg' ? 'scale-125' : 'scale-100';
 
   return (
@@ -57,11 +57,11 @@ export default function Loader({ text = 'Loading WanderSync...', size = 'md' }) 
           </g>
         </svg>
       </div>
-      {text && (
+      {text ? (
         <p className="text-xs sm:text-sm font-medium text-muted-foreground animate-pulse tracking-wide font-heading">
           {text}
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

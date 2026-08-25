@@ -63,6 +63,16 @@ export const getAdminAllUsers = async (page = 1, limit = 10, search = '', role =
   return response.data;
 };
 
+export const createAdminUser = async (userData) => {
+  const response = await api.post('/admin/users', userData);
+  return response.data;
+};
+
+export const updateAdminUserDetails = async (id, userData) => {
+  const response = await api.put(`/admin/users/${id}`, userData);
+  return response.data;
+};
+
 export const updateUserRole = async (id, role) => {
   const response = await api.patch(`/admin/users/${id}/role`, { role });
   return response.data;
@@ -75,5 +85,30 @@ export const toggleUserStatus = async (id, status) => {
 
 export const deleteUserAdmin = async (id) => {
   const response = await api.delete(`/admin/users/${id}`);
+  return response.data;
+};
+
+// Active Service Customers Management
+export const getAdminCustomers = async (page = 1, limit = 10, search = '', paymentStatus = 'All') => {
+  const params = new URLSearchParams({ page, limit });
+  if (search) params.append('search', search);
+  if (paymentStatus && paymentStatus !== 'All') params.append('paymentStatus', paymentStatus);
+
+  const response = await api.get(`/admin/customers?${params.toString()}`);
+  return response.data;
+};
+
+export const createAdminCustomer = async (customerData) => {
+  const response = await api.post('/admin/customers', customerData);
+  return response.data;
+};
+
+export const updateAdminCustomer = async (id, customerData) => {
+  const response = await api.put(`/admin/customers/${id}`, customerData);
+  return response.data;
+};
+
+export const deleteAdminCustomer = async (id) => {
+  const response = await api.delete(`/admin/customers/${id}`);
   return response.data;
 };

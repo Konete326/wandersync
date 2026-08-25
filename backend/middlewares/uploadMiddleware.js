@@ -16,4 +16,9 @@ const upload = multer({
   fileFilter
 });
 
+export const uploadSingle = (fieldName = 'image') => upload.single(fieldName);
+
+export const uploadMultiple = (fieldName = 'images', maxCount = 5) => upload.array(fieldName, maxCount);
+
+export { upload };
 export default upload;

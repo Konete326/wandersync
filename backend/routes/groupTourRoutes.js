@@ -4,10 +4,12 @@ import {
   getGroupTourById,
   createGroupTour,
   updateGroupTour,
-  deleteGroupTour,
+  deleteGroupTour
+} from '../controllers/groupTourController.js';
+import {
   createPOSBooking,
   getTourBookings
-} from '../controllers/groupTourController.js';
+} from '../controllers/posController.js';
 import { protect, adminOnly } from '../middlewares/authMiddleware.js';
 import { uploadSingle } from '../middlewares/uploadMiddleware.js';
 

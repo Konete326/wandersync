@@ -57,7 +57,7 @@ const Login = () => {
       showModal({
         title: 'Sign In Failed',
         message: error.response?.data?.message || 'Invalid email or password. Please try again.',
-        type: 'danger'
+        type: 'error'
       });
     } finally {
       setLoading(false);

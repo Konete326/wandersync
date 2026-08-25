@@ -111,7 +111,6 @@ export default function AdminGroupTours() {
 
   return (
     <div className="space-y-6 select-none font-sans max-w-7xl mx-auto pb-16">
-      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#121215] border border-border/80 shadow-md">
         <div className="flex items-center gap-3">
           <div className="size-10 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
@@ -128,10 +127,10 @@ export default function AdminGroupTours() {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => navigate('/admin/tour-pos')}
-            className="px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            className="px-3.5 py-2 rounded-xl bg-[#18181b]/80 hover:bg-[#272730] text-foreground hover:text-orange-400 border border-border/80 hover:border-orange-500/40 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
           >
-            <CreditCard className="size-3.5" />
-            <span>⚡ POS Booking Terminal</span>
+            <CreditCard className="size-3.5 text-orange-400" />
+            <span>POS Booking Terminal</span>
           </button>
 
           <GlowingButton
@@ -145,7 +144,6 @@ export default function AdminGroupTours() {
         </div>
       </div>
 
-      {/* Filter & Search Bar */}
       <div className="p-4 rounded-2xl bg-[#121215] border border-border/80 flex flex-col md:flex-row items-center justify-between gap-3 text-xs shadow-md">
         <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
@@ -159,7 +157,6 @@ export default function AdminGroupTours() {
         </form>
 
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          {/* Country Filter */}
           <select
             value={selectedCountry}
             onChange={(e) => {
@@ -174,7 +171,6 @@ export default function AdminGroupTours() {
             ))}
           </select>
 
-          {/* Status Filter */}
           <select
             value={selectedStatus}
             onChange={(e) => {
@@ -190,7 +186,6 @@ export default function AdminGroupTours() {
         </div>
       </div>
 
-      {/* Tours Grid (6 Per Page) */}
       {loading ? (
         <div className="py-24 flex items-center justify-center">
           <Loader text="Loading agency group tours..." />
@@ -215,7 +210,6 @@ export default function AdminGroupTours() {
                 className="rounded-2xl border border-border/80 bg-[#121215] hover:border-orange-500/40 transition-all overflow-hidden flex flex-col justify-between shadow-md group"
               >
                 <div>
-                  {/* Cover Image & Status Badges */}
                   <div className="relative h-44 w-full overflow-hidden bg-secondary/30">
                     <img
                       src={tour.coverImage || tour.images?.[0]}
@@ -250,12 +244,11 @@ export default function AdminGroupTours() {
                         {tour.title}
                       </h3>
                       <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <MapPin className="size-2.5 text-emerald-400" />
+                        <MapPin className="size-2.5 text-orange-400" />
                         <span>{tour.city}, {tour.country}</span>
                       </p>
                     </div>
 
-                    {/* Dates & Schedule */}
                     <div className="p-2.5 rounded-xl bg-secondary/30 border border-border text-[11px] flex items-center justify-between">
                       <div className="space-y-0.5">
                         <span className="text-muted-foreground flex items-center gap-1">
@@ -273,7 +266,6 @@ export default function AdminGroupTours() {
                       </div>
                     </div>
 
-                    {/* Capacity Progress Bar */}
                     <div className="space-y-1.5 pt-1">
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="text-muted-foreground flex items-center gap-1">
@@ -295,13 +287,12 @@ export default function AdminGroupTours() {
                   </div>
                 </div>
 
-                {/* Card Actions Strip */}
                 <div className="p-4 pt-0 border-t border-border/70 mt-2 flex items-center justify-between gap-2">
                   <button
                     onClick={() => navigate(`/admin/tour-pos?tourId=${tour._id}`)}
-                    className="flex-1 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                    className="flex-1 py-1.5 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <CreditCard className="size-3" />
+                    <CreditCard className="size-3 text-orange-400" />
                     <span>POS Book</span>
                   </button>
 

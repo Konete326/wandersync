@@ -76,10 +76,9 @@ export default function Gallery() {
 
   return (
     <div className="w-full min-h-screen bg-[#09090b] text-[#fafafa] font-sans pb-16 select-none">
-      {/* Top Sticky Filter Bar */}
-      <div className="border-b border-border/80 bg-[#121215]/80 backdrop-blur-xl sticky top-14 z-30 px-4 py-3">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full md:w-auto py-1">
+      <div className="border-b border-border/80 bg-[#121215]/80 backdrop-blur-xl sticky top-14 z-30 px-4 sm:px-6 lg:px-8 py-3">
+        <div className="w-full max-w-[1720px] mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full md:w-auto py-1">
             {uniqueCountries.map((c) => (
               <button
                 key={c}
@@ -87,10 +86,10 @@ export default function Gallery() {
                   setActiveCountry(c);
                   setPage(1);
                 }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap transition-all cursor-pointer ${
                   activeCountry === c
-                    ? 'bg-orange-500 text-zinc-950 font-bold shadow-md shadow-orange-500/20'
-                    : 'bg-secondary/40 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/70'
+                    ? 'bg-orange-500/15 text-orange-400 font-bold border border-orange-500/60 shadow-sm shadow-orange-500/10 ring-1 ring-orange-500/30'
+                    : 'bg-[#18181b]/80 hover:bg-[#272730] text-muted-foreground hover:text-foreground font-medium border border-border/80 hover:border-zinc-500'
                 }`}
               >
                 {c === 'All' ? '🌍 All World' : c}
@@ -105,19 +104,19 @@ export default function Gallery() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search destinations, cities..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-[#18181b]/80 border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 transition-all"
             />
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+      <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {loading ? (
           <div className="py-28 flex items-center justify-center">
             <Loader text="Loading live global destinations..." />
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="p-12 sm:p-16 rounded-3xl border border-dashed border-border/80 text-center space-y-4 max-w-lg mx-auto bg-card/30">
+          <div className="p-12 sm:p-16 rounded-3xl border border-dashed border-border/80 text-center space-y-4 max-w-xl mx-auto bg-card/30">
             <Globe className="size-12 text-orange-400 mx-auto animate-pulse" />
             <div className="space-y-1">
               <h3 className="text-base font-bold text-foreground">No Destinations Found</h3>
@@ -139,7 +138,7 @@ export default function Gallery() {
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-6">
               {filteredItems.map((item) => (
                 <div
                   key={item._id}
@@ -203,7 +202,6 @@ export default function Gallery() {
               ))}
             </div>
 
-            {/* Pagination Controls */}
             {totalPages > 1 && (
               <div className="p-3.5 rounded-2xl bg-[#121215] border border-border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-md">
                 <span className="text-muted-foreground">

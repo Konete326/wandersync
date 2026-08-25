@@ -1141,8 +1141,9 @@ export default function DestinationExplorer() {
                 </div>
 
                 <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <p className="text-[11px] text-muted-foreground">
-                    ⚡ Instant Sync: Ready to generate a day-by-day itinerary incorporating these exact flights, accommodations, and attractions.
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="size-3.5 text-orange-400 shrink-0" />
+                    <span>Instant Sync: Ready to generate a day-by-day itinerary incorporating these exact flights, accommodations, and attractions.</span>
                   </p>
                   <GlowingButton
                     onClick={handlePlanWithCustomConfig}

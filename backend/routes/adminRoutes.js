@@ -14,10 +14,18 @@ import {
 } from '../controllers/adminTripsController.js';
 import {
   getAdminAllUsers,
+  createAdminUser,
+  updateAdminUserDetails,
   updateUserRoleAdmin,
   toggleUserStatusAdmin,
   deleteUserAdmin
 } from '../controllers/adminUsersController.js';
+import {
+  getAdminCustomers,
+  createAdminCustomer,
+  updateAdminCustomer,
+  deleteAdminCustomer
+} from '../controllers/adminCustomersController.js';
 import { protect, adminOnly } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -36,8 +44,15 @@ router.patch('/trips/:id/visibility', toggleTripVisibilityAdmin);
 router.delete('/trips/:id', deleteTripAdmin);
 
 router.get('/users/all', getAdminAllUsers);
+router.post('/users', createAdminUser);
+router.put('/users/:id', updateAdminUserDetails);
 router.patch('/users/:id/role', updateUserRoleAdmin);
 router.patch('/users/:id/status', toggleUserStatusAdmin);
 router.delete('/users/:id', deleteUserAdmin);
+
+router.get('/customers', getAdminCustomers);
+router.post('/customers', createAdminCustomer);
+router.put('/customers/:id', updateAdminCustomer);
+router.delete('/customers/:id', deleteAdminCustomer);
 
 export default router;

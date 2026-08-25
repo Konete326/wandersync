@@ -22,6 +22,7 @@ import {
 export const navGroups = [
   {
     label: 'Core Operations',
+    defaultOpen: true,
     items: [
       {
         title: 'Dashboard',
@@ -57,6 +58,7 @@ export const navGroups = [
   },
   {
     label: 'Travel Catalog & Fleet',
+    defaultOpen: false,
     items: [
       {
         title: 'Countries & Cities',
@@ -92,6 +94,7 @@ export const navGroups = [
   },
   {
     label: 'AI & Intelligence',
+    defaultOpen: false,
     items: [
       {
         title: 'Gemini Analytics',
@@ -107,6 +110,7 @@ export const navGroups = [
   },
   {
     label: 'System & Control',
+    defaultOpen: false,
     items: [
       {
         title: 'Notifications',

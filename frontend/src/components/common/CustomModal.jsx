@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { AlertTriangle, CheckCircle2, Info, AlertOctagon, X, Trash2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Info, AlertCircle, X, Trash2 } from 'lucide-react';
 
 const CustomModal = ({
   isOpen,
   title,
   message,
   type = 'info',
-  confirmText = 'Confirm',
+  confirmText = 'OK',
   cancelText = 'Cancel',
   isConfirm = false,
   onConfirm,
@@ -28,7 +28,6 @@ const CustomModal = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    // Focus confirm button for quick keyboard Enter confirmation
     setTimeout(() => {
       confirmBtnRef.current?.focus();
     }, 50);
@@ -46,18 +45,40 @@ const CustomModal = ({
 
   if (!isOpen) return null;
 
+  const isDeleteAction = isConfirm && (type === 'delete' || (type === 'danger' && /delete|remove|clear/i.test(confirmText)));
+
   const icons = {
-    info: <Info className="size-5 text-orange-400" />,
+    info: <Info className="size-5 text-cyan-400" />,
     success: <CheckCircle2 className="size-5 text-emerald-400" />,
     warning: <AlertTriangle className="size-5 text-amber-400" />,
-    danger: <Trash2 className="size-5 text-rose-400" />
+    danger: isDeleteAction ? <Trash2 className="size-5 text-rose-400" /> : <AlertCircle className="size-5 text-rose-400" />,
+    error: <AlertCircle className="size-5 text-rose-400" />,
+    delete: <Trash2 className="size-5 text-rose-400" />
   };
 
   const iconBgs = {
-    info: 'bg-orange-500/10 border-orange-500/30 text-orange-400',
+    info: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400',
     success: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
     warning: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
-    danger: 'bg-rose-500/15 border-rose-500/30 text-rose-400'
+    danger: 'bg-rose-500/15 border-rose-500/30 text-rose-400',
+    error: 'bg-rose-500/15 border-rose-500/30 text-rose-400',
+    delete: 'bg-rose-500/15 border-rose-500/30 text-rose-400'
+  };
+
+  const getConfirmBtnClass = () => {
+    if (isDeleteAction) {
+      return 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/50 ring-1 ring-rose-500/50';
+    }
+    if (type === 'danger' || type === 'error') {
+      return 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/50';
+    }
+    if (type === 'warning') {
+      return 'bg-amber-500 hover:bg-amber-400 text-zinc-950 shadow-amber-950/50';
+    }
+    if (type === 'success') {
+      return 'bg-emerald-500 hover:bg-emerald-400 text-zinc-950 shadow-emerald-950/50';
+    }
+    return 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 shadow-cyan-950/50 font-bold';
   };
 
   return (
@@ -104,13 +125,9 @@ const CustomModal = ({
             ref={confirmBtnRef}
             type="button"
             onClick={handleConfirm}
-            className={`px-4 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer min-h-[34px] shadow-sm flex items-center gap-1.5 ${
-              type === 'danger'
-                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/50 ring-1 ring-rose-500/50'
-                : 'bg-orange-500 hover:bg-orange-400 text-zinc-950 shadow-orange-950/50 font-bold'
-            }`}
+            className={`px-4 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer min-h-[34px] shadow-sm flex items-center gap-1.5 ${getConfirmBtnClass()}`}
           >
-            {type === 'danger' && <Trash2 className="size-3.5" />}
+            {isDeleteAction && <Trash2 className="size-3.5" />}
             <span>{confirmText}</span>
           </button>
         </div>

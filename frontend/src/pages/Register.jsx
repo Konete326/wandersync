@@ -64,7 +64,7 @@ const Register = () => {
       showModal({
         title: 'Registration Failed',
         message: error.response?.data?.message || 'Could not register account. Please check your credentials.',
-        type: 'danger'
+        type: 'error'
       });
     } finally {
       setLoading(false);
