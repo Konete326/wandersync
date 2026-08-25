@@ -61,35 +61,31 @@ export default function AdminAiAnalytics() {
   const tokensConsumed = totalInferences * 1850;
 
   return (
-    <div className="space-y-6 select-none font-sans max-w-7xl mx-auto pb-16">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#121215] border border-border/80 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
-            <Sparkles className="size-5" />
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <Sparkles className="size-4" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground leading-tight">Gemini AI Intelligence & Token Analytics</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Real-time neural telemetry, LLM inference quotas, model latency, and prompt dispatch metrics
+            <h1 className="text-sm font-bold text-foreground leading-tight">Gemini AI Intelligence & Token Analytics</h1>
+            <p className="text-[11px] text-muted-foreground">
+              Neural telemetry, LLM inference quotas, and model latency
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleRunDiagnostics}
-            disabled={isDiagnosing}
-            className="px-3.5 py-1.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`size-3.5 ${isDiagnosing ? 'animate-spin' : ''}`} />
-            <span>{isDiagnosing ? 'Diagnosing...' : 'Run Diagnostics'}</span>
-          </button>
-        </div>
+        <button
+          onClick={handleRunDiagnostics}
+          disabled={isDiagnosing}
+          className="px-3 py-1.5 rounded-lg bg-[#18181b]/80 hover:bg-[#272730] text-foreground hover:text-orange-400 border border-border/80 hover:border-orange-500/40 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
+        >
+          <RefreshCw className={`size-3.5 text-orange-400 ${isDiagnosing ? 'animate-spin' : ''}`} />
+          <span>{isDiagnosing ? 'Diagnosing...' : 'Diagnostics'}</span>
+        </button>
       </div>
 
-      {/* 4-Stat Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         <div className="p-4 rounded-2xl bg-[#121215] border border-border/80 space-y-2 shadow-md">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Total AI Inferences</span>

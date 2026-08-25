@@ -41,23 +41,26 @@ export default function AdminSettings() {
   };
 
   return (
-    <div className="w-full space-y-4 font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-border/80 pb-3">
-        <div>
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground font-heading">
-            System Settings
-          </h1>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Configure WanderSync generative AI engine parameters, cloud services, and application variables.
-          </p>
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <Sliders className="size-4" />
+          </div>
+          <div>
+            <h1 className="text-sm font-bold text-foreground leading-tight">System Settings</h1>
+            <p className="text-[11px] text-muted-foreground">
+              Configure AI parameters, cloud services, and variables
+            </p>
+          </div>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-orange-500 hover:bg-orange-400 text-zinc-950 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md shadow-orange-500/20 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-400 text-zinc-950 text-xs font-bold rounded-lg transition-all cursor-pointer shadow-md shadow-orange-500/20 disabled:opacity-50"
         >
           <Save className="size-3.5" />
-          <span>{saving ? 'Saving...' : 'Save Configuration'}</span>
+          <span>{saving ? 'Saving...' : 'Save Settings'}</span>
         </button>
       </div>
 

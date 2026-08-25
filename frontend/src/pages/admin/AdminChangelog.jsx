@@ -25,23 +25,23 @@ const releaseLog = {
 
 export default function AdminChangelog() {
   return (
-    <div className="w-full space-y-3.5 max-w-5xl mx-auto font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-border/80 pb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="size-7 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
-              <History className="size-3.5" />
-            </div>
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground font-heading">
-              Product Changelog
-            </h1>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/30">
-              Current: v1.0.0
-            </span>
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <History className="size-4" />
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Production release notes, platform capabilities, and architectural milestones
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-bold text-foreground leading-tight">Product Changelog</h1>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                v1.0.0
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Production release notes, platform capabilities, and milestones
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-secondary/70 text-zinc-300 border border-border">

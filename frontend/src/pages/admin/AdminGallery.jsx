@@ -105,32 +105,32 @@ export default function AdminGallery() {
   };
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto font-sans w-full pb-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/80 pb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="size-7 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
-              <Compass className="size-3.5" />
-            </div>
-            <h1 className="text-lg sm:text-xl font-bold font-heading text-foreground">
-              Destinations & Photos Hub
-            </h1>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/30">
-              {total} Verified
-            </span>
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <Compass className="size-4" />
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Manage verified destination landmarks, photo galleries, tourist spots, and hotel stays with nightly rates
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-bold text-foreground leading-tight">Destinations & Photos Hub</h1>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                {total}
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Manage destination landmarks, photo galleries, and stays
+            </p>
+          </div>
         </div>
 
         <GlowingButton
           onClick={handleOpenAdd}
           size="sm"
-          innerClassName="py-2 px-3.5 text-xs font-bold flex items-center gap-1.5"
+          innerClassName="py-1.5 px-3 text-xs font-bold flex items-center gap-1.5"
         >
-          <Plus className="size-3.5 text-orange-400" />
-          <span>Add New Destination</span>
+          <Plus className="size-3.5" />
+          <span>Add Destination</span>
         </GlowingButton>
       </div>
 
@@ -142,7 +142,7 @@ export default function AdminGallery() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search destination, city, or country..."
-            className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+            className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
           />
         </form>
 

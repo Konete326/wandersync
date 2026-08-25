@@ -103,33 +103,28 @@ export default function AdminCommunity() {
   };
 
   return (
-    <div className="space-y-6 select-none font-sans max-w-7xl mx-auto pb-16">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#121215] border border-border/80 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
-            <MessageSquare className="size-5" />
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <MessageSquare className="size-4" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground leading-tight">Community Chat & Discussion Moderation</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Live monitoring, announcement pins, toxic content removal, and traveler interaction feeds
+            <h1 className="text-sm font-bold text-foreground leading-tight">Community Chat & Moderation</h1>
+            <p className="text-[11px] text-muted-foreground">
+              Live monitoring, announcement pins, and content moderation
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
-            <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Live Stream (4s Sync)</span>
-          </div>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold">
+          <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Live Stream</span>
         </div>
       </div>
 
-      {/* Filter & Channel Selector Bar */}
-      <div className="p-4 rounded-2xl bg-[#121215] border border-border/80 flex flex-col md:flex-row items-center justify-between gap-3 text-xs shadow-md">
-        {/* Channels Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full md:w-auto py-1">
+      <div className="p-3 rounded-xl bg-[#121215] border border-border/80 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs shadow-xs">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full md:w-auto py-0.5">
           {channels.map((ch) => {
             const Icon = ch.icon;
             const isActive = activeRoom === ch.id;

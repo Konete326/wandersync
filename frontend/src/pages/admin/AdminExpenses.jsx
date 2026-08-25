@@ -200,37 +200,35 @@ export default function AdminExpenses() {
   };
 
   return (
-    <div className="w-full space-y-4 max-w-7xl mx-auto font-sans pb-10">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/80 pb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="size-7 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
-              <Receipt className="size-3.5" />
-            </div>
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground font-heading">
-              Platform Expenses & Cloud Ledger
-            </h1>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/30">
-              {stats.totalRecords} Records
-            </span>
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <Receipt className="size-4" />
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Operational ledger for Google Gemini API tokens, Cloudinary CDN, MongoDB cluster, hosting, and service vendors
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-bold text-foreground leading-tight">Platform Expenses & Cloud Ledger</h1>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                {stats.totalRecords}
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Operational ledger for API tokens, CDN, database, and hosting
+            </p>
+          </div>
         </div>
 
         <GlowingButton
           onClick={handleOpenAdd}
           size="sm"
-          innerClassName="py-2 px-3.5 text-xs font-bold flex items-center gap-1.5"
+          innerClassName="py-1.5 px-3 text-xs font-bold flex items-center gap-1.5"
         >
-          <Plus className="size-3.5 text-orange-400" />
-          <span>Record New Expense</span>
+          <Plus className="size-3.5" />
+          <span>New Expense</span>
         </GlowingButton>
       </div>
 
-      {/* 4 KPI Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="p-3.5 rounded-xl bg-[#121215] border border-border/80 space-y-1 shadow-sm">
           <div className="flex items-center justify-between text-muted-foreground">

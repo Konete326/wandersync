@@ -61,23 +61,26 @@ export default function AdminProfile() {
   };
 
   return (
-    <div className="w-full space-y-4 max-w-7xl mx-auto font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-border/80 pb-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground font-heading">
-            Admin Profile
-          </h1>
-          <p className="text-xs text-muted-foreground">
-            Manage your credentials, root privileges, and system preferences.
-          </p>
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <Shield className="size-4" />
+          </div>
+          <div>
+            <h1 className="text-sm font-bold text-foreground leading-tight">Admin Profile & Access</h1>
+            <p className="text-[11px] text-muted-foreground">
+              Manage credentials, privileges, and system preferences
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/20">
             <Shield className="size-3" />
             {formData.role.toUpperCase()}
           </span>
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-orange-500/10 text-orange-400 border border-orange-500/30">
-            <CheckCircle2 className="size-3 text-orange-400" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+            <CheckCircle2 className="size-3 text-emerald-400" />
             Active Session
           </span>
         </div>

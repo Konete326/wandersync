@@ -110,41 +110,41 @@ export default function AdminGroupTours() {
   };
 
   return (
-    <div className="space-y-6 select-none font-sans max-w-7xl mx-auto pb-16">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#121215] border border-border/80 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
-            <Compass className="size-5" />
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <Compass className="size-4" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground leading-tight">Agency Group Tours & Guided Expeditions</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Organize multi-traveler group packages, allocate capacities, and manage instant POS ticketing
+            <h1 className="text-sm font-bold text-foreground leading-tight">Agency Group Tours & Guided Expeditions</h1>
+            <p className="text-[11px] text-muted-foreground">
+              Organize group packages, allocate capacities, and manage instant ticketing
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => navigate('/admin/tour-pos')}
-            className="px-3.5 py-2 rounded-xl bg-[#18181b]/80 hover:bg-[#272730] text-foreground hover:text-orange-400 border border-border/80 hover:border-orange-500/40 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            className="px-3 py-1.5 rounded-lg bg-[#18181b]/80 hover:bg-[#272730] text-foreground hover:text-orange-400 border border-border/80 hover:border-orange-500/40 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <CreditCard className="size-3.5 text-orange-400" />
-            <span>POS Booking Terminal</span>
+            <span>POS Terminal</span>
           </button>
 
           <GlowingButton
             onClick={() => navigate('/admin/group-tours/new')}
             size="sm"
-            innerClassName="py-2 px-4 text-xs font-bold flex items-center gap-1.5"
+            innerClassName="py-1.5 px-3 text-xs font-bold flex items-center gap-1.5"
           >
             <Plus className="size-3.5" />
-            <span>Create Group Tour</span>
+            <span>Create Tour</span>
           </GlowingButton>
         </div>
       </div>
 
-      <div className="p-4 rounded-2xl bg-[#121215] border border-border/80 flex flex-col md:flex-row items-center justify-between gap-3 text-xs shadow-md">
+      <div className="p-3 rounded-xl bg-[#121215] border border-border/80 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs shadow-xs">
         <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
           <input
@@ -179,6 +179,7 @@ export default function AdminGroupTours() {
             }}
             className="px-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
+            <option key="All" value="All" className="bg-[#121215] text-foreground">All Statuses</option>
             {statusOptions.map((st) => (
               <option key={st} value={st} className="bg-[#121215] text-foreground">{st === 'All' ? 'All Statuses' : st}</option>
             ))}
@@ -187,19 +188,19 @@ export default function AdminGroupTours() {
       </div>
 
       {loading ? (
-        <div className="py-24 flex items-center justify-center">
+        <div className="py-20 flex items-center justify-center">
           <Loader text="Loading agency group tours..." />
         </div>
       ) : tours.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl bg-[#121215] border border-border/80 space-y-3">
-          <Compass className="size-10 text-muted-foreground/30 mx-auto" />
+        <div className="p-10 text-center rounded-2xl bg-[#121215] border border-border/80 space-y-2">
+          <Compass className="size-8 text-muted-foreground/30 mx-auto" />
           <h3 className="text-sm font-bold text-foreground">No Group Tours Found</h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Click "Create Group Tour" to create your first organized group tour package.
+            Click "Create Tour" to create your first organized group tour package.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {tours.map((tour) => {
             const seatsRemaining = Math.max(0, tour.totalCapacity - tour.bookedSeats);
             const percentBooked = Math.min(100, Math.round((tour.bookedSeats / tour.totalCapacity) * 100));

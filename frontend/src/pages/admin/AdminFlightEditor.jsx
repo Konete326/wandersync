@@ -224,23 +224,22 @@ export default function AdminFlightEditor() {
   }
 
   return (
-    <div className="space-y-6 select-none font-sans max-w-5xl mx-auto pb-16">
-      {/* Top Studio Bar */}
-      <div className="flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 shadow-md">
-        <div className="flex items-center gap-3">
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-12">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={() => navigate('/admin/flights')}
-            className="p-2 rounded-xl bg-secondary/70 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer border border-border"
+            className="p-1.5 rounded-lg bg-secondary/60 hover:bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-3.5" />
           </button>
           <div>
-            <h1 className="text-base sm:text-lg font-bold text-foreground leading-tight">
+            <h1 className="text-sm font-bold text-foreground leading-tight">
               {isEditing ? `Edit Flight: ${formData.airline} (${formData.flightNumber})` : 'Schedule New Flight Route'}
             </h1>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              Configure airline specifications, origin & destination airports, cabin tiers, and luggage policies
+            <p className="text-[11px] text-muted-foreground">
+              Configure airline specifications, airports, and cabin tiers
             </p>
           </div>
         </div>
@@ -249,7 +248,7 @@ export default function AdminFlightEditor() {
           onClick={handleSubmit}
           disabled={saving}
           size="sm"
-          innerClassName="py-1.5 px-3.5 text-xs font-bold flex items-center gap-1.5"
+          innerClassName="py-1.5 px-3 text-xs font-bold flex items-center gap-1.5"
         >
           <Save className="size-3.5 text-orange-400" />
           <span>{saving ? 'Saving...' : isEditing ? 'Update Flight' : 'Publish Flight'}</span>

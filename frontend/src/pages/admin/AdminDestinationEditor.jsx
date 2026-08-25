@@ -361,28 +361,28 @@ export default function AdminDestinationEditor() {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-4 font-sans pb-12">
-      {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/80 pb-3">
-        <div className="flex items-center gap-3">
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-12">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
           <button
+            type="button"
             onClick={() => navigate('/admin/media')}
             className="p-1.5 rounded-lg bg-secondary/60 hover:bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             title="Back to Catalog"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-3.5" />
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg sm:text-xl font-bold font-heading text-foreground">
+              <h1 className="text-sm font-bold font-heading text-foreground">
                 {isEditing ? 'Edit Destination Details' : 'Create New Travel Destination'}
               </h1>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/30">
-                {isEditing ? 'Editing Mode' : 'New Catalog Entry'}
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                {isEditing ? 'Editing' : 'New'}
               </span>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              Comprehensive travel builder for landmarks, tourist attractions, multi-image hotels, foods, and logistics.
+            <p className="text-[11px] text-muted-foreground">
+              Comprehensive travel builder for landmarks, attractions, hotels, and foods
             </p>
           </div>
         </div>
@@ -392,20 +392,20 @@ export default function AdminDestinationEditor() {
             type="button"
             onClick={handleAiAutofill}
             disabled={aiLoading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/30 hover:bg-orange-500/20 transition-all cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/30 hover:bg-orange-500/20 transition-all cursor-pointer disabled:opacity-50"
           >
             <Sparkles className={`size-3.5 ${aiLoading ? 'animate-spin' : ''}`} />
-            <span>{aiLoading ? 'AI Generating...' : 'Gemini AI Deep Fill'}</span>
+            <span>{aiLoading ? 'AI Generating...' : 'Gemini Deep Fill'}</span>
           </button>
 
           <GlowingButton
             onClick={handleSubmit}
             disabled={saving}
             size="sm"
-            innerClassName="py-1.5 px-3.5 text-xs font-bold flex items-center gap-1.5"
+            innerClassName="py-1.5 px-3 text-xs font-bold flex items-center gap-1.5"
           >
             <Save className="size-3.5 text-orange-400" />
-            <span>{saving ? 'Publishing...' : isEditing ? 'Update Destination' : 'Publish Destination'}</span>
+            <span>{saving ? 'Saving...' : isEditing ? 'Update Destination' : 'Publish Destination'}</span>
           </GlowingButton>
         </div>
       </div>

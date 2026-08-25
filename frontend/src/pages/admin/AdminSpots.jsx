@@ -99,37 +99,35 @@ export default function AdminSpots() {
   };
 
   return (
-    <div className="w-full space-y-4 max-w-7xl mx-auto font-sans pb-10">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/80 pb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="size-7 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
-              <Navigation className="size-3.5" />
-            </div>
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground font-heading">
-              Tourist Areas & Attractions
-            </h1>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/30">
-              {total} Spots
-            </span>
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <Navigation className="size-4" />
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Manage key cultural landmarks, natural wonders, visiting hours, tickets, and multiple scenic shots
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-bold text-foreground leading-tight">Tourist Areas & Attractions</h1>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                {total}
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Manage key landmarks, natural wonders, and ticket pricing
+            </p>
+          </div>
         </div>
 
         <GlowingButton
           onClick={() => navigate('/admin/spots/new')}
           size="sm"
-          innerClassName="py-2 px-3.5 text-xs font-bold flex items-center gap-1.5"
+          innerClassName="py-1.5 px-3 text-xs font-bold flex items-center gap-1.5"
         >
-          <Plus className="size-3.5 text-orange-400" />
+          <Plus className="size-3.5" />
           <span>Add Attraction</span>
         </GlowingButton>
       </div>
 
-      {/* Filter Bar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 bg-[#121215] p-2.5 rounded-xl border border-border/80">
         <form onSubmit={handleSearchSubmit} className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />

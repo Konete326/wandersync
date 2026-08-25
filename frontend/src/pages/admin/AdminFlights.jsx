@@ -109,17 +109,16 @@ export default function AdminFlights() {
   };
 
   return (
-    <div className="space-y-6 select-none font-sans max-w-7xl mx-auto pb-12">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#121215] border border-border/80 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
-            <Plane className="size-5" />
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <Plane className="size-4" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground leading-tight">Flights & Aviation Schedules</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Manage international routes, aircraft models, cabin classes, and live seat ticket pricing
+            <h1 className="text-sm font-bold text-foreground leading-tight">Flights & Aviation Schedules</h1>
+            <p className="text-[11px] text-muted-foreground">
+              Manage international routes, cabin classes, and live pricing
             </p>
           </div>
         </div>
@@ -127,15 +126,14 @@ export default function AdminFlights() {
         <GlowingButton
           onClick={() => navigate('/admin/flights/new')}
           size="sm"
-          innerClassName="py-2 px-4 text-xs font-bold flex items-center gap-2"
+          innerClassName="py-1.5 px-3 text-xs font-bold flex items-center gap-1.5"
         >
           <Plus className="size-3.5" />
-          <span>Schedule New Flight</span>
+          <span>New Flight</span>
         </GlowingButton>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className="p-4 rounded-2xl bg-[#121215] border border-border/80 flex flex-col md:flex-row items-center justify-between gap-3 text-xs shadow-md">
+      <div className="p-3 rounded-xl bg-[#121215] border border-border/80 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs shadow-xs">
         <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
           <input
@@ -177,21 +175,20 @@ export default function AdminFlights() {
         </div>
       </div>
 
-      {/* Grid of Flight Cards (6 Per Page) */}
       {loading ? (
         <div className="py-20 flex items-center justify-center">
-          <Loader text="Loading live airline schedules..." />
+          <Loader text="Loading flight routes..." />
         </div>
       ) : flights.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl bg-[#121215] border border-border/80 space-y-3">
-          <Plane className="size-10 text-muted-foreground/30 mx-auto" />
-          <h3 className="text-sm font-bold text-foreground">No Flights Scheduled</h3>
+        <div className="p-10 text-center rounded-2xl bg-[#121215] border border-border/80 space-y-2">
+          <Plane className="size-8 text-muted-foreground/30 mx-auto" />
+          <h3 className="text-sm font-bold text-foreground">No Flights Found</h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            No airline routes match your filter. Click "Schedule New Flight" to add your first flight route.
+            Click "New Flight" to add your first flight route.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {flights.map((flight) => (
             <div
               key={flight._id}

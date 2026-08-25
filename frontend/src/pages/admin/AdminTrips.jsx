@@ -154,30 +154,28 @@ export default function AdminTrips() {
   };
 
   return (
-    <div className="space-y-6 select-none font-sans max-w-7xl mx-auto pb-16">
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#121215] border border-border/80 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
-            <Compass className="size-5" />
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <Compass className="size-4" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground leading-tight">AI Trips & Itineraries Maestro</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Live moderation, visibility management, community showcase, and deep JSON/PDF inspection
+            <h1 className="text-sm font-bold text-foreground leading-tight">AI Trips & Itineraries Maestro</h1>
+            <p className="text-[11px] text-muted-foreground">
+              Live moderation, visibility management, and deep inspection
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="px-3 py-1.5 rounded-xl bg-secondary/50 border border-border text-xs font-bold text-foreground">
+          <div className="px-2.5 py-1 rounded-lg bg-secondary/50 border border-border text-[11px] font-bold text-foreground">
             Total Trips: <span className="text-orange-400 font-extrabold">{total}</span>
           </div>
         </div>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className="p-4 rounded-2xl bg-[#121215] border border-border/80 flex flex-col md:flex-row items-center justify-between gap-3 text-xs shadow-md">
+      <div className="p-3 rounded-xl bg-[#121215] border border-border/80 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs shadow-xs">
         <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
           <input
@@ -219,21 +217,20 @@ export default function AdminTrips() {
         </div>
       </div>
 
-      {/* Trips Grid (8 Per Page) */}
       {loading ? (
-        <div className="py-24 flex items-center justify-center">
+        <div className="py-20 flex items-center justify-center">
           <Loader text="Loading live traveler itineraries..." />
         </div>
       ) : trips.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl bg-[#121215] border border-border/80 space-y-3">
-          <Compass className="size-10 text-muted-foreground/30 mx-auto" />
+        <div className="p-10 text-center rounded-2xl bg-[#121215] border border-border/80 space-y-2">
+          <Compass className="size-8 text-muted-foreground/30 mx-auto" />
           <h3 className="text-sm font-bold text-foreground">No Trips Found</h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
             No traveler itineraries match the selected search query or visibility filter.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3.5">
           {trips.map((trip) => (
             <div
               key={trip._id}

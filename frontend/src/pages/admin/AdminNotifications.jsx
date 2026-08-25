@@ -97,28 +97,28 @@ export default function AdminNotifications() {
   };
 
   return (
-    <div className="w-full space-y-3.5 max-w-7xl mx-auto font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-border/80 pb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="size-7 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
-              <Bell className="size-3.5" />
-            </div>
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground font-heading">
-              System Notifications
-            </h1>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/30">
-              {notifications.filter((n) => !n.read).length} New
-            </span>
+    <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
+      <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <Bell className="size-4" />
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Real-time operational alerts, AI generation logs, and security telemetry
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-bold text-foreground leading-tight">System Notifications</h1>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                {notifications.filter((n) => !n.read).length} New
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Real-time operational alerts, AI generation logs, and telemetry
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={markAllAsRead}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary/70 hover:bg-secondary text-foreground text-xs font-semibold rounded-lg border border-border transition-all cursor-pointer shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#18181b]/80 hover:bg-[#272730] text-foreground hover:text-orange-400 text-xs font-semibold rounded-lg border border-border/80 hover:border-orange-500/40 transition-all cursor-pointer shadow-xs"
           >
             <Check className="size-3 text-orange-400" />
             <span>Mark All Read</span>
