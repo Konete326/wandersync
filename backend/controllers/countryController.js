@@ -52,7 +52,9 @@ export const createCountry = async (req, res) => {
       coverImage = uploadResult.url;
       publicId = uploadResult.publicId;
     }
-    if (!coverImage) return sendError(res, 'Please provide a cover image', 400);
+    if (!coverImage) {
+      coverImage = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&auto=format&fit=crop&q=80';
+    }
     const parseField = (val) => (typeof val === 'string' ? JSON.parse(val) : (val || []));
     const country = await Country.create({
       name: name.trim(),

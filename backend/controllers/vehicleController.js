@@ -54,26 +54,18 @@ export const createVehicle = async (req, res) => {
       coverImage = uploadResult.url;
       publicId = uploadResult.publicId;
     }
-    if (!coverImage) return sendError(res, 'Please provide a vehicle photo', 400);
+    if (!coverImage) {
+      coverImage = 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=1200&auto=format&fit=crop&q=80';
+    }
     const parseField = (val) => (typeof val === 'string' ? JSON.parse(val) : (val || []));
     const vehicle = await Vehicle.create({
-      name: name.trim(),
-      vehicleType: vehicleType || 'SUV',
-      capacity: capacity || '5 Passengers',
-      transmission: transmission || 'Automatic',
-      fuelType: fuelType || 'Petrol',
-      pricePerDay: pricePerDay || '$95/day',
-      pricePerHour: pricePerHour || '$20/hr',
+      name: name.trim(), vehicleType: vehicleType || 'SUV', capacity: capacity || '5 Passengers',
+      transmission: transmission || 'Automatic', fuelType: fuelType || 'Petrol',
+      pricePerDay: pricePerDay || '$95/day', pricePerHour: pricePerHour || '$20/hr',
       driverIncluded: driverIncluded === 'true' || driverIncluded === true,
-      country: country.trim(),
-      city: city.trim(),
-      status: status || 'Available',
-      coverImage,
-      publicId,
-      features: parseField(req.body.features),
-      images: parseField(req.body.images),
-      featured: featured === 'true' || featured === true,
-      createdBy: req.user ? req.user._id : null
+      country: country.trim(), city: city.trim(), status: status || 'Available',
+      coverImage, publicId, features: parseField(req.body.features), images: parseField(req.body.images),
+      featured: featured === 'true' || featured === true, createdBy: req.user ? req.user._id : null
     });
     return sendSuccess(res, 'Vehicle added to fleet successfully', vehicle, 201);
   } catch (error) {

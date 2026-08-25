@@ -211,8 +211,9 @@ export default function AdminGroupTourEditor() {
       if (coverFile) {
         const compressedCover = await compressImage(coverFile);
         body.append('image', compressedCover);
-      } else if (formData.coverImage) {
-        body.append('coverImage', formData.coverImage);
+      } else {
+        const fallback = formData.coverImage || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&auto=format&fit=crop&q=80';
+        body.append('coverImage', fallback);
       }
 
       if (isEditing) {
@@ -258,8 +259,12 @@ export default function AdminGroupTourEditor() {
       pricePerPerson: preset.pricePerPerson || prev.pricePerPerson,
       tourGuideName: preset.tourGuideName || prev.tourGuideName,
       tourGuidePhone: preset.tourGuidePhone || prev.tourGuidePhone,
+      coverImage: preset.coverImage || prev.coverImage,
       inclusions: preset.inclusions?.length ? preset.inclusions : prev.inclusions
     }));
+    if (preset.coverImage) {
+      setCoverPreview(preset.coverImage);
+    }
     showToast(`Auto-filled package for ${preset.title}!`, 'success');
   };
 

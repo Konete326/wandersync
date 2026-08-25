@@ -172,8 +172,9 @@ export default function AdminSpotEditor() {
       if (coverFile) {
         const compressedCover = await compressImage(coverFile);
         body.append('image', compressedCover);
-      } else if (formData.coverImage) {
-        body.append('coverImage', formData.coverImage);
+      } else {
+        const fallback = formData.coverImage || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80';
+        body.append('coverImage', fallback);
       }
 
       if (isEditing) {
@@ -218,8 +219,12 @@ export default function AdminSpotEditor() {
       duration: preset.duration || prev.duration,
       bestTimeToVisit: preset.bestTimeToVisit || prev.bestTimeToVisit,
       address: preset.address || prev.address,
-      description: preset.description || prev.description
+      description: preset.description || prev.description,
+      coverImage: preset.coverImage || prev.coverImage
     }));
+    if (preset.coverImage) {
+      setCoverPreview(preset.coverImage);
+    }
     showToast(`Auto-filled details for ${preset.name}!`, 'success');
   };
 

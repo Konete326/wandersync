@@ -53,7 +53,9 @@ export const createHotel = async (req, res) => {
       coverImage = uploadResult.url;
       publicId = uploadResult.publicId;
     }
-    if (!coverImage) return sendError(res, 'Please provide a hotel cover image', 400);
+    if (!coverImage) {
+      coverImage = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&auto=format&fit=crop&q=80';
+    }
     const parseField = (val) => (typeof val === 'string' ? JSON.parse(val) : (val || []));
     const hotel = await Hotel.create({
       name: name.trim(),

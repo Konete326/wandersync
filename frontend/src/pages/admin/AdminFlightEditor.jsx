@@ -200,8 +200,9 @@ export default function AdminFlightEditor() {
       if (coverFile) {
         const compressedCover = await compressImage(coverFile);
         body.append('image', compressedCover);
-      } else if (formData.coverImage) {
-        body.append('coverImage', formData.coverImage);
+      } else {
+        const fallback = formData.coverImage || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1200&auto=format&fit=crop&q=80';
+        body.append('coverImage', fallback);
       }
 
       if (isEditing) {
@@ -256,8 +257,12 @@ export default function AdminFlightEditor() {
       duration: preset.duration || prev.duration,
       price: preset.price || prev.price,
       baggage: preset.baggage || prev.baggage,
-      status: preset.status || prev.status
+      status: preset.status || prev.status,
+      coverImage: preset.coverImage || prev.coverImage
     }));
+    if (preset.coverImage) {
+      setCoverPreview(preset.coverImage);
+    }
     showToast(`Auto-filled schedule for ${preset.airline} (${preset.flightNumber})!`, 'success');
   };
 

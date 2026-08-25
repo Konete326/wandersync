@@ -190,6 +190,7 @@ export default function AdminCountryEditor() {
       language: preset.language || prev.language,
       timezone: preset.timezone || prev.timezone,
       description: preset.description || prev.description,
+      coverImage: preset.coverImage || prev.coverImage,
       popularCities: preset.popularCities?.length
         ? preset.popularCities.map((c) => ({
             name: c.name || '',
@@ -198,6 +199,9 @@ export default function AdminCountryEditor() {
           }))
         : prev.popularCities
     }));
+    if (preset.coverImage) {
+      setCoverPreview(preset.coverImage);
+    }
     setCountryDropdownOpen(false);
     if (notify) {
       showToast(`Auto-filled country telemetry for ${preset.name}!`, 'success');
@@ -324,8 +328,9 @@ export default function AdminCountryEditor() {
       if (coverFile) {
         const compressedCover = await compressImage(coverFile);
         body.append('image', compressedCover);
-      } else if (formData.coverImage) {
-        body.append('coverImage', formData.coverImage);
+      } else {
+        const fallbackCover = formData.coverImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&auto=format&fit=crop&q=80';
+        body.append('coverImage', fallbackCover);
       }
 
       if (isEditing) {
@@ -344,6 +349,7 @@ export default function AdminCountryEditor() {
   };
 
   const handleAiAutofill = (data) => {
+    const aiCover = data.coverImage || formData.coverImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&auto=format&fit=crop&q=80';
     setFormData((prev) => ({
       ...prev,
       name: data.name || prev.name,
@@ -353,8 +359,18 @@ export default function AdminCountryEditor() {
       language: data.language || prev.language,
       timezone: data.timezone || prev.timezone,
       description: data.description || prev.description,
-      popularCities: data.popularCities?.length ? data.popularCities : prev.popularCities
+      coverImage: aiCover,
+      popularCities: data.popularCities?.length
+        ? data.popularCities.map((c) => ({
+            name: c.name || '',
+            description: c.description || '',
+            images: c.images || []
+          }))
+        : prev.popularCities
     }));
+    if (aiCover) {
+      setCoverPreview(aiCover);
+    }
   };
 
   const filteredCountriesList = WORLD_COUNTRIES.filter((c) =>

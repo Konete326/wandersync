@@ -193,8 +193,9 @@ export default function AdminHotelEditor() {
       if (coverFile) {
         const compressedCover = await compressImage(coverFile);
         body.append('image', compressedCover);
-      } else if (formData.coverImage) {
-        body.append('coverImage', formData.coverImage);
+      } else {
+        const fallback = formData.coverImage || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&auto=format&fit=crop&q=80';
+        body.append('coverImage', fallback);
       }
 
       if (isEditing) {
@@ -239,8 +240,12 @@ export default function AdminHotelEditor() {
       pricePerNight: preset.pricePerNight || prev.pricePerNight,
       priceRange: preset.priceRange || '$$$$',
       description: preset.description || prev.description,
+      coverImage: preset.coverImage || prev.coverImage,
       amenities: preset.amenities?.length ? preset.amenities : prev.amenities
     }));
+    if (preset.coverImage) {
+      setCoverPreview(preset.coverImage);
+    }
     showToast(`Auto-filled details for ${preset.name}!`, 'success');
   };
 

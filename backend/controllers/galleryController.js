@@ -45,7 +45,9 @@ export const createGalleryItem = async (req, res) => {
       imageUrl = uploadResult.url;
       publicId = uploadResult.publicId;
     }
-    if (!imageUrl) return sendError(res, 'Please provide a primary landmark image', 400);
+    if (!imageUrl) {
+      imageUrl = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&auto=format&fit=crop&q=80';
+    }
     const parseField = (val) => (typeof val === 'string' ? JSON.parse(val) : (val || []));
     const item = await Gallery.create({
       title: title.trim(),

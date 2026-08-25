@@ -44,7 +44,9 @@ export const createFlight = async (req, res) => {
       coverImage = uploadResult.url;
       publicId = uploadResult.publicId;
     }
-    if (!coverImage) return sendError(res, 'Please provide an airplane cover image', 400);
+    if (!coverImage) {
+      coverImage = 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1200&auto=format&fit=crop&q=80';
+    }
     const parseField = (val) => (typeof val === 'string' ? JSON.parse(val) : (val || []));
     const flight = await Flight.create({
       airline: airline.trim(), flightNumber: flightNumber.trim().toUpperCase(),

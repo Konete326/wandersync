@@ -44,7 +44,9 @@ export const createGroupTour = async (req, res) => {
       coverImage = uploadResult.url;
       publicId = uploadResult.publicId;
     }
-    if (!coverImage) return sendError(res, 'Please provide a group tour cover photo', 400);
+    if (!coverImage) {
+      coverImage = 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&auto=format&fit=crop&q=80';
+    }
     const parseField = (val) => (typeof val === 'string' ? JSON.parse(val) : (val || []));
     const tour = await GroupTour.create({
       title: title.trim(), tagline: tagline ? tagline.trim() : 'All-inclusive guided group expedition',

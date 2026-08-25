@@ -192,8 +192,9 @@ export default function AdminVehicleEditor() {
       if (coverFile) {
         const compressedCover = await compressImage(coverFile);
         body.append('image', compressedCover);
-      } else if (formData.coverImage) {
-        body.append('coverImage', formData.coverImage);
+      } else {
+        const fallback = formData.coverImage || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=1200&auto=format&fit=crop&q=80';
+        body.append('coverImage', fallback);
       }
 
       if (isEditing) {
@@ -237,8 +238,12 @@ export default function AdminVehicleEditor() {
       pricePerDay: preset.pricePerDay || prev.pricePerDay,
       driverIncluded: preset.driverIncluded !== undefined ? preset.driverIncluded : prev.driverIncluded,
       description: preset.description || prev.description,
+      coverImage: preset.coverImage || prev.coverImage,
       features: preset.features?.length ? preset.features : prev.features
     }));
+    if (preset.coverImage) {
+      setCoverPreview(preset.coverImage);
+    }
     showToast(`Auto-filled details for ${preset.name}!`, 'success');
   };
 
