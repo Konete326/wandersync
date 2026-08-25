@@ -2,6 +2,35 @@ import { useState, useId } from 'react';
 import { validateField } from '@/utils/validationRules';
 import { AlertCircle } from 'lucide-react';
 
+const toTitleCase = (str) => {
+  if (!str || typeof str !== 'string') return str;
+  const trimmed = str.trim().replace(/\s+/g, ' ');
+  if (
+    trimmed.includes('@') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('/') ||
+    /^\$?\d+/.test(trimmed)
+  ) {
+    return trimmed;
+  }
+  return trimmed
+    .split(' ')
+    .map((word) => {
+      if (word.length <= 4 && word === word.toUpperCase() && /^[A-Z0-9]+$/.test(word)) {
+        return word;
+      }
+      if (word.includes('-')) {
+        return word
+          .split('-')
+          .map((part) => (part ? part.charAt(0).toUpperCase() + part.slice(1) : ''))
+          .join('-');
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+};
+
 export default function ValidatedInput({
   type = 'text',
   validationType = '',
@@ -10,6 +39,7 @@ export default function ValidatedInput({
   onBlur,
   placeholder = '',
   required = false,
+  autoCapitalize = true,
   className = '',
   containerClassName = '',
   label = '',
@@ -35,6 +65,27 @@ export default function ValidatedInput({
 
   const handleBlur = (e) => {
     setTouched(true);
+
+    if (
+      autoCapitalize &&
+      type === 'text' &&
+      typeof value === 'string' &&
+      value.trim().length > 0 &&
+      validationType !== 'email' &&
+      validationType !== 'password' &&
+      validationType !== 'url'
+    ) {
+      const formatted = toTitleCase(value);
+      if (formatted !== value && onChange) {
+        const syntheticEvent = {
+          ...e,
+          target: { ...e.target, value: formatted },
+          currentTarget: { ...e.currentTarget, value: formatted }
+        };
+        onChange(syntheticEvent);
+      }
+    }
+
     if (onBlur) onBlur(e);
   };
 
