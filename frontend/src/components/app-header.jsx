@@ -33,18 +33,18 @@ export function AppHeader() {
       <div className="flex items-center gap-2 md:gap-3">
         <Link
           to="/admin/changelog"
-          className="flex items-center justify-center size-8 rounded-lg border border-border bg-background hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          className="flex items-center justify-center size-8 rounded-full border border-border bg-[#121215] hover:bg-[#18181b] hover:border-orange-500/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer shadow-xs"
           title="Changelog"
         >
           <History className="size-4" />
         </Link>
         <Link
           to="/admin/notifications"
-          className="relative flex items-center justify-center size-8 rounded-lg border border-border bg-background hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          className="relative flex items-center justify-center size-8 rounded-full border border-border bg-[#121215] hover:bg-[#18181b] hover:border-orange-500/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer shadow-xs"
           title="Notifications"
         >
           <Bell className="size-4" />
-          <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-cyan-400"></span>
+          <span className="absolute top-1 right-1 size-1.5 rounded-full bg-orange-500"></span>
         </Link>
         <Separator
           className="h-4 data-[orientation=vertical]:self-center"
