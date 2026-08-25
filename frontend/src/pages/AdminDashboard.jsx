@@ -10,6 +10,7 @@ const AdminGroupTourEditor = lazy(() => import('@/pages/admin/AdminGroupTourEdit
 const AdminTourPOSTerminal = lazy(() => import('@/pages/admin/AdminTourPOSTerminal'));
 const AdminTrips = lazy(() => import('@/pages/admin/AdminTrips'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
+const AdminEmployees = lazy(() => import('@/pages/admin/AdminEmployees'));
 const AdminCommunity = lazy(() => import('@/pages/admin/AdminCommunity'));
 const AdminCountries = lazy(() => import('@/pages/admin/AdminCountries'));
 const AdminCountryEditor = lazy(() => import('@/pages/admin/AdminCountryEditor'));
@@ -52,6 +53,7 @@ export default function AdminDashboard() {
           <Route path="/tour-pos" element={<AdminTourPOSTerminal />} />
           <Route path="/trips" element={<AdminTrips />} />
           <Route path="/users" element={<AdminUsers />} />
+          <Route path="/employees" element={<AdminEmployees />} />
           <Route path="/community" element={<AdminCommunity />} />
 
           {/* Travel Catalog & Fleet Suite */}

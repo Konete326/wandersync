@@ -16,7 +16,8 @@ import {
   Plane,
   MessageSquare,
   CreditCard,
-  Luggage
+  Luggage,
+  Briefcase
 } from 'lucide-react';
 
 export const navGroups = [
@@ -49,6 +50,11 @@ export const navGroups = [
         title: 'Travelers',
         path: '/admin/users',
         icon: <Users className="size-4" />
+      },
+      {
+        title: 'Staff & Tasks',
+        path: '/admin/employees',
+        icon: <Briefcase className="size-4" />
       },
       {
         title: 'Community Lounge',

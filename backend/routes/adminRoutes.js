@@ -26,6 +26,18 @@ import {
   updateAdminCustomer,
   deleteAdminCustomer
 } from '../controllers/adminCustomersController.js';
+import {
+  getAdminEmployees,
+  createAdminEmployee,
+  updateAdminEmployee,
+  deleteAdminEmployee
+} from '../controllers/adminEmployeesController.js';
+import {
+  getAdminEmployeeTasks,
+  createAdminEmployeeTask,
+  updateAdminEmployeeTaskStatus,
+  deleteAdminEmployeeTask
+} from '../controllers/adminEmployeeTasksController.js';
 import { protect, adminOnly } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -54,5 +66,15 @@ router.get('/customers', getAdminCustomers);
 router.post('/customers', createAdminCustomer);
 router.put('/customers/:id', updateAdminCustomer);
 router.delete('/customers/:id', deleteAdminCustomer);
+
+router.get('/employees', getAdminEmployees);
+router.post('/employees', createAdminEmployee);
+router.put('/employees/:id', updateAdminEmployee);
+router.delete('/employees/:id', deleteAdminEmployee);
+
+router.get('/employees/tasks', getAdminEmployeeTasks);
+router.post('/employees/tasks', createAdminEmployeeTask);
+router.patch('/employees/tasks/:id/status', updateAdminEmployeeTaskStatus);
+router.delete('/employees/tasks/:id', deleteAdminEmployeeTask);
 
 export default router;
