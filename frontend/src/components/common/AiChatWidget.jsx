@@ -155,6 +155,12 @@ export default function AiChatWidget({ tripContext = null }) {
     };
   }, [loading]);
 
+  useEffect(() => {
+    const handleOpenChat = () => setIsOpen(true);
+    window.addEventListener('open-ai-chat', handleOpenChat);
+    return () => window.removeEventListener('open-ai-chat', handleOpenChat);
+  }, []);
+
   const detectActions = (queryText) => {
     const textLower = queryText.toLowerCase();
     const navMap = isAdmin ? ADMIN_NAVIGATION_MAP : USER_NAVIGATION_MAP;
@@ -238,23 +244,24 @@ export default function AiChatWidget({ tripContext = null }) {
   const currentQuickPrompts = isAdmin ? adminQuickPrompts : userQuickPrompts;
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 font-sans select-none">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[100] font-sans select-none pointer-events-auto">
       {!isOpen && (
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
-          className={`size-12 rounded-full bg-[#121215] border flex items-center justify-center shadow-xl hover:scale-110 transition-all duration-200 cursor-pointer relative group ${
+          className={`size-13 sm:size-14 rounded-full bg-[#121215] border-2 flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-200 cursor-pointer relative group ${
             isAdmin
-              ? 'border-orange-500/50 text-orange-400 shadow-orange-950/40'
-              : 'border-orange-500/40 text-orange-400 shadow-orange-950/30'
+              ? 'border-orange-500/70 text-orange-400 shadow-orange-950/60 hover:border-orange-400'
+              : 'border-orange-500/50 text-orange-400 shadow-orange-950/40 hover:border-orange-400'
           }`}
-          title={isAdmin ? 'WanderSync AI Admin Copilot' : 'WanderSync AI Travel Concierge'}
+          title={isAdmin ? 'WanderSync AI Admin Copilot (Click to open)' : 'WanderSync AI Travel Concierge (Click to open)'}
         >
           {isAdmin ? (
-            <Bot className="size-5 text-orange-400 group-hover:rotate-12 transition-transform" />
+            <Bot className="size-6 text-orange-400 group-hover:rotate-12 transition-transform" />
           ) : (
-            <Sparkles className="size-5 text-orange-400 group-hover:rotate-12 transition-transform" />
+            <Sparkles className="size-6 text-orange-400 group-hover:rotate-12 transition-transform" />
           )}
-          <span className="absolute top-0 right-0 size-3 rounded-full bg-orange-500 border-2 border-[#121215] animate-pulse" />
+          <span className="absolute -top-0.5 -right-0.5 size-3.5 rounded-full bg-orange-500 border-2 border-[#121215] animate-pulse" />
         </button>
       )}
 
