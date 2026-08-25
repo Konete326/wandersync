@@ -21,41 +21,14 @@ import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
+import {
+  countryCallingCodes,
+  detectLocalCallingCode,
+  setDefaultCallingCode,
+  formatPhoneNumber
+} from '@/utils/countryDetector';
 
 const paymentMethods = ['POS Terminal', 'Cash', 'Credit Card', 'Bank Transfer'];
-
-const countryCallingCodes = [
-  { code: '+1', country: 'US/CA', mask: '(###) ###-####' },
-  { code: '+44', country: 'UK', mask: '#### ######' },
-  { code: '+92', country: 'PK', mask: '### #######' },
-  { code: '+971', country: 'UAE', mask: '## ### ####' },
-  { code: '+966', country: 'KSA', mask: '## ### ####' },
-  { code: '+91', country: 'IN', mask: '##### #####' },
-  { code: '+61', country: 'AU', mask: '### ### ###' },
-  { code: '+49', country: 'DE', mask: '#### #######' },
-  { code: '+33', country: 'FR', mask: '# ## ## ## ##' },
-  { code: '+81', country: 'JP', mask: '## #### ####' },
-  { code: '+86', country: 'CN', mask: '### #### ####' },
-  { code: '+90', country: 'TR', mask: '### ### ####' },
-  { code: '+60', country: 'MY', mask: '## ### ####' },
-  { code: '+65', country: 'SG', mask: '#### ####' },
-  { code: '+34', country: 'ES', mask: '### ### ###' },
-  { code: '+39', country: 'IT', mask: '### ### ####' }
-];
-
-const formatPhoneNumber = (digits, mask) => {
-  const clean = digits.replace(/\D/g, '');
-  let formatted = '';
-  let cleanIndex = 0;
-  for (let i = 0; i < mask.length && cleanIndex < clean.length; i++) {
-    if (mask[i] === '#') {
-      formatted += clean[cleanIndex++];
-    } else {
-      formatted += mask[i];
-    }
-  }
-  return formatted;
-};
 
 export default function AdminTourPOSTerminal() {
   const [searchParams] = useSearchParams();
@@ -70,7 +43,7 @@ export default function AdminTourPOSTerminal() {
 
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
-  const [phoneCountryCode, setPhoneCountryCode] = useState('+1');
+  const [phoneCountryCode, setPhoneCountryCode] = useState(detectLocalCallingCode);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [passengersCount, setPassengersCount] = useState(1);
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -325,16 +298,17 @@ export default function AdminTourPOSTerminal() {
                       onChange={(e) => {
                         const newCode = e.target.value;
                         setPhoneCountryCode(newCode);
+                        setDefaultCallingCode(newCode);
                         const selected = countryCallingCodes.find((c) => c.code === newCode);
                         if (selected && phoneNumber) {
                           setPhoneNumber(formatPhoneNumber(phoneNumber, selected.mask));
                         }
                       }}
-                      className="w-24 px-1.5 py-1 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer h-[30px] shrink-0 font-mono"
+                      className="w-28 px-1.5 py-1 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer h-[30px] shrink-0 font-mono"
                     >
                       {countryCallingCodes.map((c) => (
                         <option key={c.code} value={c.code} className="bg-[#121215] text-foreground">
-                          {c.code} ({c.country})
+                          {c.code} ({c.name})
                         </option>
                       ))}
                     </select>

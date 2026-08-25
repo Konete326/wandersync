@@ -32,6 +32,7 @@ import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
+import { detectLocalCallingCode } from '@/utils/countryDetector';
 
 const tourCategories = ['Cultural & Adventure', 'Family Expedition', 'Honeymoon Special', 'Pilgrimage & Sacred', 'Nature & Safari', 'Corporate Retreat'];
 const tourStatuses = ['Open', 'Filling Fast', 'Sold Out', 'In Progress', 'Completed'];
@@ -61,7 +62,7 @@ export default function AdminGroupTourEditor() {
     pricePerPerson: 850,
     inclusions: ['Luxury Hotel Stays', 'Daily Buffet Breakfast & Dinners', 'AC Tourist Bus', 'Licensed Guide', 'Monument Tickets'],
     tourGuideName: 'Senior Tour Maestro',
-    tourGuidePhone: '+1 (800) 555-TOUR',
+    tourGuidePhone: `${detectLocalCallingCode()} 300 5558687`,
     status: 'Open',
     coverImage: '',
     images: [],
