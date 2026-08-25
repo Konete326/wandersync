@@ -115,17 +115,17 @@ export default function AdminCountries() {
   };
 
   return (
-    <div className="w-full max-w-[1720px] mx-auto min-h-[calc(100vh-5.5rem)] flex flex-col justify-between space-y-3 font-sans select-none pb-2">
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
+    <div className="w-full max-w-[1720px] mx-auto flex flex-col justify-between space-y-2 font-sans select-none">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#121215] border border-border/80 shadow-xs">
           <div className="flex items-center gap-2.5">
-            <div className="size-7 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+            <div className="size-6.5 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
               <Globe className="size-3.5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <h1 className="text-xs sm:text-sm font-bold text-foreground leading-tight">Countries & Cities Catalog</h1>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-orange-500/15 text-orange-400 border border-orange-500/30">
                   {total}
                 </span>
               </div>
@@ -191,11 +191,11 @@ export default function AdminCountries() {
         </div>
 
         {loading ? (
-          <div className="py-20 flex items-center justify-center">
+          <div className="py-16 flex items-center justify-center">
             <Loader text="Loading countries catalog..." />
           </div>
         ) : countries.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-[#121215] border border-border/80 text-center space-y-2.5 max-w-md mx-auto my-6">
+          <div className="p-8 rounded-2xl bg-[#121215] border border-border/80 text-center space-y-2.5 max-w-md mx-auto my-4">
             <Globe className="size-8 text-orange-400 mx-auto" />
             <h3 className="text-xs font-bold text-foreground">No Countries Found</h3>
             <p className="text-[11px] text-muted-foreground">
@@ -226,7 +226,7 @@ export default function AdminCountries() {
                     coverImage={item.coverImage}
                     images={item.images}
                     alt={item.name}
-                    containerClassName="h-28 sm:h-32 w-full"
+                    containerClassName="h-28 sm:h-30 w-full"
                     overlayChildren={
                       <div className="absolute top-2 left-2 right-2 flex items-center justify-between z-10 pointer-events-none">
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-black/75 backdrop-blur-md text-white border border-white/15 flex items-center gap-1.5 shadow-xs">
@@ -242,7 +242,7 @@ export default function AdminCountries() {
                     }
                   />
 
-                  <div className="p-3 space-y-1.5">
+                  <div className="p-2.5 space-y-1">
                     <div className="flex items-center justify-between">
                       <h3 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-orange-400 transition-colors">
                         {item.name}
@@ -255,21 +255,6 @@ export default function AdminCountries() {
                     <p className="text-[11px] text-muted-foreground line-clamp-1 leading-relaxed">
                       {item.description || `Explore the iconic sights, culture, and hubs of ${item.name}.`}
                     </p>
-
-                    {item.images && item.images.length > 0 && (
-                      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-0.5">
-                        {item.images.slice(0, 5).map((img, idx) => (
-                          <div key={idx} className="size-6 rounded overflow-hidden border border-border shrink-0">
-                            <img src={img} alt={`Scenic ${idx}`} className="size-full object-cover" />
-                          </div>
-                        ))}
-                        {item.images.length > 5 && (
-                          <div className="size-6 rounded bg-secondary border border-border flex items-center justify-center text-[9px] font-bold text-orange-400 shrink-0">
-                            +{item.images.length - 5}
-                          </div>
-                        )}
-                      </div>
-                    )}
 
                     {item.popularCities && item.popularCities.length > 0 && (
                       <div className="flex flex-wrap gap-1 pt-0.5">
@@ -316,7 +301,7 @@ export default function AdminCountries() {
       </div>
 
       {/* Fixed Sticky Bottom Pagination */}
-      <div className="sticky bottom-0 z-20 mt-4 px-3.5 py-2 rounded-xl bg-[#121215]/95 backdrop-blur-md border border-border/80 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+      <div className="sticky bottom-0 z-20 mt-1 px-3 py-1.5 rounded-xl bg-[#121215]/95 backdrop-blur-md border border-border/80 shadow-md flex flex-col sm:flex-row items-center justify-between gap-1.5 text-xs text-muted-foreground">
         <div className="text-[11px]">
           Showing <strong className="text-foreground">{total === 0 ? 0 : (page - 1) * 6 + 1}</strong> to{' '}
           <strong className="text-foreground">{Math.min(page * 6, total)}</strong> of{' '}
