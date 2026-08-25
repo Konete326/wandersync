@@ -126,53 +126,53 @@ export default function AdminNotifications() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="py-1.5 px-3 rounded-xl bg-[#121215] border border-border/80 flex flex-wrap items-center gap-1.5 shadow-xs">
         <button
           onClick={() => { setFilter('all'); setPage(1); }}
-          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+          className={`h-[30px] px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             filter === 'all'
-              ? 'bg-orange-500 text-zinc-950 shadow-sm shadow-orange-500/20 font-bold'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
+              ? 'bg-orange-500 text-zinc-950 shadow-xs shadow-orange-500/20 font-bold'
+              : 'bg-[#18181b]/80 text-muted-foreground hover:text-foreground border border-border/80 hover:border-orange-500/30'
           }`}
         >
           All ({notifications.length})
         </button>
         <button
           onClick={() => { setFilter('unread'); setPage(1); }}
-          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+          className={`h-[30px] px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             filter === 'unread'
-              ? 'bg-orange-500 text-zinc-950 shadow-sm shadow-orange-500/20 font-bold'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
+              ? 'bg-orange-500 text-zinc-950 shadow-xs shadow-orange-500/20 font-bold'
+              : 'bg-[#18181b]/80 text-muted-foreground hover:text-foreground border border-border/80 hover:border-orange-500/30'
           }`}
         >
           Unread ({notifications.filter((n) => !n.read).length})
         </button>
         <button
           onClick={() => { setFilter('ai'); setPage(1); }}
-          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+          className={`h-[30px] px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             filter === 'ai'
-              ? 'bg-orange-500 text-zinc-950 shadow-sm shadow-orange-500/20 font-bold'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
+              ? 'bg-orange-500 text-zinc-950 shadow-xs shadow-orange-500/20 font-bold'
+              : 'bg-[#18181b]/80 text-muted-foreground hover:text-foreground border border-border/80 hover:border-orange-500/30'
           }`}
         >
           AI Engine
         </button>
         <button
           onClick={() => { setFilter('security'); setPage(1); }}
-          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+          className={`h-[30px] px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             filter === 'security'
-              ? 'bg-orange-500 text-zinc-950 shadow-sm shadow-orange-500/20 font-bold'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
+              ? 'bg-orange-500 text-zinc-950 shadow-xs shadow-orange-500/20 font-bold'
+              : 'bg-[#18181b]/80 text-muted-foreground hover:text-foreground border border-border/80 hover:border-orange-500/30'
           }`}
         >
           Security
         </button>
         <button
           onClick={() => { setFilter('trip'); setPage(1); }}
-          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+          className={`h-[30px] px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             filter === 'trip'
-              ? 'bg-orange-500 text-zinc-950 shadow-sm shadow-orange-500/20 font-bold'
-              : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
+              ? 'bg-orange-500 text-zinc-950 shadow-xs shadow-orange-500/20 font-bold'
+              : 'bg-[#18181b]/80 text-muted-foreground hover:text-foreground border border-border/80 hover:border-orange-500/30'
           }`}
         >
           Trips

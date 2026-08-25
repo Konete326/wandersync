@@ -128,23 +128,23 @@ export default function AdminSpots() {
         </GlowingButton>
       </div>
 
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 bg-[#121215] p-2.5 rounded-xl border border-border/80">
-        <form onSubmit={handleSearchSubmit} className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
+      <div className="py-1.5 px-3 rounded-xl bg-[#121215] border border-border/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs shadow-xs">
+        <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-72">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search spot by name, city, landmark..."
-            className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
+            className="w-full pl-8 pr-2.5 h-[30px] rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
           />
         </form>
 
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
           <select
             value={country}
             onChange={(e) => setCountry(e.target.value)}
-            className="bg-[#121215] border border-border/80 rounded-lg px-2.5 py-1 text-xs text-foreground font-semibold focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
+            className="h-[30px] px-2.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground font-semibold focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
             <option value="All" className="bg-[#121215] text-foreground">All Countries</option>
             {countriesList.map((c) => (
@@ -152,22 +152,36 @@ export default function AdminSpots() {
             ))}
           </select>
 
-          {/* Category Filter */}
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
             {spotCategories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setCategory(cat)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                className={`h-[30px] px-2.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                   category === cat
-                    ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm shadow-orange-500/20'
-                    : 'bg-secondary/60 text-muted-foreground hover:text-foreground border border-border hover:border-orange-500/30'
+                    ? 'bg-orange-500 text-zinc-950 font-bold shadow-xs shadow-orange-500/20'
+                    : 'bg-[#18181b]/80 text-muted-foreground hover:text-foreground border border-border/80 hover:border-orange-500/30'
                 }`}
               >
                 {cat}
               </button>
             ))}
           </div>
+
+          {(search || country !== 'All' || category !== 'All') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('');
+                setCountry('All');
+                setCategory('All');
+                setPage(1);
+              }}
+              className="h-[30px] px-2 rounded-lg bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground text-[11px] font-semibold transition-colors cursor-pointer border border-border/60"
+            >
+              Reset
+            </button>
+          )}
         </div>
       </div>
 

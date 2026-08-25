@@ -175,26 +175,26 @@ export default function AdminTrips() {
         </div>
       </div>
 
-      <div className="p-3 rounded-xl bg-[#121215] border border-border/80 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs shadow-xs">
-        <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+      <div className="py-1.5 px-3 rounded-xl bg-[#121215] border border-border/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs shadow-xs">
+        <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-72">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search destination, title, country..."
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
+            className="w-full pl-8 pr-2.5 h-[30px] rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
           />
         </form>
 
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
           <select
             value={visibility}
             onChange={(e) => {
               setVisibility(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
+            className="h-[30px] px-2.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
             <option value="all" className="bg-[#121215] text-foreground">All Visibilities</option>
             <option value="public" className="bg-[#121215] text-foreground">Public Trips Only</option>
@@ -207,13 +207,28 @@ export default function AdminTrips() {
               setSelectedCountry(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-1.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
+            className="h-[30px] px-2.5 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 cursor-pointer"
           >
             <option value="All" className="bg-[#121215] text-foreground">All Countries</option>
             {countriesList.map((c) => (
               <option key={c._id} value={c.name} className="bg-[#121215] text-foreground">{c.name}</option>
             ))}
           </select>
+
+          {(search || visibility !== 'all' || selectedCountry !== 'All') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('');
+                setVisibility('all');
+                setSelectedCountry('All');
+                setPage(1);
+              }}
+              className="h-[30px] px-2 rounded-lg bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground text-[11px] font-semibold transition-colors cursor-pointer border border-border/60"
+            >
+              Reset
+            </button>
+          )}
         </div>
       </div>
 

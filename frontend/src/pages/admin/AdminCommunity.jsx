@@ -123,8 +123,8 @@ export default function AdminCommunity() {
         </div>
       </div>
 
-      <div className="p-3 rounded-xl bg-[#121215] border border-border/80 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs shadow-xs">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full md:w-auto py-0.5">
+      <div className="py-1.5 px-3 rounded-xl bg-[#121215] border border-border/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs shadow-xs">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto py-0.5">
           {channels.map((ch) => {
             const Icon = ch.icon;
             const isActive = activeRoom === ch.id;
@@ -132,10 +132,10 @@ export default function AdminCommunity() {
               <button
                 key={ch.id}
                 onClick={() => setActiveRoom(ch.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer ${
+                className={`h-[30px] px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer ${
                   isActive
-                    ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm shadow-orange-500/20'
-                    : 'bg-secondary/40 text-muted-foreground hover:text-foreground border border-border'
+                    ? 'bg-orange-500 text-zinc-950 font-bold shadow-xs shadow-orange-500/20'
+                    : 'bg-[#18181b]/80 text-muted-foreground hover:text-foreground border border-border/80 hover:border-orange-500/30'
                 }`}
               >
                 <Icon className="size-3.5" />
@@ -145,15 +145,14 @@ export default function AdminCommunity() {
           })}
         </div>
 
-        {/* Search */}
-        <form onSubmit={handleSearchSubmit} className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+        <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search keywords or traveler name..."
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+            placeholder="Search messages, travelers..."
+            className="w-full pl-8 pr-2.5 h-[30px] rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
           />
         </form>
       </div>
