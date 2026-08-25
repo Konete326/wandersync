@@ -383,12 +383,15 @@ export default function AdminSpotEditor() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-zinc-300">Description & Landmark Significance</label>
+                <label className="text-[11px] font-bold text-zinc-300 flex items-center justify-between">
+                  <span>Description & Landmark Significance</span>
+                  <span className="text-[10px] text-muted-foreground font-normal">(Optional)</span>
+                </label>
                 <textarea
                   rows={3}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="History, iconic torii gates, viewpoints, and best visiting advice..."
+                  placeholder="History, iconic sights, and best visiting advice (Optional)..."
                   className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none resize-none leading-relaxed"
                 />
               </div>

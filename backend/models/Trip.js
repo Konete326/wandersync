@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const activitySchema = new mongoose.Schema({
   timeSlot: { type: String, enum: ['Morning', 'Afternoon', 'Evening', 'Night'], required: true },
   title: { type: String, required: true },
-  description: { type: String, required: true },
+  description: { type: String, default: '' },
   locationName: { type: String, required: true },
   coordinates: {
     lat: { type: Number, default: 0 },

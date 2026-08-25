@@ -873,12 +873,15 @@ export default function AdminEmployees() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-muted-foreground">Instructions & Description</label>
+                <label className="text-[11px] font-bold text-muted-foreground flex items-center justify-between">
+                  <span>Instructions & Description</span>
+                  <span className="text-[10px] text-muted-foreground font-normal">(Optional)</span>
+                </label>
                 <textarea
                   rows={3}
                   value={taskForm.description}
                   onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-                  placeholder="Add specific guidelines or checklist notes for this task..."
+                  placeholder="Add specific guidelines or checklist notes (Optional)..."
                   className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500 resize-none"
                 />
               </div>

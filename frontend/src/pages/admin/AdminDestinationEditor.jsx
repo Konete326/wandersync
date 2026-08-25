@@ -451,12 +451,15 @@ export default function AdminDestinationEditor() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-zinc-300">Comprehensive Overview & Description</label>
+                <label className="text-[11px] font-bold text-zinc-300 flex items-center justify-between">
+                  <span>Comprehensive Overview & Description</span>
+                  <span className="text-[10px] text-muted-foreground font-normal">(Optional)</span>
+                </label>
                 <textarea
                   rows={3}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Enter a rich, engaging overview describing the history, atmosphere, and essence of this travel destination..."
+                  placeholder="Overview describing the history, atmosphere, and essence of this destination (Optional)..."
                   className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50 resize-none leading-relaxed"
                 />
               </div>
@@ -807,7 +810,10 @@ export default function AdminDestinationEditor() {
                 </div>
 
                 <div className="space-y-0.5">
-                  <label className="text-[10px] font-bold text-zinc-300">Spot Description & Highlights</label>
+                  <label className="text-[10px] font-bold text-zinc-300 flex items-center justify-between">
+                    <span>Spot Description & Highlights</span>
+                    <span className="text-[10px] text-muted-foreground font-normal">(Optional)</span>
+                  </label>
                   <textarea
                     rows={2}
                     value={spot.description}
@@ -816,7 +822,7 @@ export default function AdminDestinationEditor() {
                       updated[i].description = e.target.value;
                       setFormData({ ...formData, touristPlaces: updated });
                     }}
-                    placeholder="Short description of landmark significance and best view spots..."
+                    placeholder="Short description of landmark significance (Optional)..."
                     className="w-full px-2.5 py-1 rounded bg-secondary/70 border border-border text-xs text-foreground focus:outline-none resize-none"
                   />
                 </div>

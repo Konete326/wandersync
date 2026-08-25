@@ -529,12 +529,15 @@ export default function AdminCountryEditor() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-zinc-300">Overview Description</label>
+                <label className="text-[11px] font-bold text-zinc-300 flex items-center justify-between">
+                  <span>Overview Description</span>
+                  <span className="text-[10px] text-muted-foreground font-normal">(Optional)</span>
+                </label>
                 <textarea
                   rows={3}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Rich overview detailing climate, highlights, and travel appeal..."
+                  placeholder="Overview detailing climate, highlights, and travel appeal (Optional)..."
                   className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:border-orange-500/60 resize-none leading-relaxed"
                 />
               </div>
