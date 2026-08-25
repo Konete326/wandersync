@@ -477,25 +477,31 @@ export default function AdminSpotEditor() {
                     placeholder="e.g. Kyoto"
                   />
                   <datalist id="spot-city-options">
-                    {getCitySuggestions(formData.country).map((cityName) => (
-                      <option key={cityName} value={cityName} />
+                    {getCitySuggestions(formData.country).map((c) => (
+                      <option key={c.name || c} value={c.name || c} />
                     ))}
                   </datalist>
                   <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-1">
-                    {getCitySuggestions(formData.country).slice(0, 3).map((cityName) => (
-                      <button
-                        key={cityName}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, city: cityName })}
-                        className={`px-1.5 py-0.2 rounded text-[9px] font-medium border transition-all cursor-pointer shrink-0 ${
-                          formData.city.toLowerCase() === cityName.toLowerCase()
-                            ? 'bg-orange-500 text-zinc-950 font-bold border-orange-500'
-                            : 'bg-secondary/60 hover:bg-orange-500/10 text-muted-foreground hover:text-orange-400 border-border'
-                        }`}
-                      >
-                        {cityName}
-                      </button>
-                    ))}
+                    {getCitySuggestions(formData.country).slice(0, 4).map((c) => {
+                      const cityName = c.name || c;
+                      const cityFlag = c.flag || '📍';
+                      const isSelected = formData.city.toLowerCase() === cityName.toLowerCase();
+                      return (
+                        <button
+                          key={cityName}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, city: cityName })}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium border flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
+                            isSelected
+                              ? 'bg-orange-500 text-zinc-950 font-bold border-orange-500 shadow-xs'
+                              : 'bg-secondary/60 hover:bg-orange-500/10 text-muted-foreground hover:text-orange-400 border-border'
+                          }`}
+                        >
+                          <span className="text-xs leading-none">{cityFlag}</span>
+                          <span>{cityName}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

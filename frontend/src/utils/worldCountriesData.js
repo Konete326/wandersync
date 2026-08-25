@@ -590,28 +590,39 @@ export const getCountryFlag = (countryInput = '') => {
 export const getCitySuggestions = (countryInput = '') => {
   if (!countryInput || typeof countryInput !== 'string') {
     return [
-      'Islamabad', 'Lahore', 'Karachi', 'Hunza Valley',
-      'Tokyo', 'Kyoto', 'Osaka', 'Sapporo',
-      'Dubai', 'Abu Dhabi', 'Sharjah',
-      'Zurich', 'Geneva', 'Lucerne', 'Zermatt',
-      'Paris', 'Nice', 'Lyon',
-      'Rome', 'Florence', 'Venice',
-      'Istanbul', 'Cappadocia',
-      'Riyadh', 'Jeddah',
-      'London', 'Edinburgh',
-      'New York City', 'Los Angeles',
-      'Barcelona', 'Madrid'
+      { name: 'Islamabad', flag: '🇵🇰', country: 'Pakistan' },
+      { name: 'Lahore', flag: '🇵🇰', country: 'Pakistan' },
+      { name: 'Hunza Valley', flag: '🇵🇰', country: 'Pakistan' },
+      { name: 'Tokyo', flag: '🇯🇵', country: 'Japan' },
+      { name: 'Kyoto', flag: '🇯🇵', country: 'Japan' },
+      { name: 'Dubai', flag: '🇦🇪', country: 'United Arab Emirates' },
+      { name: 'Abu Dhabi', flag: '🇦🇪', country: 'United Arab Emirates' },
+      { name: 'Zurich', flag: '🇨🇭', country: 'Switzerland' },
+      { name: 'Geneva', flag: '🇨🇭', country: 'Switzerland' },
+      { name: 'Paris', flag: '🇫🇷', country: 'France' },
+      { name: 'Rome', flag: '🇮🇹', country: 'Italy' },
+      { name: 'Istanbul', flag: '🇹🇷', country: 'Turkey' },
+      { name: 'Riyadh', flag: '🇸🇦', country: 'Saudi Arabia' },
+      { name: 'London', flag: '🇬🇧', country: 'United Kingdom' },
+      { name: 'New York City', flag: '🇺🇸', country: 'United States' },
+      { name: 'Barcelona', flag: '🇪🇸', country: 'Spain' }
     ];
   }
   const countryPreset = findCountryPreset(countryInput);
   if (countryPreset && Array.isArray(countryPreset.popularCities) && countryPreset.popularCities.length > 0) {
-    return countryPreset.popularCities.map((c) => c.name);
+    const flag = getCountryFlag(countryPreset.code || countryPreset.name);
+    return countryPreset.popularCities.map((c) => ({
+      name: c.name,
+      flag,
+      country: countryPreset.name
+    }));
   }
+  const fallbackFlag = getCountryFlag(countryInput);
   return [
-    'Islamabad', 'Lahore', 'Karachi', 'Hunza Valley',
-    'Tokyo', 'Kyoto', 'Osaka', 'Dubai', 'Abu Dhabi',
-    'Zurich', 'Geneva', 'Paris', 'Rome', 'Istanbul',
-    'Riyadh', 'Jeddah', 'London', 'New York City', 'Barcelona'
+    { name: `${countryInput} Capital`, flag: fallbackFlag, country: countryInput },
+    { name: `${countryInput} Central`, flag: fallbackFlag, country: countryInput },
+    { name: `${countryInput} Coastal`, flag: fallbackFlag, country: countryInput }
   ];
 };
+
 
