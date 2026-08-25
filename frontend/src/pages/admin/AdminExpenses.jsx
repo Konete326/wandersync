@@ -333,7 +333,7 @@ export default function AdminExpenses() {
         </div>
       </div>
 
-      {/* Expenses Table View */}
+      
       {loading ? (
         <div className="py-20 flex items-center justify-center">
           <Loader text="Loading platform expenses ledger..." />
@@ -450,7 +450,7 @@ export default function AdminExpenses() {
         </div>
       )}
 
-      {/* Mandatory Bottom Pagination Bar */}
+      
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/80 text-xs text-muted-foreground">
         <div>
           Showing <strong className="text-foreground">{total === 0 ? 0 : (page - 1) * limit + 1}</strong> to{' '}
@@ -506,7 +506,7 @@ export default function AdminExpenses() {
         </div>
       </div>
 
-      {/* Record / Edit Expense Modal Dialog */}
+      
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
           <div className="max-w-lg w-full rounded-2xl bg-[#121215] border border-orange-500/30 shadow-2xl p-5 space-y-4 font-sans max-h-[90vh] overflow-y-auto">

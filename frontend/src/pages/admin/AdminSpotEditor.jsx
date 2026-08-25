@@ -349,7 +349,7 @@ export default function AdminSpotEditor() {
               </div>
             </div>
 
-            {/* Cover Photo */}
+            
             <div className="md:col-span-4 space-y-1">
               <label className="text-[11px] font-bold text-zinc-300">Primary Spot Photo *</label>
               <div className="relative h-44 w-full rounded-xl border border-dashed border-border hover:border-orange-500/40 bg-secondary/30 flex flex-col items-center justify-center overflow-hidden transition-colors">
@@ -375,7 +375,7 @@ export default function AdminSpotEditor() {
             </div>
           </div>
 
-          {/* Multiple Extra Landmark Photos */}
+          
           <div className="pt-3 border-t border-border/70 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -412,7 +412,7 @@ export default function AdminSpotEditor() {
           </div>
         </div>
 
-        {/* Footer */}
+        
         <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/80">
           <button
             type="button"

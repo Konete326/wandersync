@@ -397,7 +397,7 @@ export default function AdminDestinationEditor() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* SECTION 1: Primary Destination & Hero Landmark Media */}
+        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
           <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
             <Compass className="size-4 text-orange-400" />
@@ -487,7 +487,7 @@ export default function AdminDestinationEditor() {
             </div>
           </div>
 
-          {/* Destination Additional Gallery Images Carousel / Grid */}
+          
           <div className="pt-3 border-t border-border/70 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -526,7 +526,7 @@ export default function AdminDestinationEditor() {
           </div>
         </div>
 
-        {/* SECTION 2: Traveler Practical Essentials */}
+        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
           <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
             <Lightbulb className="size-4 text-orange-400" />
@@ -657,7 +657,7 @@ export default function AdminDestinationEditor() {
           </div>
         </div>
 
-        {/* SECTION 3: Key Tourist Attractions (Multiple with Photos & Tickets) */}
+        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
           <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
             <div className="flex items-center gap-2">
@@ -825,7 +825,7 @@ export default function AdminDestinationEditor() {
           </div>
         </div>
 
-        {/* SECTION 4: Hotels & Accommodations (Nightly Rates, Multiple Photos & Ratings) */}
+        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
           <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
             <div className="flex items-center gap-2">
@@ -999,7 +999,7 @@ export default function AdminDestinationEditor() {
           </div>
         </div>
 
-        {/* SECTION 5: Local Food & Culinary Recommendations */}
+        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
           <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
             <div className="flex items-center gap-2">
@@ -1077,7 +1077,7 @@ export default function AdminDestinationEditor() {
           </div>
         </div>
 
-        {/* Bottom Action Footer */}
+        
         <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/80">
           <button
             type="button"

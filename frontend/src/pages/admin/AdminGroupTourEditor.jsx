@@ -295,7 +295,7 @@ export default function AdminGroupTourEditor() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Core Tour Package Specs */}
+        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
           <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
             <Compass className="size-4 text-orange-400" />
@@ -429,7 +429,7 @@ export default function AdminGroupTourEditor() {
               </div>
             </div>
 
-            {/* Primary Cover Image */}
+            
             <div className="md:col-span-4 space-y-1">
               <label className="text-[11px] font-bold text-zinc-300">Tour Primary Cover Photo *</label>
               <div className="relative h-56 w-full rounded-xl border border-dashed border-border hover:border-orange-500/40 bg-secondary/30 flex flex-col items-center justify-center overflow-hidden transition-colors">
@@ -455,7 +455,7 @@ export default function AdminGroupTourEditor() {
             </div>
           </div>
 
-          {/* SECTION 2: Package Inclusions Builder */}
+          
           <div className="pt-4 border-t border-border/70 space-y-3">
             <label className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
               <ShieldCheck className="size-3.5 text-orange-400" />
@@ -506,7 +506,7 @@ export default function AdminGroupTourEditor() {
             </div>
           </div>
 
-          {/* Multiple Tour Gallery Images */}
+          
           <div className="pt-3 border-t border-border/70 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-foreground flex items-center gap-1.5">

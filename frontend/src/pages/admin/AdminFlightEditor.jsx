@@ -288,7 +288,7 @@ export default function AdminFlightEditor() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Core Specs Card */}
+        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
           <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
             <Plane className="size-4 text-orange-400" />
@@ -380,7 +380,7 @@ export default function AdminFlightEditor() {
               </div>
             </div>
 
-            {/* Airplane Primary Cover Upload */}
+            
             <div className="md:col-span-4 space-y-1">
               <label className="text-[11px] font-bold text-zinc-300">Airplane Primary Photo *</label>
               <div className="relative h-44 w-full rounded-xl border border-dashed border-border hover:border-orange-500/40 bg-secondary/30 flex flex-col items-center justify-center overflow-hidden transition-colors">
@@ -406,7 +406,7 @@ export default function AdminFlightEditor() {
             </div>
           </div>
 
-          {/* SECTION 2: Route Origin & Destination Geographics */}
+          
           <div className="pt-4 border-t border-border/70 space-y-3">
             <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
               <Globe className="size-3.5 text-orange-400" />
@@ -414,7 +414,7 @@ export default function AdminFlightEditor() {
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Origin Departure */}
+              
               <div className="p-3.5 rounded-xl bg-secondary/30 border border-border space-y-3">
                 <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider block">
                   Departure Origin
@@ -450,7 +450,7 @@ export default function AdminFlightEditor() {
                 </div>
               </div>
 
-              {/* Destination Arrival */}
+              
               <div className="p-3.5 rounded-xl bg-secondary/30 border border-border space-y-3">
                 <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">
                   Arrival Destination
@@ -521,7 +521,7 @@ export default function AdminFlightEditor() {
             </div>
           </div>
 
-          {/* Multiple Cabin & Aircraft Interior Photos */}
+          
           <div className="pt-3 border-t border-border/70 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-foreground flex items-center gap-1.5">

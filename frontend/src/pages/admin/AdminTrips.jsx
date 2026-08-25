@@ -46,9 +46,6 @@ export default function AdminTrips() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const limit = 8;
-
-  // Selected Trip for Inspection Drawer / Modal
   const [inspectTrip, setInspectTrip] = useState(null);
 
   const loadCountries = async () => {
@@ -252,7 +249,7 @@ export default function AdminTrips() {
               className="rounded-2xl border border-border/80 bg-[#121215] hover:border-orange-500/40 transition-all overflow-hidden flex flex-col justify-between shadow-md group"
             >
               <div>
-                {/* Cover Image / Destination Header */}
+                
                 <div className="relative h-36 w-full overflow-hidden bg-secondary/30">
                   <img
                     src={trip.coverImage?.url || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=500&auto=format&fit=crop&q=80'}
@@ -296,7 +293,7 @@ export default function AdminTrips() {
                     </p>
                   </div>
 
-                  {/* Creator Info */}
+                  
                   <div className="flex items-center justify-between text-[10px] p-2 rounded-lg bg-secondary/30 border border-border">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <div className="size-5 rounded-full bg-orange-500/20 text-orange-400 font-bold text-[9px] flex items-center justify-center shrink-0">
@@ -311,7 +308,7 @@ export default function AdminTrips() {
                 </div>
               </div>
 
-              {/* Action Buttons Strip */}
+              
               <div className="p-3 pt-0 flex items-center gap-1.5 border-t border-border/70 mt-1 text-[11px]">
                 <button
                   onClick={() => setInspectTrip(trip)}
@@ -359,7 +356,7 @@ export default function AdminTrips() {
         </div>
       )}
 
-      {/* Pagination */}
+      
       {totalPages > 1 && (
         <div className="p-3.5 rounded-2xl bg-[#121215] border border-border flex items-center justify-between text-xs shadow-md">
           <span className="text-muted-foreground">
@@ -416,7 +413,7 @@ export default function AdminTrips() {
         </div>
       )}
 
-      {/* Comprehensive Trip Inspection Modal */}
+      
       {inspectTrip && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 select-none animate-in fade-in duration-200">
           <div className="max-w-3xl w-full rounded-3xl overflow-hidden bg-[#121215] border border-border/80 shadow-2xl flex flex-col max-h-[90vh]">
@@ -455,7 +452,7 @@ export default function AdminTrips() {
                 <p className="text-zinc-300 leading-relaxed text-xs">{inspectTrip.overview}</p>
               </div>
 
-              {/* Day by Day Schedule Highlights */}
+              
               <div className="space-y-3">
                 <span className="text-xs font-bold text-foreground block uppercase tracking-wider">
                   Day-by-Day Itinerary Activities ({inspectTrip.days?.length || 0} Days)

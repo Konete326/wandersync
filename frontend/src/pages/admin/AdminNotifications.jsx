@@ -241,7 +241,7 @@ export default function AdminNotifications() {
         )}
       </div>
 
-      {/* Mandatory Pagination Section */}
+      
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2.5 border-t border-border/80 text-xs text-muted-foreground">
         <div>
           Showing <strong className="text-foreground">{filtered.length === 0 ? 0 : (page - 1) * itemsPerPage + 1}</strong> to{' '}

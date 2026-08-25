@@ -152,7 +152,7 @@ export default function AdminCountries() {
         </div>
       </div>
 
-      {/* 6-Card Grid */}
+      
       {loading ? (
         <div className="py-24 flex items-center justify-center">
           <Loader text="Loading countries catalog..." />
@@ -216,7 +216,7 @@ export default function AdminCountries() {
                     {item.description || `Explore the iconic sights, culture, and hubs of ${item.name}.`}
                   </p>
 
-                  {/* Multi-Photo Thumbnails */}
+                  
                   {item.images && item.images.length > 0 && (
                     <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
                       {item.images.slice(0, 5).map((img, idx) => (
@@ -232,7 +232,7 @@ export default function AdminCountries() {
                     </div>
                   )}
 
-                  {/* Popular Cities Badges */}
+                  
                   {item.popularCities && item.popularCities.length > 0 && (
                     <div className="flex flex-wrap gap-1 pt-1">
                       {item.popularCities.map((c, i) => (
@@ -276,7 +276,7 @@ export default function AdminCountries() {
         </div>
       )}
 
-      {/* Mandatory 6-Card Bottom Pagination */}
+      
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/80 text-xs text-muted-foreground">
         <div>
           Showing <strong className="text-foreground">{total === 0 ? 0 : (page - 1) * 6 + 1}</strong> to{' '}

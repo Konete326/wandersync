@@ -229,7 +229,7 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* Users Moderation Table */}
+      
       {loading ? (
         <div className="py-24 flex items-center justify-center">
           <Loader text="Loading live user directory..." />
@@ -373,7 +373,7 @@ export default function AdminUsers() {
         </div>
       )}
 
-      {/* Pagination Bar */}
+      
       {totalPages > 1 && (
         <div className="p-3.5 rounded-2xl bg-[#121215] border border-border flex items-center justify-between text-xs shadow-md">
           <span className="text-muted-foreground">

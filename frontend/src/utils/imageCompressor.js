@@ -11,7 +11,6 @@ export const compressImage = (file, options = {}) => {
       return resolve(file);
     }
 
-    // Skip compression if already very small (under 120KB)
     if (file.size < 120 * 1024 && !file.type.includes('png')) {
       return resolve(file);
     }

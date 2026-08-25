@@ -25,7 +25,6 @@ export const getAdminNotifications = async () => {
   return response.data;
 };
 
-// Full Trips Management
 export const getAdminAllTrips = async (page = 1, limit = 8, search = '', visibility = 'all', country = 'All', featured = '') => {
   const params = new URLSearchParams({ page, limit });
   if (search) params.append('search', search);
@@ -52,7 +51,6 @@ export const deleteTripAdmin = async (id) => {
   return response.data;
 };
 
-// Full Users Management
 export const getAdminAllUsers = async (page = 1, limit = 10, search = '', role = 'All', status = 'All') => {
   const params = new URLSearchParams({ page, limit });
   if (search) params.append('search', search);
@@ -88,7 +86,6 @@ export const deleteUserAdmin = async (id) => {
   return response.data;
 };
 
-// Active Service Customers Management
 export const getAdminCustomers = async (page = 1, limit = 10, search = '', paymentStatus = 'All') => {
   const params = new URLSearchParams({ page, limit });
   if (search) params.append('search', search);

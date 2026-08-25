@@ -155,7 +155,7 @@ export default function AdminVehicles() {
         </div>
       </div>
 
-      {/* 6-Card Grid */}
+      
       {loading ? (
         <div className="py-24 flex items-center justify-center">
           <Loader text="Loading transport fleet..." />
@@ -231,7 +231,7 @@ export default function AdminVehicles() {
                     </span>
                   </div>
 
-                  {/* Multi-Photo Thumbnails */}
+                  
                   {item.images && item.images.length > 0 && (
                     <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
                       {item.images.slice(0, 5).map((img, idx) => (
@@ -276,7 +276,7 @@ export default function AdminVehicles() {
         </div>
       )}
 
-      {/* Mandatory 6-Card Bottom Pagination */}
+      
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/80 text-xs text-muted-foreground">
         <div>
           Showing <strong className="text-foreground">{total === 0 ? 0 : (page - 1) * 6 + 1}</strong> to{' '}

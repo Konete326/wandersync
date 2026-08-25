@@ -236,7 +236,7 @@ export default function AdminGallery() {
         </div>
       )}
 
-      {/* Mandatory Pagination Section */}
+      
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/80 text-xs text-muted-foreground">
         <div>
           Showing <strong className="text-foreground">{total === 0 ? 0 : (page - 1) * limit + 1}</strong> to{' '}
@@ -332,7 +332,7 @@ export default function AdminGallery() {
                 />
               </div>
 
-              {/* Traveler Essentials Summary */}
+              
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-secondary/40 p-3 rounded-xl border border-border text-[11px]">
                 <div>
                   <span className="text-muted-foreground flex items-center gap-1">
@@ -364,7 +364,7 @@ export default function AdminGallery() {
                 {inspectItem.description || 'No description provided.'}
               </div>
 
-              {/* Tourist Attractions */}
+              
               <div className="space-y-2">
                 <h4 className="font-bold text-foreground flex items-center gap-1.5">
                   <Navigation className="size-3.5 text-orange-400" />
@@ -386,7 +386,7 @@ export default function AdminGallery() {
                 </div>
               </div>
 
-              {/* Hotels */}
+              
               <div className="space-y-2 pt-2.5 border-t border-border/70">
                 <h4 className="font-bold text-foreground flex items-center gap-1.5">
                   <Building className="size-3.5 text-orange-400" />
@@ -412,7 +412,7 @@ export default function AdminGallery() {
                 </div>
               </div>
 
-              {/* Foods */}
+              
               {inspectItem.localFoods?.length > 0 && (
                 <div className="space-y-2 pt-2.5 border-t border-border/70">
                   <h4 className="font-bold text-foreground flex items-center gap-1.5">

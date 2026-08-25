@@ -238,7 +238,7 @@ export default function AdminCountryEditor() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Core Geography Card */}
+        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
           <div className="flex items-center gap-2 border-b border-border/70 pb-2.5">
             <Globe className="size-4 text-orange-400" />
@@ -333,7 +333,7 @@ export default function AdminCountryEditor() {
               </div>
             </div>
 
-            {/* Cover Photo */}
+            
             <div className="md:col-span-4 space-y-1">
               <label className="text-[11px] font-bold text-zinc-300">Country Cover Photo *</label>
               <div className="relative h-44 w-full rounded-xl border border-dashed border-border hover:border-orange-500/40 bg-secondary/30 flex flex-col items-center justify-center overflow-hidden transition-colors">
@@ -359,7 +359,7 @@ export default function AdminCountryEditor() {
             </div>
           </div>
 
-          {/* Multi-Photo Scenic Gallery */}
+          
           <div className="pt-3 border-t border-border/70 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -397,7 +397,7 @@ export default function AdminCountryEditor() {
           </div>
         </div>
 
-        {/* Popular Cities & Hubs */}
+        
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-3 shadow-md">
           <div className="flex items-center justify-between border-b border-border/70 pb-2.5">
             <div className="flex items-center gap-2">
@@ -467,7 +467,7 @@ export default function AdminCountryEditor() {
           </div>
         </div>
 
-        {/* Footer */}
+        
         <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/80">
           <button
             type="button"

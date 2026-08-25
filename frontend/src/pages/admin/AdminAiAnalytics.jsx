@@ -139,9 +139,9 @@ export default function AdminAiAnalytics() {
         </div>
       </div>
 
-      {/* Model Health & Task Breakdown */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Model Engine Status */}
+        
         <div className="p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
           <div className="flex items-center justify-between border-b border-border/70 pb-3">
             <div className="flex items-center gap-2">
@@ -173,7 +173,7 @@ export default function AdminAiAnalytics() {
           </div>
         </div>
 
-        {/* Task Inferences Distribution */}
+        
         <div className="p-5 rounded-2xl bg-[#121215] border border-border/80 space-y-4 shadow-md">
           <div className="flex items-center justify-between border-b border-border/70 pb-3">
             <div className="flex items-center gap-2">

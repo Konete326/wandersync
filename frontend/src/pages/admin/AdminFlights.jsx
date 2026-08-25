@@ -210,7 +210,7 @@ export default function AdminFlights() {
               className="rounded-2xl border border-border/80 bg-[#121215] hover:border-orange-500/40 transition-all overflow-hidden flex flex-col justify-between shadow-md group"
             >
               <div>
-                {/* Airplane Cover Photo */}
+                
                 <div className="relative h-44 w-full overflow-hidden bg-secondary/30">
                   <img
                     src={flight.coverImage || flight.images?.[0]}
@@ -226,7 +226,7 @@ export default function AdminFlights() {
                 </div>
 
                 <div className="p-4 space-y-3">
-                  {/* Airline & Aircraft Header */}
+                  
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="text-sm font-bold text-foreground leading-tight">{flight.airline}</h3>
@@ -237,7 +237,7 @@ export default function AdminFlights() {
                     </span>
                   </div>
 
-                  {/* Route & Airport Strip */}
+                  
                   <div className="p-3 rounded-xl bg-secondary/30 border border-border flex items-center justify-between text-xs">
                     <div className="space-y-0.5 text-left">
                       <span className="text-base font-extrabold text-foreground font-mono">{flight.originAirport}</span>
@@ -260,7 +260,7 @@ export default function AdminFlights() {
                     </div>
                   </div>
 
-                  {/* Baggage & Specs */}
+                  
                   <div className="flex items-center gap-2 text-[10px] text-muted-foreground pt-1">
                     <Luggage className="size-3 text-orange-400 shrink-0" />
                     <span className="truncate">{flight.baggage}</span>
@@ -268,7 +268,7 @@ export default function AdminFlights() {
                 </div>
               </div>
 
-              {/* Bottom Card Actions */}
+              
               <div className="p-4 pt-0 border-t border-border/70 mt-2 flex items-center justify-between gap-2">
                 <button
                   onClick={() => navigate(`/admin/flights/edit/${flight._id}`)}
@@ -291,7 +291,7 @@ export default function AdminFlights() {
         </div>
       )}
 
-      {/* Pagination Bar */}
+      
       {totalPages > 1 && (
         <div className="p-3.5 rounded-2xl bg-[#121215] border border-border flex items-center justify-between text-xs shadow-md">
           <span className="text-muted-foreground">

@@ -56,7 +56,7 @@ export default function AdminDashboard() {
           <Route path="/employees" element={<AdminEmployees />} />
           <Route path="/community" element={<AdminCommunity />} />
 
-          {/* Travel Catalog & Fleet Suite */}
+          
           <Route path="/countries" element={<AdminCountries />} />
           <Route path="/countries/new" element={<AdminCountryEditor />} />
           <Route path="/countries/edit/:id" element={<AdminCountryEditor />} />
@@ -83,7 +83,7 @@ export default function AdminDashboard() {
           <Route path="/destinations/create" element={<AdminDestinationEditor />} />
           <Route path="/destinations/edit/:id" element={<AdminDestinationEditor />} />
 
-          {/* AI, Expenses & System */}
+          
           <Route path="/ai-analytics" element={<AdminAiAnalytics />} />
           <Route path="/expenses" element={<AdminExpenses />} />
           <Route path="/notifications" element={<AdminNotifications />} />

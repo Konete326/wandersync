@@ -8,10 +8,7 @@ import { XIcon } from "lucide-react";
 const latestChange = {
     badge: "CHANGELOG",
     title: "Product update",
-
-    // TIP: Use a single line of text for the description. (max 5 words)
     description: "Performance boosts and UI polish.",
-
     readMore: { href: "#", label: "Learn more" }
 };
 

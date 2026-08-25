@@ -48,17 +48,14 @@ export default function DestinationExplorer() {
   const [destination, setDestination] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Live related collections
   const [hotels, setHotels] = useState([]);
   const [spots, setSpots] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [flights, setFlights] = useState([]);
   const [countryInfo, setCountryInfo] = useState(null);
 
-  // Selected city filter within country
   const [selectedCity, setSelectedCity] = useState('');
 
-  // Trip Expense Wizard State
   const [tripDays, setTripDays] = useState(5);
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -67,7 +64,6 @@ export default function DestinationExplorer() {
   const [dailyFoodBudget, setDailyFoodBudget] = useState(40);
   const [travelersCount, setTravelersCount] = useState(2);
 
-  // Load Primary Destination Data
   useEffect(() => {
     const loadDestinationData = async () => {
       setLoading(true);
@@ -90,7 +86,6 @@ export default function DestinationExplorer() {
     loadDestinationData();
   }, [id]);
 
-  // Load Live Connected Catalog (Hotels, Spots, Vehicles, Flights, Country)
   useEffect(() => {
     if (!destination?.country) return;
 
@@ -98,7 +93,6 @@ export default function DestinationExplorer() {
       try {
         const targetCity = selectedCity || destination.city || '';
         
-        // Parallel queries to live database
         const [hotelsRes, spotsRes, vehiclesRes, flightsRes, countriesRes] = await Promise.allSettled([
           fetchHotels(1, 20, '', destination.country, targetCity),
           fetchSpots(1, 30, '', destination.country, targetCity),
@@ -152,7 +146,6 @@ export default function DestinationExplorer() {
     loadConnectedCatalog();
   }, [destination, selectedCity]);
 
-  // Extract numerical price from string like "$180/night" or "180"
   const parseRate = (str, fallback = 0) => {
     if (!str) return fallback;
     if (typeof str === 'number') return str;
@@ -160,23 +153,18 @@ export default function DestinationExplorer() {
     return match ? parseFloat(match[0]) : fallback;
   };
 
-  // Calculated Live Expenses
   const calculatedExpenses = useMemo(() => {
     const nights = Math.max(1, tripDays - 1);
     
-    // Hotel calculation
     const hotelNightly = selectedHotel ? parseRate(selectedHotel.pricePerNight, 150) : 0;
     const totalHotel = hotelNightly * nights;
 
-    // Vehicle calculation
     const vehicleDaily = selectedVehicle ? parseRate(selectedVehicle.pricePerDay, 70) : 0;
     const totalVehicle = vehicleDaily * tripDays;
 
-    // Flight calculation
     const flightSeatRate = selectedFlight ? parseRate(selectedFlight.price, 450) : 0;
     const totalFlight = flightSeatRate * travelersCount;
 
-    // Spots Ticket calculation
     const selectedSpotsList = spots.filter((s) => selectedSpotIds.includes(s._id));
     const totalTicketsPerPerson = selectedSpotsList.reduce((acc, spot) => {
       const price = parseRate(spot.ticketPrice, 0);
@@ -184,10 +172,8 @@ export default function DestinationExplorer() {
     }, 0);
     const totalTickets = totalTicketsPerPerson * travelersCount;
 
-    // Food & Dining calculation
     const totalFood = dailyFoodBudget * tripDays * travelersCount;
 
-    // Grand total
     const grandTotal = totalHotel + totalVehicle + totalFlight + totalTickets + totalFood;
 
     return {
@@ -244,7 +230,7 @@ export default function DestinationExplorer() {
 
   return (
     <div className="w-full min-h-screen bg-[#09090b] text-[#fafafa] font-sans pb-20 select-none">
-      {/* Top Breadcrumb & Actions Bar */}
+      
       <div className="border-b border-border/70 bg-[#121215]/90 backdrop-blur-xl sticky top-14 z-30 px-4 py-2.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs text-muted-foreground truncate">
@@ -279,7 +265,7 @@ export default function DestinationExplorer() {
         </div>
       </div>
 
-      {/* Hero Destination Banner */}
+      
       <div className="relative h-72 sm:h-96 w-full overflow-hidden border-b border-border/80">
         <img
           src={destination.imageUrl}
@@ -313,7 +299,7 @@ export default function DestinationExplorer() {
             </p>
           </div>
 
-          {/* Key Quick Facts Pills */}
+          
           <div className="flex items-center gap-2 bg-[#121215]/80 backdrop-blur-md p-2.5 rounded-xl border border-border shrink-0 shadow-lg">
             <div className="px-2.5 py-1 text-center border-r border-border/70">
               <span className="text-[10px] text-muted-foreground block">Best Season</span>
@@ -331,10 +317,10 @@ export default function DestinationExplorer() {
         </div>
       </div>
 
-      {/* Main Container */}
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
         
-        {/* City Filter / Selector Bar within Country */}
+        
         {countryInfo?.popularCities?.length > 0 && (
           <div className="p-3 rounded-xl bg-[#121215] border border-border flex items-center gap-2 overflow-x-auto no-scrollbar shadow-sm">
             <span className="text-xs font-bold text-muted-foreground shrink-0 flex items-center gap-1">
@@ -366,7 +352,7 @@ export default function DestinationExplorer() {
           </div>
         )}
 
-        {/* Navigation Tabs (5-Tier Unified Suite) */}
+        
         <div className="flex items-center gap-2 border-b border-border/80 pb-2 overflow-x-auto no-scrollbar">
           {[
             { id: 'overview', label: '1. Overview & Photos', icon: Images, count: allPhotos.length },
@@ -404,7 +390,7 @@ export default function DestinationExplorer() {
           })}
         </div>
 
-        {/* TAB 1: OVERVIEW & SCENIC GALLERY */}
+        
         {activeTab === 'overview' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div className="space-y-2">
@@ -421,7 +407,7 @@ export default function DestinationExplorer() {
               </div>
             </div>
 
-            {/* Travel Essentials & Logistics 3-Column Grid */}
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 rounded-2xl bg-[#121215] border border-border space-y-3 shadow-md">
                 <div className="flex items-center gap-2 border-b border-border/70 pb-2">
@@ -492,7 +478,7 @@ export default function DestinationExplorer() {
           </div>
         )}
 
-        {/* TAB 2: LIVE VERIFIED HOTELS */}
+        
         {activeTab === 'hotels' && (
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="flex items-center justify-between">
@@ -603,7 +589,7 @@ export default function DestinationExplorer() {
           </div>
         )}
 
-        {/* TAB 3: LIVE TOURIST SPOTS & TICKETS */}
+        
         {activeTab === 'spots' && (
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="flex items-center justify-between">
@@ -683,7 +669,7 @@ export default function DestinationExplorer() {
           </div>
         )}
 
-        {/* TAB 4: LIVE TRANSPORT & VEHICLE FLEET */}
+        
         {activeTab === 'vehicles' && (
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="flex items-center justify-between">
@@ -784,7 +770,7 @@ export default function DestinationExplorer() {
           </div>
         )}
 
-        {/* TAB 5: LIVE SCHEDULED FLIGHTS & AIRLINES */}
+        
         {activeTab === 'flights' && (
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="flex items-center justify-between">
@@ -843,7 +829,7 @@ export default function DestinationExplorer() {
                             </span>
                           </div>
 
-                          {/* Airport Flight Path */}
+                          
                           <div className="p-3 rounded-xl bg-secondary/30 border border-border flex items-center justify-between text-xs">
                             <div className="space-y-0.5 text-left">
                               <span className="text-base font-extrabold text-foreground font-mono">{flt.originAirport}</span>
@@ -906,7 +892,7 @@ export default function DestinationExplorer() {
           </div>
         )}
 
-        {/* TAB 6: INTERACTIVE LIVE EXPENSE & BUDGET CALCULATOR */}
+        
         {activeTab === 'calculator' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div className="p-6 rounded-2xl bg-[#121215] border border-orange-500/30 shadow-2xl space-y-6">
@@ -931,9 +917,9 @@ export default function DestinationExplorer() {
                 </GlowingButton>
               </div>
 
-              {/* Wizard Interactive Sliders / Pickers */}
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {/* Trip Duration */}
+                
                 <div className="p-4 rounded-xl bg-secondary/40 border border-border space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-zinc-300">Trip Duration</label>
@@ -950,7 +936,7 @@ export default function DestinationExplorer() {
                   <span className="text-[10px] text-muted-foreground block">Slide to adjust travel days & stay nights</span>
                 </div>
 
-                {/* Travelers Count */}
+                
                 <div className="p-4 rounded-xl bg-secondary/40 border border-border space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-zinc-300">Number of Travelers</label>
@@ -975,7 +961,7 @@ export default function DestinationExplorer() {
                   <span className="text-[10px] text-muted-foreground block">Affects flights, tickets & dining calculation</span>
                 </div>
 
-                {/* Daily Meals / Food Budget */}
+                
                 <div className="p-4 rounded-xl bg-secondary/40 border border-border space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-zinc-300">Daily Dining & Food / Person</label>
@@ -1005,9 +991,9 @@ export default function DestinationExplorer() {
                 </div>
               </div>
 
-              {/* Selected Config Cards (Hotels + Transport + Flights) */}
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Stay Summary */}
+                
                 <div className="p-4 rounded-xl bg-secondary/30 border border-border space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
@@ -1036,7 +1022,7 @@ export default function DestinationExplorer() {
                   )}
                 </div>
 
-                {/* Rental Vehicle Summary */}
+                
                 <div className="p-4 rounded-xl bg-secondary/30 border border-border space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
@@ -1065,7 +1051,7 @@ export default function DestinationExplorer() {
                   )}
                 </div>
 
-                {/* Flight Summary */}
+                
                 <div className="p-4 rounded-xl bg-secondary/30 border border-border space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
@@ -1095,7 +1081,7 @@ export default function DestinationExplorer() {
                 </div>
               </div>
 
-              {/* Grand Total Expense Breakdown Card */}
+              
               <div className="p-5 rounded-2xl bg-gradient-to-br from-orange-950/30 via-[#161412] to-secondary/60 border border-orange-500/40 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
                   <div>
