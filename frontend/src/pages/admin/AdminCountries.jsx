@@ -17,7 +17,7 @@ import { fetchCountries, deleteCountry } from '@/services/countryService';
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
-import LazyImage from '@/components/common/LazyImage';
+import CardGallerySlider from '@/components/common/CardGallerySlider';
 import { getCountryFlag } from '@/utils/worldCountriesData';
 
 import {
@@ -222,25 +222,25 @@ export default function AdminCountries() {
                 className="rounded-xl bg-[#121215] border border-border/80 overflow-hidden shadow-xs hover:border-orange-500/40 transition-all flex flex-col justify-between group"
               >
                 <div>
-                  <div className="relative h-28 sm:h-32 w-full overflow-hidden">
-                    <LazyImage
-                      src={item.coverImage}
-                      alt={item.name}
-                      containerClassName="w-full h-full"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#121215] via-black/20 to-transparent pointer-events-none" />
-                    <div className="absolute top-2 left-2 right-2 flex items-center justify-between z-10">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-black/75 backdrop-blur-md text-white border border-white/15 flex items-center gap-1.5 shadow-xs">
-                        <span className="text-sm leading-none">{getCountryFlag(item.code || item.name)}</span>
-                        <span className="uppercase text-[9px]">{item.continent}</span>
-                      </span>
-                      {item.code && (
-                        <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-orange-500 text-zinc-950">
-                          {item.code}
+                  <CardGallerySlider
+                    coverImage={item.coverImage}
+                    images={item.images}
+                    alt={item.name}
+                    containerClassName="h-28 sm:h-32 w-full"
+                    overlayChildren={
+                      <div className="absolute top-2 left-2 right-2 flex items-center justify-between z-10 pointer-events-none">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-black/75 backdrop-blur-md text-white border border-white/15 flex items-center gap-1.5 shadow-xs">
+                          <span className="text-sm leading-none">{getCountryFlag(item.code || item.name)}</span>
+                          <span className="uppercase text-[9px]">{item.continent}</span>
                         </span>
-                      )}
-                    </div>
-                  </div>
+                        {item.code && (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-orange-500 text-zinc-950">
+                            {item.code}
+                          </span>
+                        )}
+                      </div>
+                    }
+                  />
 
                   <div className="p-3 space-y-1.5">
                     <div className="flex items-center justify-between">

@@ -16,6 +16,8 @@ import { fetchGalleryItems } from '../services/galleryService';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import Loader from '../components/common/Loader';
+import CardGallerySlider from '../components/common/CardGallerySlider';
+import { getCountryFlag } from '@/utils/worldCountriesData';
 
 import {
   subscribeRealtimeUpdate,
@@ -175,22 +177,25 @@ export default function Gallery() {
                   className="uiverse-card group cursor-pointer"
                   onClick={() => navigate(`/gallery/${item._id}`)}
                 >
-                  <div
-                    className="uiverse-card-header"
-                    style={{ backgroundImage: `url(${item.imageUrl})` }}
-                  >
-                    <div className="uiverse-card-header-bar">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-white border border-white/10 font-sans flex items-center gap-1">
-                        <Globe className="size-2.5 text-orange-400" />
-                        <span>{item.country}</span>
-                      </span>
-                      {item.city && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-orange-950/80 backdrop-blur-md text-orange-300 border border-orange-500/30">
-                          {item.city}
+                  <CardGallerySlider
+                    coverImage={item.imageUrl}
+                    images={item.images}
+                    alt={item.title}
+                    containerClassName="h-48 w-full rounded-t-2xl"
+                    overlayChildren={
+                      <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none z-10">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-white border border-white/10 font-sans flex items-center gap-1.5 shadow-xs">
+                          <span className="text-sm leading-none">{getCountryFlag(item.country)}</span>
+                          <span>{item.country}</span>
                         </span>
-                      )}
-                    </div>
-                  </div>
+                        {item.city && (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-orange-950/80 backdrop-blur-md text-orange-300 border border-orange-500/30">
+                            {item.city}
+                          </span>
+                        )}
+                      </div>
+                    }
+                  />
 
                   <div className="uiverse-card-body font-sans">
                     <span className="uiverse-card-name group-hover:text-orange-400 transition-colors truncate">

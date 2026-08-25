@@ -19,6 +19,8 @@ import { fetchVehicles, deleteVehicle } from '@/services/vehicleService';
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
+import CardGallerySlider from '@/components/common/CardGallerySlider';
+import { getCountryFlag } from '@/utils/worldCountriesData';
 
 import {
   subscribeRealtimeUpdate,
@@ -222,20 +224,23 @@ export default function AdminVehicles() {
               className="rounded-2xl bg-[#121215] border border-border/80 overflow-hidden shadow-sm hover:border-orange-500/40 transition-all flex flex-col justify-between group"
             >
               <div>
-                <div
-                  className="relative h-44 w-full bg-cover bg-center overflow-hidden"
-                  style={{ backgroundImage: `url(${item.coverImage})` }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#121215] via-black/20 to-transparent" />
-                  <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between">
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-black/70 backdrop-blur-md text-white border border-white/10">
-                      {item.vehicleType}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-orange-950/80 backdrop-blur-md text-orange-300 border border-orange-500/30">
-                      {item.status || 'Available'}
-                    </span>
-                  </div>
-                </div>
+                <CardGallerySlider
+                  coverImage={item.coverImage}
+                  images={item.images}
+                  alt={item.name}
+                  containerClassName="h-44 w-full"
+                  overlayChildren={
+                    <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none z-10">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-black/75 backdrop-blur-md text-white border border-white/10 flex items-center gap-1.5 shadow-xs">
+                        <span className="text-sm leading-none">{getCountryFlag(item.country)}</span>
+                        <span>{item.vehicleType}</span>
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-orange-950/80 backdrop-blur-md text-orange-300 border border-orange-500/30">
+                        {item.status || 'Available'}
+                      </span>
+                    </div>
+                  }
+                />
 
                 <div className="p-4 space-y-2.5">
                   <div className="flex items-center justify-between">

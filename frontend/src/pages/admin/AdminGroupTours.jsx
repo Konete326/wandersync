@@ -24,6 +24,8 @@ import { fetchCountries } from '@/services/countryService';
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
+import CardGallerySlider from '@/components/common/CardGallerySlider';
+import { getCountryFlag } from '@/utils/worldCountriesData';
 
 import {
   subscribeRealtimeUpdate,
@@ -263,33 +265,39 @@ export default function AdminGroupTours() {
                 className="rounded-2xl border border-border/80 bg-[#121215] hover:border-orange-500/40 transition-all overflow-hidden flex flex-col justify-between shadow-md group"
               >
                 <div>
-                  <div className="relative h-44 w-full overflow-hidden bg-secondary/30">
-                    <img
-                      src={tour.coverImage || tour.images?.[0]}
-                      alt={tour.title}
-                      className="size-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-orange-400 text-[10px] font-bold border border-orange-500/30">
-                      {tour.category || 'Group Tour'}
-                    </div>
+                  <CardGallerySlider
+                    coverImage={tour.coverImage}
+                    images={tour.images}
+                    alt={tour.title}
+                    containerClassName="h-44 w-full"
+                    overlayChildren={
+                      <>
+                        <div className="absolute top-2.5 left-2.5 flex items-center gap-1 z-10 pointer-events-none">
+                          <span className="px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-white text-[10px] font-bold border border-white/10 flex items-center gap-1">
+                            <span className="text-sm leading-none">{getCountryFlag(tour.country)}</span>
+                            <span>{tour.category || 'Group Tour'}</span>
+                          </span>
+                        </div>
 
-                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1">
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold backdrop-blur-sm ${
-                        tour.status === 'Sold Out'
-                          ? 'bg-rose-950/80 text-rose-400 border border-rose-500/30'
-                          : tour.status === 'Filling Fast'
-                          ? 'bg-amber-950/80 text-amber-300 border border-amber-500/30'
-                          : 'bg-emerald-950/80 text-emerald-400 border border-emerald-500/30'
-                      }`}>
-                        {tour.status}
-                      </span>
-                    </div>
+                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1 z-10 pointer-events-none">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold backdrop-blur-sm ${
+                            tour.status === 'Sold Out'
+                              ? 'bg-rose-950/80 text-rose-400 border border-rose-500/30'
+                              : tour.status === 'Filling Fast'
+                              ? 'bg-amber-950/80 text-amber-300 border border-amber-500/30'
+                              : 'bg-emerald-950/80 text-emerald-400 border border-emerald-500/30'
+                          }`}>
+                            {tour.status}
+                          </span>
+                        </div>
 
-                    <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
-                      <span>{tour.durationDays} Days / {Math.max(1, tour.durationDays - 1)} Nights</span>
-                      <span>${tour.pricePerPerson} / Person</span>
-                    </div>
-                  </div>
+                        <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 pointer-events-none z-10">
+                          <span>{tour.durationDays} Days / {Math.max(1, tour.durationDays - 1)} Nights</span>
+                          <span>${tour.pricePerPerson} / Person</span>
+                        </div>
+                      </>
+                    }
+                  />
 
                   <div className="p-4 space-y-3">
                     <div>
