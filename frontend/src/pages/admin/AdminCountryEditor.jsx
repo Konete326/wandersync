@@ -131,6 +131,8 @@ export default function AdminCountryEditor() {
 
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState('');
+  const [coverMode, setCoverMode] = useState('upload');
+  const coverInputRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -202,6 +204,7 @@ export default function AdminCountryEditor() {
     }));
     if (preset.coverImage) {
       setCoverPreview(preset.coverImage);
+      setCoverFile(null);
     }
     setCountryDropdownOpen(false);
     if (notify) {
@@ -218,12 +221,40 @@ export default function AdminCountryEditor() {
     }
   };
 
-  const handleCoverChange = async (e) => {
-    const file = e.target.files?.[0];
+  const handleCoverChange = (e) => {
+    const file = e.target?.files?.[0];
     if (file) {
-      const compressed = await compressImage(file);
-      setCoverFile(compressed);
-      setCoverPreview(URL.createObjectURL(compressed));
+      setCoverFile(file);
+      try {
+        const previewUrl = URL.createObjectURL(file);
+        setCoverPreview(previewUrl);
+      } catch {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setCoverPreview(event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+      setFormData((prev) => ({ ...prev, coverImage: '' }));
+    }
+  };
+
+  const handleCoverDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer?.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setCoverFile(file);
+      try {
+        const previewUrl = URL.createObjectURL(file);
+        setCoverPreview(previewUrl);
+      } catch {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setCoverPreview(event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+      setFormData((prev) => ({ ...prev, coverImage: '' }));
     }
   };
 
@@ -327,10 +358,14 @@ export default function AdminCountryEditor() {
       body.append('images', JSON.stringify(formData.images.filter(Boolean)));
 
       if (coverFile) {
-        const compressedCover = await compressImage(coverFile);
-        body.append('image', compressedCover);
+        try {
+          const compressed = await compressImage(coverFile);
+          body.append('image', compressed);
+        } catch {
+          body.append('image', coverFile);
+        }
       } else {
-        const fallbackCover = formData.coverImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&auto=format&fit=crop&q=80';
+        const fallbackCover = formData.coverImage || coverPreview || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&auto=format&fit=crop&q=80';
         body.append('coverImage', fallbackCover);
       }
 
@@ -373,6 +408,7 @@ export default function AdminCountryEditor() {
     }));
     if (aiCover) {
       setCoverPreview(aiCover);
+      setCoverFile(null);
     }
   };
 
@@ -623,28 +659,113 @@ export default function AdminCountryEditor() {
               </div>
             </div>
 
-            <div className="md:col-span-4 space-y-1">
-              <label className="text-[11px] font-bold text-zinc-300">Country Cover Photo *</label>
-              <div className="relative h-44 w-full rounded-xl border border-dashed border-border hover:border-orange-500/40 bg-secondary/30 flex flex-col items-center justify-center overflow-hidden transition-colors">
-                {coverPreview ? (
-                  <div className="relative size-full group">
-                    <img src={coverPreview} alt="Cover Preview" className="size-full object-cover" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <label className="px-2.5 py-1 rounded-lg bg-orange-500 text-zinc-950 font-bold text-xs cursor-pointer">
-                        Change Photo
-                        <input type="file" accept="image/*" onChange={handleCoverChange} className="hidden" />
-                      </label>
-                    </div>
-                  </div>
-                ) : (
-                  <label className="size-full flex flex-col items-center justify-center p-4 cursor-pointer text-center space-y-1.5">
-                    <UploadCloud className="size-6 text-orange-400" />
-                    <span className="text-xs font-bold text-foreground">Upload Cover Image</span>
-                    <span className="text-[10px] text-muted-foreground">PNG, JPG, WebP</span>
-                    <input type="file" accept="image/*" onChange={handleCoverChange} className="hidden" />
-                  </label>
-                )}
+            <div className="md:col-span-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-zinc-300">Country Cover Photo *</label>
+                <div className="flex items-center gap-1 bg-secondary/80 p-0.5 rounded-lg border border-border">
+                  <button
+                    type="button"
+                    onClick={() => setCoverMode('upload')}
+                    className={`px-2 py-0.5 text-[10px] font-bold rounded cursor-pointer transition-colors ${
+                      coverMode === 'upload' ? 'bg-orange-500 text-zinc-950 shadow-xs' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Upload File
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCoverMode('url')}
+                    className={`px-2 py-0.5 text-[10px] font-bold rounded cursor-pointer transition-colors ${
+                      coverMode === 'url' ? 'bg-orange-500 text-zinc-950 shadow-xs' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Image URL
+                  </button>
+                </div>
               </div>
+
+              {coverMode === 'url' ? (
+                <div className="space-y-2">
+                  <input
+                    type="url"
+                    value={formData.coverImage}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData((prev) => ({ ...prev, coverImage: val }));
+                      setCoverPreview(val);
+                      setCoverFile(null);
+                    }}
+                    placeholder="https://images.unsplash.com/photo-..."
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:border-orange-500/60"
+                  />
+                  {coverPreview ? (
+                    <div className="relative h-36 w-full rounded-xl overflow-hidden border border-border bg-secondary/30">
+                      <img src={coverPreview} alt="Cover Preview" className="size-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCoverPreview('');
+                          setFormData((prev) => ({ ...prev, coverImage: '' }));
+                        }}
+                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/80 hover:bg-rose-500 text-white cursor-pointer transition-colors"
+                        title="Clear URL"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleCoverDrop}
+                  className="relative h-44 w-full rounded-xl border border-dashed border-border hover:border-orange-500/40 bg-secondary/30 flex flex-col items-center justify-center overflow-hidden transition-colors"
+                >
+                  <input
+                    ref={coverInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCoverChange}
+                    className="hidden"
+                  />
+                  {coverPreview ? (
+                    <div className="relative size-full group">
+                      <img src={coverPreview} alt="Cover Preview" className="size-full object-cover" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
+                        <button
+                          type="button"
+                          onClick={() => coverInputRef.current?.click()}
+                          className="px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-400 text-zinc-950 font-bold text-xs cursor-pointer shadow-md transition-all flex items-center gap-1"
+                        >
+                          <UploadCloud className="size-3.5" />
+                          <span>Change Photo</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCoverFile(null);
+                            setCoverPreview('');
+                            setFormData((prev) => ({ ...prev, coverImage: '' }));
+                          }}
+                          className="p-1.5 rounded-lg bg-rose-500/80 hover:bg-rose-500 text-white cursor-pointer transition-colors"
+                          title="Remove Photo"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => coverInputRef.current?.click()}
+                      className="size-full flex flex-col items-center justify-center p-4 cursor-pointer text-center space-y-1.5"
+                    >
+                      <UploadCloud className="size-6 text-orange-400" />
+                      <span className="text-xs font-bold text-foreground">Click to Upload Cover Image</span>
+                      <span className="text-[10px] text-muted-foreground">PNG, JPG, WebP or Drag & Drop</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
