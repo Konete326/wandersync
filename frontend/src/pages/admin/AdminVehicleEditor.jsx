@@ -215,15 +215,62 @@ export default function AdminVehicleEditor() {
     }
   };
 
+  const normalizeVehicleType = (rawType = '', name = '') => {
+    const text = `${rawType} ${name}`.toLowerCase();
+    if (
+      text.includes('sedan') ||
+      text.includes('e-class') ||
+      text.includes('s-class') ||
+      text.includes('c-class') ||
+      text.includes('mercedes') ||
+      text.includes('bmw 7') ||
+      text.includes('bmw 5') ||
+      text.includes('audi a6') ||
+      text.includes('audi a8') ||
+      text.includes('camry') ||
+      text.includes('civic') ||
+      text.includes('accord') ||
+      text.includes('lexus es') ||
+      text.includes('lexus ls') ||
+      text.includes('rolls royce') ||
+      text.includes('bentley')
+    ) {
+      if (text.includes('g-wagon') || text.includes('g-class') || text.includes('gle') || text.includes('gls')) {
+        return 'SUV';
+      }
+      return 'Luxury Sedan';
+    }
+    if (text.includes('van') || text.includes('minibus') || text.includes('hiace') || text.includes('sprinter') || text.includes('alphard') || text.includes('vellfire') || text.includes('v-class')) {
+      return 'Van & Minibus';
+    }
+    if (text.includes('4x4') || text.includes('off-road') || text.includes('prado') || text.includes('land cruiser') || text.includes('defender') || text.includes('jeep') || text.includes('fortuner')) {
+      return '4x4 Off-Road';
+    }
+    if (text.includes('electric') || text.includes('tesla') || text.includes('taycan') || text.includes('ev') || text.includes('eqs') || text.includes('lucid')) {
+      return 'Electric';
+    }
+    if (text.includes('convertible') || text.includes('cabriolet') || text.includes('spider')) {
+      return 'Convertible';
+    }
+    if (vehicleTypes.includes(rawType)) {
+      return rawType;
+    }
+    return 'SUV';
+  };
+
   const handleAiAutofill = (data) => {
+    const resolvedType = normalizeVehicleType(data.vehicleType || data.type, data.name);
+    const resolvedPrice = typeof data.pricePerDay === 'number' ? `$${data.pricePerDay}/day` : (data.pricePerDay || formData.pricePerDay);
+    const resolvedCapacity = data.capacity ? (String(data.capacity).includes('Passenger') ? data.capacity : `${data.capacity} Passengers`) : formData.capacity;
+
     setFormData((prev) => ({
       ...prev,
       name: data.name || prev.name,
-      vehicleType: data.type || prev.vehicleType,
-      capacity: data.capacity ? `${data.capacity} Passengers` : prev.capacity,
+      vehicleType: resolvedType,
+      capacity: resolvedCapacity,
       transmission: data.transmission || prev.transmission,
       fuelType: data.fuelType || prev.fuelType,
-      pricePerDay: data.pricePerDay || prev.pricePerDay,
+      pricePerDay: resolvedPrice,
       description: data.description || prev.description,
       features: data.features?.length ? data.features : prev.features,
       coverImage: data.coverImage || prev.coverImage,
