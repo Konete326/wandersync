@@ -215,21 +215,21 @@ export default function AdminCountries() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {countries.map((item) => (
               <div
                 key={item._id}
-                className="rounded-xl bg-[#121215] border border-border/80 overflow-hidden shadow-xs hover:border-orange-500/40 transition-all flex flex-col justify-between group"
+                className="rounded-2xl bg-[#121215] border border-border/80 overflow-hidden shadow-sm hover:border-orange-500/40 transition-all flex flex-col justify-between group"
               >
                 <div>
                   <CardGallerySlider
                     coverImage={item.coverImage}
                     images={item.images}
                     alt={item.name}
-                    containerClassName="h-28 sm:h-30 w-full"
+                    containerClassName="h-44 sm:h-48 w-full"
                     overlayChildren={
-                      <div className="absolute top-2 left-2 z-10 pointer-events-none">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-black/75 backdrop-blur-md text-white border border-white/15 flex items-center gap-1.5 shadow-xs">
+                      <div className="absolute top-2.5 left-2.5 z-10 pointer-events-none">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/75 backdrop-blur-md text-white border border-white/15 flex items-center gap-1.5 shadow-xs">
                           <span className="text-sm leading-none">{getCountryFlag(item.code || item.name)}</span>
                           <span className="uppercase text-[9px]">{item.continent}</span>
                         </span>
@@ -237,24 +237,24 @@ export default function AdminCountries() {
                     }
                   />
 
-                  <div className="p-2.5 space-y-1">
+                  <div className="p-3.5 space-y-2">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-orange-400 transition-colors">
+                      <h3 className="text-sm sm:text-base font-bold text-foreground group-hover:text-orange-400 transition-colors">
                         {item.name}
                       </h3>
-                      <span className="text-[10px] text-muted-foreground font-semibold">
+                      <span className="text-xs text-muted-foreground font-semibold">
                         {item.currency}
                       </span>
                     </div>
 
-                    <p className="text-[11px] text-muted-foreground line-clamp-1 leading-relaxed">
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                       {item.description || `Explore the iconic sights, culture, and hubs of ${item.name}.`}
                     </p>
 
                     {item.popularCities && item.popularCities.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pt-0.5">
+                      <div className="flex flex-wrap gap-1.5 pt-1">
                         {item.popularCities.map((c, i) => (
-                          <span key={i} className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-secondary/80 text-zinc-300 border border-border">
+                          <span key={i} className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-secondary/80 text-zinc-300 border border-border">
                             {c.name}
                           </span>
                         ))}
