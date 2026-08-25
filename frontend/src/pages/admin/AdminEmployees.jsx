@@ -74,8 +74,7 @@ const TASK_CATEGORIES = [
 ];
 
 export default function AdminEmployees() {
-  const { showToast } = useToast();
-  const { showModal } = useModal();
+  const { showToast, showModal } = useModal();
 
   const [activeTab, setActiveTab] = useState('roster');
   const [search, setSearch] = useState('');
