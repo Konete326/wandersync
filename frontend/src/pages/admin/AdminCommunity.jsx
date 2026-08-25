@@ -10,73 +10,195 @@ import {
   Building,
   Users,
   Image as ImageIcon,
-  CheckCircle2,
-  ShieldCheck,
+  Send,
+  X,
+  Compass,
+  ArrowLeft,
   Crown,
-  RefreshCw
+  RefreshCw,
+  Eye,
+  CheckCircle2
 } from 'lucide-react';
 import {
   fetchCommunityMessages,
+  postCommunityMessage,
   deleteCommunityMessage,
-  togglePinMessage
+  togglePinMessage,
+  toggleLikeMessage
 } from '@/services/communityService';
+import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/context/ModalContext';
+import { compressImage } from '@/utils/imageCompressor';
 import Loader from '@/components/common/Loader';
+import GlowingButton from '@/components/common/GlowingButton';
 
-const channels = [
-  { id: 'all', label: 'All Channels', icon: MessageSquare },
-  { id: 'global-lounge', label: '#global-lounge', icon: Globe },
-  { id: 'flights-and-deals', label: '#flights-and-deals', icon: Plane },
-  { id: 'stays-and-hotels', label: '#stays-and-hotels', icon: Building },
-  { id: 'travel-buddies', label: '#travel-buddies', icon: Users }
+const COMMUNITY_GROUPS = [
+  {
+    id: 'global-lounge',
+    name: 'Global Traveler Lounge',
+    desc: 'Worldwide travel banter, stories & wanderlust talk',
+    icon: Globe,
+    badgeColor: 'text-orange-400 border-orange-500/30 bg-orange-500/10'
+  },
+  {
+    id: 'travel-buddies',
+    name: 'Travel Buddies & Meetups',
+    desc: 'Find travel companions, road trips & solo meetups',
+    icon: Users,
+    badgeColor: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10'
+  },
+  {
+    id: 'flights-and-deals',
+    name: 'Flights & Airfare Deals',
+    desc: 'Aviation routes, airline sales & seat alerts',
+    icon: Plane,
+    badgeColor: 'text-sky-400 border-sky-500/30 bg-sky-500/10'
+  },
+  {
+    id: 'stays-and-hotels',
+    name: 'Luxury Resorts & Hotels',
+    desc: 'Boutique stays, hotel reviews & accommodation tips',
+    icon: Building,
+    badgeColor: 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+  },
+  {
+    id: 'solo-expeditions',
+    name: 'Solo Expeditions & Treks',
+    desc: 'Hiking trails, backpacker guides & mountain camps',
+    icon: Compass,
+    badgeColor: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
+  },
+  {
+    id: 'photography-visuals',
+    name: 'Sceneries & Photography',
+    desc: 'Travel snapshots, drone shots & camera presets',
+    icon: ImageIcon,
+    badgeColor: 'text-purple-400 border-purple-500/30 bg-purple-500/10'
+  }
 ];
 
 export default function AdminCommunity() {
+  const { user } = useAuth();
   const { showModal, showToast } = useModal();
+
+  const [activeGroup, setActiveGroup] = useState(COMMUNITY_GROUPS[0]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeRoom, setActiveRoom] = useState('all');
   const [search, setSearch] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [groupSearch, setGroupSearch] = useState('');
+
+  const [mobileShowChat, setMobileShowChat] = useState(false);
+
+  const [inputText, setInputText] = useState('');
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [sending, setSending] = useState(false);
+  const [previewModalImg, setPreviewModalImg] = useState(null);
+
+  const fileInputRef = useRef(null);
+  const chatBottomRef = useRef(null);
+
+  const scrollToBottom = () => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const loadMessages = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const res = await fetchCommunityMessages(activeRoom, 80, search);
+      const res = await fetchCommunityMessages(activeGroup.id, 100, search);
       if (res.data?.messages) {
         setMessages(res.data.messages);
       } else {
         setMessages([]);
       }
     } catch {
-      if (!silent) showToast('Could not load community discussions', 'error');
+      if (!silent) showToast('Could not load channel discussions', 'error');
     } finally {
       if (!silent) setLoading(false);
-      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
     loadMessages();
-  }, [activeRoom]);
+  }, [activeGroup]);
 
-  // Real-time polling every 4 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       loadMessages(true);
-    }, 4000);
+    }, 3000);
     return () => clearInterval(interval);
-  }, [activeRoom, search]);
+  }, [activeGroup, search]);
 
-  const handleSearchSubmit = (e) => {
+  const handleGroupSelect = (grp) => {
+    setActiveGroup(grp);
+    setMobileShowChat(true);
+  };
+
+  const handleImageSelect = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    if (selectedImages.length + files.length > 3) {
+      showToast('Maximum 3 images allowed per message', 'warning');
+      return;
+    }
+
+    const newImages = [];
+    const newPreviews = [];
+
+    for (const file of files) {
+      if (selectedImages.length + newImages.length >= 3) break;
+      try {
+        const compressed = await compressImage(file);
+        newImages.push(compressed);
+        newPreviews.push(URL.createObjectURL(compressed));
+      } catch {
+        newImages.push(file);
+        newPreviews.push(URL.createObjectURL(file));
+      }
+    }
+
+    setSelectedImages((prev) => [...prev, ...newImages]);
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeSelectedImage = (index) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    loadMessages();
+    if (!inputText.trim() && selectedImages.length === 0) return;
+
+    setSending(true);
+    try {
+      const formData = new FormData();
+      formData.append('text', inputText.trim() || 'Shared an update');
+      formData.append('room', activeGroup.id);
+
+      selectedImages.forEach((img) => {
+        formData.append('images', img);
+      });
+
+      await postCommunityMessage(formData);
+      setInputText('');
+      setSelectedImages([]);
+      setImagePreviews([]);
+      await loadMessages(true);
+      scrollToBottom();
+    } catch {
+      showToast('Failed to post message', 'error');
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleTogglePin = async (msg) => {
     try {
       await togglePinMessage(msg._id);
-      showToast(`Message ${!msg.pinned ? 'pinned as announcement' : 'unpinned'}`, 'success');
+      showToast(`Message ${!msg.pinned ? 'pinned as group announcement' : 'unpinned'}`, 'success');
       setMessages((prev) =>
         prev.map((m) => (m._id === msg._id ? { ...m, pinned: !m.pinned } : m))
       );
@@ -87,13 +209,13 @@ export default function AdminCommunity() {
 
   const handleDeleteMessage = (msg) => {
     showModal({
-      title: 'Delete Community Message?',
-      message: `Are you sure you want to delete message from "${msg.user?.name || 'User'}" ("${msg.text.slice(0, 40)}...")? This will permanently remove it from the live channel stream.`,
+      title: 'Permanently Delete Message?',
+      message: `Delete message from "${msg.user?.name || 'Traveler'}"? It will be removed immediately for all platform users.`,
       type: 'danger',
       onConfirm: async () => {
         try {
           await deleteCommunityMessage(msg._id);
-          showToast('Message deleted from community stream', 'success');
+          showToast('Message removed from community stream', 'success');
           setMessages((prev) => prev.filter((m) => m._id !== msg._id));
         } catch {
           showToast('Failed to delete message', 'error');
@@ -101,6 +223,15 @@ export default function AdminCommunity() {
       }
     });
   };
+
+  const filteredGroups = COMMUNITY_GROUPS.filter(
+    (g) =>
+      g.name.toLowerCase().includes(groupSearch.toLowerCase()) ||
+      g.desc.toLowerCase().includes(groupSearch.toLowerCase())
+  );
+
+  const pinnedMessage = messages.find((m) => m.pinned);
+  const ActiveIcon = activeGroup.icon;
 
   return (
     <div className="w-full max-w-[1720px] mx-auto space-y-3 font-sans select-none pb-8">
@@ -110,164 +241,353 @@ export default function AdminCommunity() {
             <MessageSquare className="size-4" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-foreground leading-tight">Community Chat & Moderation</h1>
+            <h1 className="text-sm font-bold text-foreground leading-tight">
+              Community Channels & Live Moderation
+            </h1>
             <p className="text-[11px] text-muted-foreground">
-              Live monitoring, announcement pins, and content moderation
+              WhatsApp-style group streams, real-time traveler chat, announcement pinning & instant message removal.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold">
           <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Live Stream</span>
+          <span>Live WebSocket Sync</span>
         </div>
       </div>
 
-      <div className="py-1.5 px-3 rounded-xl bg-[#121215] border border-border/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs shadow-xs">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto py-0.5">
-          {channels.map((ch) => {
-            const Icon = ch.icon;
-            const isActive = activeRoom === ch.id;
-            return (
-              <button
-                key={ch.id}
-                onClick={() => setActiveRoom(ch.id)}
-                className={`h-[30px] px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer ${
-                  isActive
-                    ? 'bg-orange-500 text-zinc-950 font-bold shadow-xs shadow-orange-500/20'
-                    : 'bg-[#18181b]/80 text-muted-foreground hover:text-foreground border border-border/80 hover:border-orange-500/30'
-                }`}
-              >
-                <Icon className="size-3.5" />
-                <span>{ch.label}</span>
-              </button>
-            );
-          })}
-        </div>
+      <div className="rounded-2xl bg-[#121215] border border-border/80 overflow-hidden shadow-lg h-[calc(100vh-210px)] min-h-[560px] flex flex-col md:flex-row">
+        <div
+          className={`w-full md:w-80 lg:w-96 border-r border-border/80 flex flex-col bg-[#0f0f12] shrink-0 ${
+            mobileShowChat ? 'hidden md:flex' : 'flex'
+          }`}
+        >
+          <div className="p-3 border-b border-border/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider">
+                Community Groups ({COMMUNITY_GROUPS.length})
+              </span>
+              <span className="text-[10px] text-muted-foreground font-semibold">Public Channels</span>
+            </div>
 
-        <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-64">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search messages, travelers..."
-            className="w-full pl-8 pr-2.5 h-[30px] rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40"
-          />
-        </form>
-      </div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
+              <input
+                type="text"
+                value={groupSearch}
+                onChange={(e) => setGroupSearch(e.target.value)}
+                placeholder="Search groups..."
+                className="w-full pl-8 pr-2.5 h-[30px] rounded-lg bg-[#18181b] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60"
+              />
+            </div>
+          </div>
 
-      {/* Messages Feed Table / Stream */}
-      {loading ? (
-        <div className="py-24 flex items-center justify-center">
-          <Loader text="Loading live community discussions..." />
-        </div>
-      ) : messages.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl bg-[#121215] border border-border/80 space-y-3">
-          <MessageSquare className="size-10 text-muted-foreground/30 mx-auto" />
-          <h3 className="text-sm font-bold text-foreground">No Messages in this Channel</h3>
-          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Traveler discussions posted from the community page will appear here instantly.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {messages.map((msg) => (
-            <div
-              key={msg._id}
-              className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md ${
-                msg.pinned
-                  ? 'bg-amber-950/20 border-amber-500/40 ring-1 ring-amber-500/20'
-                  : 'bg-[#121215] border-border/80 hover:border-orange-500/30'
-              }`}
-            >
-              {/* Left Author & Message Block */}
-              <div className="flex items-start gap-3 min-w-0 flex-1">
-                {/* User Avatar */}
-                <div className="size-9 rounded-xl border border-orange-500/30 overflow-hidden bg-secondary shrink-0 mt-0.5">
-                  <img
-                    src={msg.user?.avatar?.url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}
-                    alt={msg.user?.name || 'User'}
-                    className="size-full object-cover"
-                  />
-                </div>
-
-                <div className="space-y-1 min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-bold text-foreground text-xs">{msg.user?.name || 'Traveler'}</span>
-                    
-                    {msg.user?.role === 'admin' ? (
-                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-0.5">
-                        <Crown className="size-2.5" /> Admin
-                      </span>
-                    ) : (
-                      <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-secondary text-muted-foreground border border-border">
-                        Traveler
-                      </span>
-                    )}
-
-                    <span className="px-2 py-0.2 rounded-md bg-secondary/60 text-[10px] font-mono text-orange-400 border border-border">
-                      #{msg.room || 'global-lounge'}
-                    </span>
-
-                    {msg.pinned && (
-                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500 text-zinc-950 flex items-center gap-0.5">
-                        <Pin className="size-2.5 fill-current" /> Pinned
-                      </span>
-                    )}
-
-                    <span className="text-[10px] text-muted-foreground">
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} •{' '}
-                      {new Date(msg.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                    </span>
+          <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-border/40">
+            {filteredGroups.map((grp) => {
+              const Icon = grp.icon;
+              const isSelected = activeGroup.id === grp.id;
+              return (
+                <button
+                  key={grp.id}
+                  onClick={() => handleGroupSelect(grp)}
+                  className={`w-full p-3 text-left flex items-start gap-3 transition-colors cursor-pointer ${
+                    isSelected
+                      ? 'bg-orange-500/10 border-l-2 border-orange-500'
+                      : 'hover:bg-secondary/40'
+                  }`}
+                >
+                  <div
+                    className={`size-10 rounded-xl border flex items-center justify-center shrink-0 shadow-xs ${grp.badgeColor}`}
+                  >
+                    <Icon className="size-5" />
                   </div>
 
-                  <p className="text-xs text-zinc-200 leading-relaxed break-words">{msg.text}</p>
-
-                  {/* Photo Attachment */}
-                  {msg.image && (
-                    <div className="pt-2">
-                      <img
-                        src={msg.image}
-                        alt="Attached by traveler"
-                        className="max-h-40 rounded-xl border border-border/80 object-cover shadow-sm"
-                      />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <h4
+                        className={`text-xs font-bold truncate ${
+                          isSelected ? 'text-orange-400' : 'text-foreground'
+                        }`}
+                      >
+                        {grp.name}
+                      </h4>
+                      {isSelected && (
+                        <span className="size-2 rounded-full bg-orange-500 shrink-0" />
+                      )}
                     </div>
-                  )}
-                </div>
+                    <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">
+                      {grp.desc}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div
+          className={`flex-1 flex flex-col bg-[#121215] min-w-0 ${
+            !mobileShowChat ? 'hidden md:flex' : 'flex'
+          }`}
+        >
+          <div className="px-3.5 py-2.5 border-b border-border/80 bg-[#151518] flex items-center justify-between gap-2.5 shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <button
+                onClick={() => setMobileShowChat(false)}
+                className="md:hidden p-1.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <ArrowLeft className="size-4" />
+              </button>
+
+              <div
+                className={`size-9 rounded-xl border flex items-center justify-center shrink-0 ${activeGroup.badgeColor}`}
+              >
+                <ActiveIcon className="size-4" />
               </div>
 
-              {/* Moderation Actions Strip */}
-              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                <div className="flex items-center gap-1 text-[11px] text-muted-foreground px-2 py-1 rounded-lg bg-secondary/40 border border-border">
-                  <Heart className="size-3 text-rose-400" />
-                  <span>{msg.likes?.length || 0}</span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-bold text-foreground truncate">{activeGroup.name}</h3>
+                  <span className="px-1.5 py-0.2 rounded bg-orange-500/15 text-orange-400 text-[9px] font-bold border border-orange-500/20">
+                    Admin Active
+                  </span>
                 </div>
-
-                {/* Toggle Pin */}
-                <button
-                  onClick={() => handleTogglePin(msg)}
-                  className={`p-2 rounded-xl border transition-colors cursor-pointer ${
-                    msg.pinned
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                      : 'bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground border-border'
-                  }`}
-                  title={msg.pinned ? 'Unpin message' : 'Pin message to channel top'}
-                >
-                  <Pin className="size-3.5" />
-                </button>
-
-                {/* Delete Message */}
-                <button
-                  onClick={() => handleDeleteMessage(msg)}
-                  className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-                  title="Delete message from channel"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
+                <p className="text-[10px] text-muted-foreground truncate">{activeGroup.desc}</p>
               </div>
             </div>
-          ))}
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => loadMessages()}
+                className="p-1.5 rounded-lg bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border cursor-pointer transition-colors"
+                title="Refresh Stream"
+              >
+                <RefreshCw className="size-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {pinnedMessage && (
+            <div className="p-2.5 px-4 bg-orange-500/10 border-b border-orange-500/20 flex items-center justify-between gap-2 text-xs shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <Pin className="size-3.5 text-orange-400 shrink-0" />
+                <span className="text-orange-300 font-semibold truncate">
+                  <strong>Pinned by Admin:</strong> {pinnedMessage.text}
+                </span>
+              </div>
+              <button
+                onClick={() => handleTogglePin(pinnedMessage)}
+                className="text-[10px] text-orange-400 hover:underline font-bold shrink-0 cursor-pointer"
+              >
+                Unpin
+              </button>
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 space-y-3 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900/20 via-zinc-950/40 to-black/60">
+            {loading ? (
+              <div className="h-full flex items-center justify-center">
+                <Loader text="Loading group chat stream..." />
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center space-y-2 p-6">
+                <MessageSquare className="size-10 text-muted-foreground/30" />
+                <h4 className="text-sm font-bold text-foreground">No Messages in this Group</h4>
+                <p className="text-xs text-muted-foreground max-w-xs">
+                  Start the conversation or post a pinned announcement for travelers in {activeGroup.name}.
+                </p>
+              </div>
+            ) : (
+              messages.map((msg) => {
+                const isAdmin = msg.user?.role === 'admin';
+                const isMine = user?._id === msg.user?._id;
+                const imagesList = msg.images?.length ? msg.images : msg.image ? [msg.image] : [];
+
+                return (
+                  <div
+                    key={msg._id}
+                    className={`flex items-start gap-2.5 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}
+                  >
+                    <div className="size-8 rounded-xl border border-border overflow-hidden bg-secondary shrink-0">
+                      <img
+                        src={msg.user?.avatar?.url || msg.user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}
+                        alt={msg.user?.name || 'User'}
+                        className="size-full object-cover"
+                      />
+                    </div>
+
+                    <div
+                      className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-3 space-y-2 shadow-sm border ${
+                        isMine
+                          ? 'bg-[#1c1c22] border-orange-500/30 text-foreground rounded-tr-xs'
+                          : 'bg-[#18181c] border-border/80 text-foreground rounded-tl-xs'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-1 text-[11px]">
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span className="font-bold text-foreground truncate">
+                            {msg.user?.name || 'Traveler'}
+                          </span>
+                          {isAdmin && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 text-[9px] font-bold border border-amber-500/30">
+                              <Crown className="size-2.5 text-amber-400" />
+                              <span>Admin</span>
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => handleTogglePin(msg)}
+                            className={`p-1 rounded hover:bg-secondary/60 cursor-pointer ${
+                              msg.pinned ? 'text-orange-400' : 'text-muted-foreground'
+                            }`}
+                            title={msg.pinned ? 'Unpin' : 'Pin to Group'}
+                          >
+                            <Pin className="size-3" />
+                          </button>
+
+                          <button
+                            onClick={() => handleDeleteMessage(msg)}
+                            className="p-1 rounded hover:bg-rose-500/20 text-muted-foreground hover:text-rose-400 cursor-pointer transition-colors"
+                            title="Delete Message (Admin)"
+                          >
+                            <Trash2 className="size-3" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {imagesList.length > 0 && (
+                        <div
+                          className={`grid gap-1.5 rounded-xl overflow-hidden ${
+                            imagesList.length === 1
+                              ? 'grid-cols-1'
+                              : imagesList.length === 2
+                              ? 'grid-cols-2'
+                              : 'grid-cols-3'
+                          }`}
+                        >
+                          {imagesList.map((imgUrl, idx) => (
+                            <div
+                              key={idx}
+                              onClick={() => setPreviewModalImg(imgUrl)}
+                              className="relative aspect-4/3 rounded-lg overflow-hidden border border-border/60 bg-black/40 group cursor-pointer"
+                            >
+                              <img
+                                src={imgUrl}
+                                alt="attachment"
+                                className="size-full object-cover group-hover:scale-105 transition-transform duration-200"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <Eye className="size-4 text-white" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <p className="text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap select-text">
+                        {msg.text}
+                      </p>
+
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5">
+                        <span>
+                          {new Date(msg.createdAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+
+                        <div className="flex items-center gap-1">
+                          <Heart className="size-3 text-rose-500 fill-rose-500" />
+                          <span>{msg.likes?.length || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            <div ref={chatBottomRef} />
+          </div>
+
+          {imagePreviews.length > 0 && (
+            <div className="p-2.5 bg-[#151518] border-t border-border/80 flex items-center gap-2 overflow-x-auto">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">
+                Attached ({imagePreviews.length}/3):
+              </span>
+              {imagePreviews.map((url, i) => (
+                <div key={i} className="relative size-12 rounded-lg border border-border overflow-hidden shrink-0">
+                  <img src={url} alt="preview" className="size-full object-cover" />
+                  <button
+                    onClick={() => removeSelectedImage(i)}
+                    className="absolute top-0.5 right-0.5 size-4 rounded-full bg-black/80 text-white flex items-center justify-center hover:bg-rose-600 cursor-pointer"
+                  >
+                    <X className="size-2.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <form
+            onSubmit={handleSendMessage}
+            className="p-2.5 bg-[#151518] border-t border-border/80 flex items-center gap-2 shrink-0"
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              multiple
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={selectedImages.length >= 3}
+              className="p-2 rounded-xl bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border/80 disabled:opacity-30 cursor-pointer transition-colors"
+              title="Attach Images (Max 3)"
+            >
+              <ImageIcon className="size-4" />
+            </button>
+
+            <input
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder={`Message ${activeGroup.name} as Administrator...`}
+              className="flex-1 px-3.5 h-[38px] rounded-xl bg-[#18181b] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60"
+            />
+
+            <GlowingButton
+              type="submit"
+              disabled={sending || (!inputText.trim() && selectedImages.length === 0)}
+              size="sm"
+              innerClassName="h-[38px] px-4 text-xs font-bold flex items-center gap-1.5"
+            >
+              <Send className="size-3.5" />
+              <span>Send</span>
+            </GlowingButton>
+          </form>
+        </div>
+      </div>
+
+      {previewModalImg && (
+        <div
+          onClick={() => setPreviewModalImg(null)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+        >
+          <div className="relative max-w-3xl max-h-[85vh] rounded-2xl overflow-hidden border border-border bg-[#121215]">
+            <img src={previewModalImg} alt="enlarged preview" className="max-h-[80vh] w-auto object-contain" />
+            <button
+              onClick={() => setPreviewModalImg(null)}
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-black/70 text-white hover:bg-rose-600 cursor-pointer"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
         </div>
       )}
     </div>

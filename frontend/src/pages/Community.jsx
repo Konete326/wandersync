@@ -10,21 +10,22 @@ import {
   Plane,
   Building,
   Pin,
-  Sparkles,
-  MapPin,
-  Calendar,
   Compass,
   ArrowRight,
   ShieldCheck,
   Crown,
   X,
-  Smile,
-  CheckCircle2
+  Eye,
+  ArrowLeft,
+  Calendar,
+  MapPin,
+  Sparkles
 } from 'lucide-react';
 import {
   fetchCommunityMessages,
   postCommunityMessage,
-  toggleLikeMessage
+  toggleLikeMessage,
+  deleteCommunityMessage
 } from '@/services/communityService';
 import { getPublicCommunityTrips } from '@/services/tripService';
 import { useAuth } from '@/context/AuthContext';
@@ -33,44 +34,82 @@ import { compressImage } from '@/utils/imageCompressor';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 
-const channels = [
-  { id: 'global-lounge', name: '#global-lounge', desc: 'General traveler banter & wanderlust talk', icon: Globe },
-  { id: 'travel-buddies', name: '#travel-buddies', desc: 'Find travel companions & solo meetups', icon: Users },
-  { id: 'flights-and-deals', name: '#flights-and-deals', desc: 'Aviation routes, airline tips & seat deals', icon: Plane },
-  { id: 'stays-and-hotels', name: '#stays-and-hotels', desc: 'Resort recommendations & hotel reviews', icon: Building }
+const COMMUNITY_GROUPS = [
+  {
+    id: 'global-lounge',
+    name: 'Global Traveler Lounge',
+    desc: 'Worldwide travel banter, stories & wanderlust talk',
+    icon: Globe,
+    badgeColor: 'text-orange-400 border-orange-500/30 bg-orange-500/10'
+  },
+  {
+    id: 'travel-buddies',
+    name: 'Travel Buddies & Meetups',
+    desc: 'Find travel companions, road trips & solo meetups',
+    icon: Users,
+    badgeColor: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10'
+  },
+  {
+    id: 'flights-and-deals',
+    name: 'Flights & Airfare Deals',
+    desc: 'Aviation routes, airline sales & seat alerts',
+    icon: Plane,
+    badgeColor: 'text-sky-400 border-sky-500/30 bg-sky-500/10'
+  },
+  {
+    id: 'stays-and-hotels',
+    name: 'Luxury Resorts & Hotels',
+    desc: 'Boutique stays, hotel reviews & accommodation tips',
+    icon: Building,
+    badgeColor: 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+  },
+  {
+    id: 'solo-expeditions',
+    name: 'Solo Expeditions & Treks',
+    desc: 'Hiking trails, backpacker guides & mountain camps',
+    icon: Compass,
+    badgeColor: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
+  },
+  {
+    id: 'photography-visuals',
+    name: 'Sceneries & Photography',
+    desc: 'Travel snapshots, drone shots & camera presets',
+    icon: ImageIcon,
+    badgeColor: 'text-purple-400 border-purple-500/30 bg-purple-500/10'
+  }
 ];
 
 export default function Community() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { showToast } = useModal();
+  const { showModal, showToast } = useModal();
 
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'itineraries'
-  const [activeChannel, setActiveChannel] = useState('global-lounge');
+  const [activeTab, setActiveTab] = useState('chat');
+  const [activeGroup, setActiveGroup] = useState(COMMUNITY_GROUPS[0]);
+  const [mobileShowChat, setMobileShowChat] = useState(false);
 
-  // Messages state
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [sending, setSending] = useState(false);
   const [inputText, setInputText] = useState('');
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [previewModalImg, setPreviewModalImg] = useState(null);
 
-  // Itineraries state
   const [publicTrips, setPublicTrips] = useState([]);
   const [loadingTrips, setLoadingTrips] = useState(true);
 
+  const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Fetch Channel Messages
   const loadMessages = async (silent = false) => {
     if (!silent) setLoadingMessages(true);
     try {
-      const res = await fetchCommunityMessages(activeChannel, 60);
+      const res = await fetchCommunityMessages(activeGroup.id, 80);
       if (res.data?.messages) {
         setMessages(res.data.messages);
       } else {
@@ -83,7 +122,6 @@ export default function Community() {
     }
   };
 
-  // Fetch Public Trips
   const loadTrips = async () => {
     setLoadingTrips(true);
     try {
@@ -98,30 +136,58 @@ export default function Community() {
   };
 
   useEffect(() => {
-    loadMessages();
-  }, [activeChannel]);
+    if (activeTab === 'chat') {
+      loadMessages();
+    } else {
+      loadTrips();
+    }
+  }, [activeGroup, activeTab]);
 
-  // Real-time polling every 3 seconds for live chat feel
   useEffect(() => {
+    if (activeTab !== 'chat') return;
     const interval = setInterval(() => {
       loadMessages(true);
     }, 3000);
     return () => clearInterval(interval);
-  }, [activeChannel]);
+  }, [activeGroup, activeTab]);
 
-  useEffect(() => {
-    if (activeTab === 'itineraries') {
-      loadTrips();
-    }
-  }, [activeTab]);
+  const handleGroupSelect = (grp) => {
+    setActiveGroup(grp);
+    setMobileShowChat(true);
+  };
 
   const handleImageSelect = async (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const compressed = await compressImage(file);
-      setSelectedImage(compressed);
-      setImagePreview(URL.createObjectURL(compressed));
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    if (selectedImages.length + files.length > 3) {
+      showToast('Maximum 3 images allowed per message', 'warning');
+      return;
     }
+
+    const newImages = [];
+    const newPreviews = [];
+
+    for (const file of files) {
+      if (selectedImages.length + newImages.length >= 3) break;
+      try {
+        const compressed = await compressImage(file);
+        newImages.push(compressed);
+        newPreviews.push(URL.createObjectURL(compressed));
+      } catch {
+        newImages.push(file);
+        newPreviews.push(URL.createObjectURL(file));
+      }
+    }
+
+    setSelectedImages((prev) => [...prev, ...newImages]);
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeSelectedImage = (index) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSendMessage = async (e) => {
@@ -131,21 +197,22 @@ export default function Community() {
       navigate('/login');
       return;
     }
-    if (!inputText.trim() && !selectedImage) return;
+    if (!inputText.trim() && selectedImages.length === 0) return;
 
     setSending(true);
     try {
       const formData = new FormData();
-      formData.append('text', inputText.trim() || 'Shared a travel photo');
-      formData.append('room', activeChannel);
-      if (selectedImage) {
-        formData.append('image', selectedImage);
-      }
+      formData.append('text', inputText.trim() || 'Shared a photo update');
+      formData.append('room', activeGroup.id);
+
+      selectedImages.forEach((img) => {
+        formData.append('images', img);
+      });
 
       await postCommunityMessage(formData);
       setInputText('');
-      setSelectedImage(null);
-      setImagePreview('');
+      setSelectedImages([]);
+      setImagePreviews([]);
       await loadMessages(true);
       scrollToBottom();
     } catch {
@@ -163,217 +230,307 @@ export default function Community() {
     try {
       const res = await toggleLikeMessage(msgId);
       setMessages((prev) =>
-        prev.map((m) => {
-          if (m._id === msgId) {
-            const currentLikes = m.likes || [];
-            const isLiked = currentLikes.includes(user._id);
-            return {
-              ...m,
-              likes: isLiked ? currentLikes.filter((id) => id !== user._id) : [...currentLikes, user._id]
-            };
-          }
-          return m;
-        })
+        prev.map((m) =>
+          m._id === msgId
+            ? {
+                ...m,
+                likes: res.data.isLiked
+                  ? [...(m.likes || []), user._id]
+                  : (m.likes || []).filter((id) => id !== user._id)
+              }
+            : m
+        )
       );
     } catch {
+      showToast('Could not like message', 'error');
     }
   };
 
+  const handleDeleteMyMessage = (msg) => {
+    showModal({
+      title: 'Delete Message?',
+      message: 'Are you sure you want to delete your message? This cannot be undone.',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          await deleteCommunityMessage(msg._id);
+          showToast('Message deleted', 'success');
+          setMessages((prev) => prev.filter((m) => m._id !== msg._id));
+        } catch {
+          showToast('Failed to delete message', 'error');
+        }
+      }
+    });
+  };
+
+  const pinnedMessage = messages.find((m) => m.pinned);
+  const ActiveIcon = activeGroup.icon;
+
   return (
-    <div className="w-full min-h-screen bg-[#09090b] text-[#fafafa] font-sans pb-16 select-none">
-      {/* Top Header */}
-      <div className="border-b border-border/80 bg-[#121215]/80 backdrop-blur-xl sticky top-14 z-30 px-4 py-3">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="size-8 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
-              <Users className="size-4" />
+    <div className="w-full min-h-screen bg-background text-foreground py-6 px-3 sm:px-6 font-sans select-none">
+      <div className="max-w-[1440px] mx-auto space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#121215] border border-border/80 shadow-md">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-extrabold text-foreground tracking-tight font-heading">
+                WanderSync Community Hub
+              </h1>
+              <span className="px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 text-[10px] font-bold border border-orange-500/30">
+                Live Channels
+              </span>
             </div>
-            <div>
-              <h1 className="text-sm font-bold text-foreground">WanderSync Global Community Lounge</h1>
-              <p className="text-[10px] text-muted-foreground">Real-time traveler chats, journey tips, and shared AI itineraries</p>
-            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Connect with fellow global travelers, share real-time tips, and explore community itineraries.
+            </p>
           </div>
 
-          {/* Dual-View Switcher */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-secondary/50 border border-border">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#18181b] border border-border/80 self-stretch sm:self-auto">
             <button
               onClick={() => setActiveTab('chat')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                 activeTab === 'chat'
-                  ? 'bg-orange-500 text-zinc-950 shadow-md shadow-orange-500/20'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-orange-500 text-zinc-950 shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
               }`}
             >
               <MessageSquare className="size-3.5" />
-              <span>Live Channels Chat</span>
+              <span>Group Chats</span>
             </button>
 
             <button
               onClick={() => setActiveTab('itineraries')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                 activeTab === 'itineraries'
-                  ? 'bg-orange-500 text-zinc-950 shadow-md shadow-orange-500/20'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-orange-500 text-zinc-950 shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
               }`}
             >
-              <Sparkles className="size-3.5" />
+              <Compass className="size-3.5" />
               <span>Public Itineraries</span>
             </button>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-        
-        {/* VIEW 1: LIVE CHANNELS CHAT */}
-        {activeTab === 'chat' && (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-[calc(100vh-12rem)] min-h-[550px]">
-            
-            {/* Left Channel Sidebar */}
-            <div className="md:col-span-4 lg:col-span-3 rounded-2xl bg-[#121215] border border-border/80 p-3 flex flex-col justify-between shadow-md">
-              <div className="space-y-3">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-2 block">
-                  Discussion Channels
+        {activeTab === 'chat' ? (
+          <div className="rounded-2xl bg-[#121215] border border-border/80 overflow-hidden shadow-lg h-[calc(100vh-210px)] min-h-[560px] flex flex-col md:flex-row">
+            <div
+              className={`w-full md:w-80 lg:w-96 border-r border-border/80 flex flex-col bg-[#0f0f12] shrink-0 ${
+                mobileShowChat ? 'hidden md:flex' : 'flex'
+              }`}
+            >
+              <div className="p-3.5 border-b border-border/80">
+                <span className="text-xs font-bold text-foreground uppercase tracking-wider">
+                  Community Lounges
                 </span>
-
-                <div className="space-y-1.5">
-                  {channels.map((ch) => {
-                    const Icon = ch.icon;
-                    const isActive = activeChannel === ch.id;
-                    return (
-                      <button
-                        key={ch.id}
-                        onClick={() => setActiveChannel(ch.id)}
-                        className={`w-full p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-start gap-2.5 ${
-                          isActive
-                            ? 'bg-orange-500/15 border border-orange-500/40 text-orange-400'
-                            : 'hover:bg-secondary/40 text-muted-foreground hover:text-foreground border border-transparent'
-                        }`}
-                      >
-                        <Icon className="size-4 shrink-0 mt-0.5" />
-                        <div className="min-w-0">
-                          <span className="text-xs font-bold block truncate">{ch.name}</span>
-                          <span className="text-[10px] text-muted-foreground block truncate">{ch.desc}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                <p className="text-[11px] text-muted-foreground">Select a channel to join the talk</p>
               </div>
 
-              {/* Online indicator */}
-              <div className="p-3 rounded-xl bg-secondary/30 border border-border/60 text-xs flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[11px] font-bold text-emerald-400">Live Network Sync</span>
-                </div>
-                <span className="text-[10px] text-muted-foreground font-mono">3s Stream</span>
+              <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-border/40">
+                {COMMUNITY_GROUPS.map((grp) => {
+                  const Icon = grp.icon;
+                  const isSelected = activeGroup.id === grp.id;
+                  return (
+                    <button
+                      key={grp.id}
+                      onClick={() => handleGroupSelect(grp)}
+                      className={`w-full p-3 text-left flex items-start gap-3 transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-orange-500/10 border-l-2 border-orange-500'
+                          : 'hover:bg-secondary/40'
+                      }`}
+                    >
+                      <div
+                        className={`size-10 rounded-xl border flex items-center justify-center shrink-0 shadow-xs ${grp.badgeColor}`}
+                      >
+                        <Icon className="size-5" />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <h4
+                            className={`text-xs font-bold truncate ${
+                              isSelected ? 'text-orange-400' : 'text-foreground'
+                            }`}
+                          >
+                            {grp.name}
+                          </h4>
+                          {isSelected && (
+                            <span className="size-2 rounded-full bg-orange-500 shrink-0" />
+                          )}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">
+                          {grp.desc}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Right Live Messages Stream & Composer */}
-            <div className="md:col-span-8 lg:col-span-9 rounded-2xl bg-[#121215] border border-border/80 flex flex-col justify-between shadow-md overflow-hidden">
-              
-              {/* Channel Header */}
-              <div className="p-3.5 border-b border-border/80 bg-secondary/20 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-sm text-foreground">
-                    {channels.find((c) => c.id === activeChannel)?.name || '#channel'}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    • {channels.find((c) => c.id === activeChannel)?.desc}
-                  </span>
+            <div
+              className={`flex-1 flex flex-col bg-[#121215] min-w-0 ${
+                !mobileShowChat ? 'hidden md:flex' : 'flex'
+              }`}
+            >
+              <div className="px-4 py-3 border-b border-border/80 bg-[#151518] flex items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <button
+                    onClick={() => setMobileShowChat(false)}
+                    className="md:hidden p-1.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    <ArrowLeft className="size-4" />
+                  </button>
+
+                  <div
+                    className={`size-9 rounded-xl border flex items-center justify-center shrink-0 ${activeGroup.badgeColor}`}
+                  >
+                    <ActiveIcon className="size-4" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <h3 className="text-xs font-bold text-foreground truncate">{activeGroup.name}</h3>
+                    <p className="text-[10px] text-muted-foreground truncate">{activeGroup.desc}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Online</span>
                 </div>
               </div>
 
-              {/* Message Scroll Area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+              {pinnedMessage && (
+                <div className="p-2.5 px-4 bg-orange-500/10 border-b border-orange-500/20 flex items-center gap-2 text-xs shrink-0">
+                  <Pin className="size-3.5 text-orange-400 shrink-0" />
+                  <span className="text-orange-300 font-semibold truncate">
+                    <strong>Announcement:</strong> {pinnedMessage.text}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 space-y-3 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900/20 via-zinc-950/40 to-black/60">
                 {loadingMessages ? (
-                  <div className="py-24 flex items-center justify-center">
-                    <Loader text="Connecting to live traveler stream..." />
+                  <div className="h-full flex items-center justify-center">
+                    <Loader text="Joining room stream..." />
                   </div>
                 ) : messages.length === 0 ? (
-                  <div className="py-20 text-center space-y-2">
-                    <MessageSquare className="size-10 text-muted-foreground/30 mx-auto" />
-                    <h3 className="text-sm font-bold text-foreground">Channel is quiet</h3>
-                    <p className="text-xs text-muted-foreground">
-                      Be the first to say hello or ask a travel recommendation!
+                  <div className="h-full flex flex-col items-center justify-center text-center space-y-2 p-6">
+                    <MessageSquare className="size-10 text-muted-foreground/30" />
+                    <h4 className="text-sm font-bold text-foreground">No Messages in this Lounge</h4>
+                    <p className="text-xs text-muted-foreground max-w-xs">
+                      Be the first traveler to post a question, story, or travel snap in {activeGroup.name}!
                     </p>
                   </div>
                 ) : (
                   messages.map((msg) => {
-                    const isSelf = user?._id === msg.user?._id;
+                    const isAdmin = msg.user?.role === 'admin';
+                    const isMine = user?._id === msg.user?._id;
                     const isLiked = msg.likes?.includes(user?._id);
+                    const imagesList = msg.images?.length ? msg.images : msg.image ? [msg.image] : [];
 
                     return (
                       <div
                         key={msg._id}
-                        className={`flex items-start gap-3 p-3 rounded-2xl transition-all ${
-                          msg.pinned
-                            ? 'bg-amber-950/20 border border-amber-500/40 ring-1 ring-amber-500/20'
-                            : 'bg-secondary/25 hover:bg-secondary/40 border border-border/60'
-                        }`}
+                        className={`flex items-start gap-2.5 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}
                       >
-                        {/* Avatar */}
-                        <div className="size-8 rounded-xl border border-orange-500/30 overflow-hidden bg-secondary shrink-0 mt-0.5">
+                        <div className="size-8 rounded-xl border border-border overflow-hidden bg-secondary shrink-0">
                           <img
-                            src={msg.user?.avatar?.url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}
+                            src={msg.user?.avatar?.url || msg.user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}
                             alt={msg.user?.name || 'User'}
                             className="size-full object-cover"
                           />
                         </div>
 
-                        {/* Content */}
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-bold text-xs text-foreground">
-                              {msg.user?.name || 'Traveler'}
-                            </span>
-
-                            {msg.user?.role === 'admin' && (
-                              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-0.5">
-                                <Crown className="size-2.5" /> Staff
+                        <div
+                          className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-3 space-y-2 shadow-sm border ${
+                            isMine
+                              ? 'bg-[#1c1c22] border-orange-500/30 text-foreground rounded-tr-xs'
+                              : 'bg-[#18181c] border-border/80 text-foreground rounded-tl-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-1 text-[11px]">
+                            <div className="flex items-center gap-1.5 truncate">
+                              <span className="font-bold text-foreground truncate">
+                                {isMine ? 'You' : msg.user?.name || 'Traveler'}
                               </span>
-                            )}
+                              {isAdmin && (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 text-[9px] font-bold border border-amber-500/30">
+                                  <Crown className="size-2.5 text-amber-400" />
+                                  <span>Admin</span>
+                                </span>
+                              )}
+                            </div>
 
-                            {msg.pinned && (
-                              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500 text-zinc-950 flex items-center gap-0.5">
-                                <Pin className="size-2.5 fill-current" /> Pinned
-                              </span>
+                            {(isMine || user?.role === 'admin') && (
+                              <button
+                                onClick={() => handleDeleteMyMessage(msg)}
+                                className="p-1 rounded hover:bg-rose-500/20 text-muted-foreground hover:text-rose-400 cursor-pointer"
+                                title="Delete Message"
+                              >
+                                <X className="size-3" />
+                              </button>
                             )}
-
-                            <span className="text-[10px] text-muted-foreground">
-                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
                           </div>
 
-                          <p className="text-xs text-zinc-200 leading-relaxed break-words">{msg.text}</p>
-
-                          {/* Image Attachment */}
-                          {msg.image && (
-                            <div className="pt-1.5">
-                              <img
-                                src={msg.image}
-                                alt="Shared Attachment"
-                                className="max-h-52 rounded-xl border border-border/80 object-cover shadow-sm"
-                              />
+                          {imagesList.length > 0 && (
+                            <div
+                              className={`grid gap-1.5 rounded-xl overflow-hidden ${
+                                imagesList.length === 1
+                                  ? 'grid-cols-1'
+                                  : imagesList.length === 2
+                                  ? 'grid-cols-2'
+                                  : 'grid-cols-3'
+                              }`}
+                            >
+                              {imagesList.map((imgUrl, idx) => (
+                                <div
+                                  key={idx}
+                                  onClick={() => setPreviewModalImg(imgUrl)}
+                                  className="relative aspect-4/3 rounded-lg overflow-hidden border border-border/60 bg-black/40 group cursor-pointer"
+                                >
+                                  <img
+                                    src={imgUrl}
+                                    alt="attachment"
+                                    className="size-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                  />
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <Eye className="size-4 text-white" />
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           )}
-                        </div>
 
-                        {/* Heart Like */}
-                        <button
-                          onClick={() => handleLike(msg._id)}
-                          className={`p-1.5 rounded-lg flex items-center gap-1 text-[11px] transition-colors cursor-pointer shrink-0 ${
-                            isLiked
-                              ? 'text-rose-400 bg-rose-500/10'
-                              : 'text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10'
-                          }`}
-                          title="Like message"
-                        >
-                          <Heart className={`size-3.5 ${isLiked ? 'fill-current' : ''}`} />
-                          <span className="font-semibold">{msg.likes?.length || 0}</span>
-                        </button>
+                          <p className="text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap select-text">
+                            {msg.text}
+                          </p>
+
+                          <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5">
+                            <span>
+                              {new Date(msg.createdAt).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+
+                            <button
+                              onClick={() => handleLike(msg._id)}
+                              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer ${
+                                isLiked
+                                  ? 'bg-rose-500/15 text-rose-400'
+                                  : 'hover:bg-secondary/60 text-muted-foreground hover:text-rose-400'
+                              }`}
+                            >
+                              <Heart
+                                className={`size-3 ${
+                                  isLiked ? 'text-rose-500 fill-rose-500' : ''
+                                }`}
+                              />
+                              <span>{msg.likes?.length || 0}</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     );
                   })
@@ -381,122 +538,125 @@ export default function Community() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Message Composer Box */}
-              <div className="p-3 border-t border-border/80 bg-secondary/30 space-y-2">
-                {/* Image Preview Banner */}
-                {imagePreview && (
-                  <div className="relative inline-block">
-                    <img src={imagePreview} alt="Upload preview" className="h-16 rounded-lg border border-orange-500/40 object-cover" />
-                    <button
-                      onClick={() => {
-                        setSelectedImage(null);
-                        setImagePreview('');
-                      }}
-                      className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs cursor-pointer shadow-md"
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </div>
-                )}
+              {imagePreviews.length > 0 && (
+                <div className="p-2.5 bg-[#151518] border-t border-border/80 flex items-center gap-2 overflow-x-auto">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">
+                    Attached ({imagePreviews.length}/3):
+                  </span>
+                  {imagePreviews.map((url, i) => (
+                    <div key={i} className="relative size-12 rounded-lg border border-border overflow-hidden shrink-0">
+                      <img src={url} alt="preview" className="size-full object-cover" />
+                      <button
+                        onClick={() => removeSelectedImage(i)}
+                        className="absolute top-0.5 right-0.5 size-4 rounded-full bg-black/80 text-white flex items-center justify-center hover:bg-rose-600 cursor-pointer"
+                      >
+                        <X className="size-2.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-                <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-                  <label className="p-2 rounded-xl bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border cursor-pointer transition-colors shrink-0">
-                    <ImageIcon className="size-4 text-orange-400" />
-                    <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-                  </label>
+              <form
+                onSubmit={handleSendMessage}
+                className="p-2.5 bg-[#151518] border-t border-border/80 flex items-center gap-2 shrink-0"
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
 
-                  <input
-                    type="text"
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    placeholder={`Message ${channels.find((c) => c.id === activeChannel)?.name}...`}
-                    className="flex-1 px-3.5 py-2 rounded-xl bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                  />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={selectedImages.length >= 3}
+                  className="p-2 rounded-xl bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border/80 disabled:opacity-30 cursor-pointer transition-colors"
+                  title="Attach Images (Max 3)"
+                >
+                  <ImageIcon className="size-4" />
+                </button>
 
-                  <button
-                    type="submit"
-                    disabled={sending || (!inputText.trim() && !selectedImage)}
-                    className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-zinc-950 font-bold text-xs flex items-center gap-1.5 transition-all disabled:opacity-40 cursor-pointer shadow-md shadow-orange-500/20 shrink-0"
-                  >
-                    <Send className="size-3.5" />
-                    <span>{sending ? 'Sending...' : 'Send'}</span>
-                  </button>
-                </form>
-              </div>
+                <input
+                  type="text"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  placeholder={
+                    user
+                      ? `Message ${activeGroup.name}...`
+                      : 'Please login to send message...'
+                  }
+                  disabled={!user}
+                  className="flex-1 px-3.5 h-[38px] rounded-xl bg-[#18181b] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60 disabled:opacity-50"
+                />
+
+                <GlowingButton
+                  type="submit"
+                  disabled={
+                    sending ||
+                    !user ||
+                    (!inputText.trim() && selectedImages.length === 0)
+                  }
+                  size="sm"
+                  innerClassName="h-[38px] px-4 text-xs font-bold flex items-center gap-1.5"
+                >
+                  <Send className="size-3.5" />
+                  <span>Send</span>
+                </GlowingButton>
+              </form>
             </div>
           </div>
-        )}
-
-        {/* VIEW 2: PUBLIC FEATURED ITINERARIES */}
-        {activeTab === 'itineraries' && (
-          <div className="space-y-6 animate-in fade-in duration-200">
+        ) : (
+          <div className="space-y-4">
             {loadingTrips ? (
-              <div className="py-24 flex items-center justify-center">
-                <Loader text="Loading public community journeys..." />
+              <div className="py-20 flex items-center justify-center">
+                <Loader text="Loading public community itineraries..." />
               </div>
             ) : publicTrips.length === 0 ? (
-              <div className="p-12 rounded-3xl bg-[#121215] border border-border text-center space-y-4 max-w-md mx-auto">
-                <Compass className="size-10 text-orange-400 mx-auto" />
-                <h3 className="text-base font-bold text-foreground">Be the First to Publish</h3>
+              <div className="p-12 text-center rounded-2xl bg-[#121215] border border-border/80 space-y-2">
+                <Compass className="size-10 text-muted-foreground/30 mx-auto" />
+                <h3 className="text-sm font-bold text-foreground">No Public Trips Yet</h3>
                 <p className="text-xs text-muted-foreground">
-                  Generate an itinerary with Gemini AI and publish it publicly to inspire travelers across the globe.
+                  Be the first traveler to create and publish an itinerary to the community.
                 </p>
-                <GlowingButton
-                  onClick={() => navigate('/create')}
-                  size="sm"
-                  innerClassName="font-bold flex items-center gap-2 mx-auto"
-                >
-                  <span>Create & Publish Itinerary</span>
-                  <ArrowRight className="size-3.5" />
-                </GlowingButton>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {publicTrips.map((trip) => (
                   <div
                     key={trip._id}
-                    onClick={() => navigate(`/shared/${trip.shareSlug}`)}
-                    className="p-6 rounded-2xl bg-[#121215] border border-border/80 flex flex-col justify-between space-y-6 hover:border-orange-500/40 transition-all group cursor-pointer shadow-md"
+                    className="p-4 rounded-2xl bg-[#121215] border border-border/80 flex flex-col justify-between gap-3 shadow-sm hover:border-orange-500/40 transition-colors"
                   >
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="inline-flex items-center gap-1 text-orange-400 font-bold">
-                          <Sparkles className="size-3" />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                          {trip.destinationCountry || 'Global'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-mono">
                           {trip.durationDays || 3} Days
                         </span>
-                        <span className="text-zinc-400 font-medium">
-                          Est. ${trip.estimatedTotalCost || 1200}
-                        </span>
                       </div>
 
-                      <h3 className="text-lg font-bold font-heading text-foreground group-hover:text-orange-400 transition-colors">
-                        {trip.title || `Trip to ${trip.destination?.city || 'Destination'}`}
-                      </h3>
-
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <MapPin className="size-3.5 text-orange-400 shrink-0" />
-                        <span>{trip.destination?.city}, {trip.destination?.country}</span>
-                      </div>
-
-                      {trip.days && trip.days.length > 0 && (
-                        <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
-                          {trip.days[0]?.activities?.[0]?.description || 'AI crafted cultural landmarks and excursions.'}
-                        </p>
-                      )}
+                      <h3 className="text-sm font-bold text-foreground line-clamp-1">{trip.title}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{trip.description}</p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-border/60">
-                      <div className="flex items-center gap-2.5">
-                        <div className="size-8 rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-xs text-foreground">
-                          {trip.user?.name ? trip.user.name.charAt(0).toUpperCase() : 'T'}
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-semibold text-foreground">{trip.user?.name || 'Traveler'}</h4>
-                          <span className="text-[10px] text-muted-foreground">Explorer</span>
-                        </div>
+                    <div className="pt-2 border-t border-border/60 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <MapPin className="size-3 text-orange-400" />
+                        <span className="truncate">{trip.destinationCity || 'Destination'}</span>
                       </div>
 
-                      <ArrowRight className="size-4 text-muted-foreground group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
+                      <button
+                        onClick={() => navigate(`/itinerary/${trip._id}`)}
+                        className="px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-foreground text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <span>View</span>
+                        <ArrowRight className="size-3" />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -505,6 +665,23 @@ export default function Community() {
           </div>
         )}
       </div>
+
+      {previewModalImg && (
+        <div
+          onClick={() => setPreviewModalImg(null)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+        >
+          <div className="relative max-w-3xl max-h-[85vh] rounded-2xl overflow-hidden border border-border bg-[#121215]">
+            <img src={previewModalImg} alt="enlarged preview" className="max-h-[80vh] w-auto object-contain" />
+            <button
+              onClick={() => setPreviewModalImg(null)}
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-black/70 text-white hover:bg-rose-600 cursor-pointer"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

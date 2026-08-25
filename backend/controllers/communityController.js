@@ -4,7 +4,7 @@ import { sendSuccess, sendError } from '../utils/apiResponse.js';
 
 export const getCommunityMessages = async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit, 10) || 50;
+    const limit = parseInt(req.query.limit, 10) || 100;
     const filter = {};
     if (req.query.room && req.query.room !== 'all') {
       filter.room = req.query.room;
@@ -26,19 +26,27 @@ export const getCommunityMessages = async (req, res) => {
 export const createCommunityMessage = async (req, res) => {
   try {
     const { text, room, destinationTag } = req.body;
-    if (!text || !text.trim()) {
-      return sendError(res, 'Message text is required', 400);
+    if ((!text || !text.trim()) && (!req.files?.length && !req.file && !req.body.image)) {
+      return sendError(res, 'Message text or image attachment is required', 400);
     }
-    let image = req.body.image || '';
-    if (req.file) {
-      const uploadResult = await uploadImageBuffer(req.file.buffer, 'wandersync/community');
-      image = uploadResult.url;
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      const filesToUpload = req.files.slice(0, 3);
+      const uploadPromises = filesToUpload.map((f) => uploadImageBuffer(f.buffer, 'wandersync/community'));
+      const results = await Promise.all(uploadPromises);
+      results.forEach((r) => { if (r?.url) images.push(r.url); });
+    } else if (req.file) {
+      const result = await uploadImageBuffer(req.file.buffer, 'wandersync/community');
+      if (result?.url) images.push(result.url);
+    } else if (req.body.image) {
+      images.push(req.body.image);
     }
     const message = await Message.create({
       user: req.user._id,
       room: room || 'global-lounge',
-      text: text.trim(),
-      image,
+      text: text ? text.trim() : '',
+      image: images[0] || '',
+      images,
       destinationTag: destinationTag || ''
     });
     const populated = await Message.findById(message._id).populate('user', 'name email avatar role');
