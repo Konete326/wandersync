@@ -352,7 +352,7 @@ export const WORLD_COUNTRIES = [
       'https://images.unsplash.com/photo-1578895101408-1a36b834405b?w=800&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1565552645632-d725f8bfc19a?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1518684079-3c830dcef090?w=800&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1609137144822-26155998a44c?w=800&auto=format&fit=crop&q=80'
     ],
     description: 'Saudi Arabia features spiritual sanctuaries, ancient UNESCO tombs in AlUla, Red Sea coral reefs, and futuristic mega-developments.',
     popularCities: [
@@ -370,7 +370,7 @@ export const WORLD_COUNTRIES = [
         description: 'Coastal Red Sea gateway with historic Al-Balad coral architecture',
         images: [
           'https://images.unsplash.com/photo-1578895101408-1a36b834405b?w=800&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1518684079-3c830dcef090?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&auto=format&fit=crop&q=80',
           'https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?w=800&auto=format&fit=crop&q=80'
         ]
       }
