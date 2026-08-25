@@ -16,11 +16,13 @@ import {
   Phone,
   Mail,
   Link as LinkIcon,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import { uploadImage } from '@/services/mediaService';
 import { compressImage } from '@/utils/imageCompressor';
 import {
+  fetchHotels,
   fetchHotelById,
   createHotel,
   updateHotel
@@ -48,6 +50,7 @@ export default function AdminHotelEditor() {
   const [saving, setSaving] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [countriesList, setCountriesList] = useState([]);
+  const [existingHotels, setExistingHotels] = useState([]);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -74,10 +77,12 @@ export default function AdminHotelEditor() {
   useEffect(() => {
     const loadCountryOptions = async () => {
       try {
-        const res = await fetchCountries(1, 50);
-        if (res.data?.countries) {
-          setCountriesList(res.data.countries);
-        }
+        const [resCountries, resHotels] = await Promise.all([
+          fetchCountries(1, 50),
+          fetchHotels(1, 100)
+        ]);
+        if (resCountries.data?.countries) setCountriesList(resCountries.data.countries);
+        if (resHotels.data?.hotels) setExistingHotels(resHotels.data.hotels);
       } catch {
       }
     };
@@ -343,6 +348,26 @@ export default function AdminHotelEditor() {
               ))}
             </div>
           </div>
+
+          {/* Duplicate Hotel Property Alert */}
+          {!isEditing && formData.name.trim() && (() => {
+            const dupHotel = existingHotels.find(
+              (h) =>
+                h.name?.trim().toLowerCase() === formData.name.trim().toLowerCase() &&
+                (!formData.city || h.city?.trim().toLowerCase() === formData.city?.trim().toLowerCase())
+            );
+            if (dupHotel) {
+              return (
+                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-amber-400 text-xs animate-in fade-in duration-200">
+                  <AlertTriangle className="size-4 shrink-0 text-amber-400" />
+                  <span>
+                    <strong>Duplicate Hotel Alert:</strong> "{dupHotel.name}" is already registered in {dupHotel.city || dupHotel.country}!
+                  </span>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-8 space-y-3">

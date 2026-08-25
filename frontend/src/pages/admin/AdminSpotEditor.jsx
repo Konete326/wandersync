@@ -15,11 +15,13 @@ import {
   Globe,
   Sparkles,
   Link as LinkIcon,
-  Check
+  Check,
+  AlertTriangle
 } from 'lucide-react';
 import { uploadImage } from '@/services/mediaService';
 import { compressImage } from '@/utils/imageCompressor';
 import {
+  fetchSpots,
   fetchSpotById,
   createSpot,
   updateSpot
@@ -106,6 +108,7 @@ export default function AdminSpotEditor() {
   const [saving, setSaving] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [countriesList, setCountriesList] = useState([]);
+  const [existingSpots, setExistingSpots] = useState([]);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const [coverMode, setCoverMode] = useState('upload');
@@ -135,10 +138,12 @@ export default function AdminSpotEditor() {
   useEffect(() => {
     const loadCountryOptions = async () => {
       try {
-        const res = await fetchCountries(1, 50);
-        if (res.data?.countries) {
-          setCountriesList(res.data.countries);
-        }
+        const [resCountries, resSpots] = await Promise.all([
+          fetchCountries(1, 50),
+          fetchSpots(1, 100)
+        ]);
+        if (resCountries.data?.countries) setCountriesList(resCountries.data.countries);
+        if (resSpots.data?.spots) setExistingSpots(resSpots.data.spots);
       } catch {}
     };
     loadCountryOptions();
@@ -445,6 +450,26 @@ export default function AdminSpotEditor() {
               ))}
             </div>
           </div>
+
+          {/* Duplicate Attraction Alert */}
+          {!isEditing && formData.name.trim() && (() => {
+            const dupSpot = existingSpots.find(
+              (s) =>
+                s.name?.trim().toLowerCase() === formData.name.trim().toLowerCase() &&
+                (!formData.country || s.country?.trim().toLowerCase() === formData.country.trim().toLowerCase())
+            );
+            if (dupSpot) {
+              return (
+                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-amber-400 text-xs animate-in fade-in duration-200">
+                  <AlertTriangle className="size-4 shrink-0 text-amber-400" />
+                  <span>
+                    <strong>Duplicate Landmark Alert:</strong> "{dupSpot.name}" is already registered in {dupSpot.city || dupSpot.country}!
+                  </span>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-8 space-y-3">

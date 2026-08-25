@@ -17,11 +17,13 @@ import {
   ChevronDown,
   Search,
   Check,
-  Zap
+  Zap,
+  AlertTriangle
 } from 'lucide-react';
 import { uploadImage } from '@/services/mediaService';
 import { compressImage } from '@/utils/imageCompressor';
 import {
+  fetchCountries,
   fetchCountryById,
   createCountry,
   updateCountry
@@ -151,6 +153,13 @@ export default function AdminCountryEditor() {
   });
   const [coverMode, setCoverMode] = useState('url');
   const coverInputRef = useRef(null);
+  const [existingCountries, setExistingCountries] = useState([]);
+
+  useEffect(() => {
+    fetchCountries(1, 100).then((res) => {
+      if (res.data?.countries) setExistingCountries(res.data.countries);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -526,6 +535,26 @@ export default function AdminCountryEditor() {
               <span>Smart Country Auto-Fill Active</span>
             </span>
           </div>
+
+          {/* Duplicate Country Alert */}
+          {!isEditing && (formData.name.trim() || formData.code.trim()) && (() => {
+            const dupCountry = existingCountries.find(
+              (c) =>
+                (formData.name && c.name?.trim().toLowerCase() === formData.name.trim().toLowerCase()) ||
+                (formData.code && c.code?.trim().toLowerCase() === formData.code.trim().toLowerCase())
+            );
+            if (dupCountry) {
+              return (
+                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-amber-400 text-xs animate-in fade-in duration-200">
+                  <AlertTriangle className="size-4 shrink-0 text-amber-400" />
+                  <span>
+                    <strong>Duplicate Country Alert:</strong> "{dupCountry.name}" ({dupCountry.code}) is already saved in the database!
+                  </span>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
 
 

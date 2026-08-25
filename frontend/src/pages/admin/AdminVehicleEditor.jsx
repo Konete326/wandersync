@@ -15,11 +15,13 @@ import {
   Globe,
   Fuel,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import { uploadImage } from '@/services/mediaService';
 import { compressImage } from '@/utils/imageCompressor';
 import {
+  fetchVehicles,
   fetchVehicleById,
   createVehicle,
   updateVehicle
@@ -47,6 +49,7 @@ export default function AdminVehicleEditor() {
   const [saving, setSaving] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [countriesList, setCountriesList] = useState([]);
+  const [existingVehicles, setExistingVehicles] = useState([]);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -71,16 +74,18 @@ export default function AdminVehicleEditor() {
   const [coverPreview, setCoverPreview] = useState('');
 
   useEffect(() => {
-    const loadCountryOptions = async () => {
+    const loadInitialOptions = async () => {
       try {
-        const res = await fetchCountries(1, 50);
-        if (res.data?.countries) {
-          setCountriesList(res.data.countries);
-        }
+        const [resCountries, resVehicles] = await Promise.all([
+          fetchCountries(1, 50),
+          fetchVehicles(1, 100)
+        ]);
+        if (resCountries.data?.countries) setCountriesList(resCountries.data.countries);
+        if (resVehicles.data?.vehicles) setExistingVehicles(resVehicles.data.vehicles);
       } catch {
       }
     };
-    loadCountryOptions();
+    loadInitialOptions();
   }, []);
 
   useEffect(() => {
@@ -388,6 +393,24 @@ export default function AdminVehicleEditor() {
               ))}
             </div>
           </div>
+
+          {/* Duplicate Vehicle Alert */}
+          {!isEditing && formData.name.trim() && (() => {
+            const dupVeh = existingVehicles.find(
+              (v) => v.name?.trim().toLowerCase() === formData.name.trim().toLowerCase()
+            );
+            if (dupVeh) {
+              return (
+                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-amber-400 text-xs animate-in fade-in duration-200">
+                  <AlertTriangle className="size-4 shrink-0 text-amber-400" />
+                  <span>
+                    <strong>Duplicate Vehicle Alert:</strong> "{dupVeh.name}" ({dupVeh.vehicleType}) is already registered in the fleet!
+                  </span>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-8 space-y-3">
