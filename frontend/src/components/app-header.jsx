@@ -6,7 +6,7 @@ import { AppBreadcrumbs } from '@/components/app-breadcrumbs';
 import { navLinks } from '@/components/app-shared';
 import { CustomSidebarTrigger } from '@/components/custom-sidebar-trigger';
 import { NavUser } from '@/components/nav-user';
-import { History, Bell, Bot } from 'lucide-react';
+import { History, Bell } from 'lucide-react';
 
 export function AppHeader() {
   const location = useLocation();
@@ -31,15 +31,6 @@ export function AppHeader() {
         <AppBreadcrumbs page={activeItem} />
       </div>
       <div className="flex items-center gap-2 md:gap-3">
-        <button
-          type="button"
-          onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat'))}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-orange-500/40 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 font-bold text-xs transition-all cursor-pointer shadow-xs"
-          title="Open AI Operations Copilot"
-        >
-          <Bot className="size-3.5 animate-pulse" />
-          <span className="hidden sm:inline">AI Copilot</span>
-        </button>
 
         <Link
           to="/admin/changelog"

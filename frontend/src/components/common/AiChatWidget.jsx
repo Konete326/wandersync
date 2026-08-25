@@ -6,8 +6,6 @@ import {
   Sparkles,
   Minimize2,
   Trash2,
-  Brain,
-  Zap,
   Bot,
   Crown,
   Compass,
@@ -22,9 +20,14 @@ import {
   Car,
   Image,
   Receipt,
-  Settings
+  Settings,
+  MapPin,
+  Calendar,
+  DollarSign,
+  CheckCircle2
 } from 'lucide-react';
 import { chatWithAiAssistant } from '../../services/aiService';
+import { saveTrip } from '../../services/tripService';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 
@@ -68,17 +71,11 @@ const adminQuickPrompts = [
 ];
 
 const userQuickPrompts = [
-  'Plan 5-Day Japan Trip',
+  'Plan 5-Day Tokyo Trip',
+  'Create 3-Day Paris Romantic Plan',
+  'Generate 7-Day Hunza Expedition',
   'Explore Top Destinations',
-  'Packing tips for Europe',
-  'Join Traveler Community',
-  'Find Flight Deals'
-];
-
-const thinkingSteps = [
-  'Analyzing request & operational context...',
-  'Querying live platform telemetry...',
-  'Synthesizing actions & guidance...'
+  'Packing tips for Europe'
 ];
 
 export default function AiChatWidget({ tripContext = null }) {
@@ -93,10 +90,29 @@ export default function AiChatWidget({ tripContext = null }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [thinkingStep, setThinkingStep] = useState(0);
-  const [thinkingSeconds, setThinkingSeconds] = useState(0);
+  const [savingTripId, setSavingTripId] = useState(null);
   const messagesEndRef = useRef(null);
-  const thinkingTimerRef = useRef(null);
+
+  const handleSaveGeneratedTrip = async (itinerary) => {
+    if (!itinerary) return;
+    setSavingTripId(itinerary.title || 'saving');
+    try {
+      const res = await saveTrip(itinerary);
+      const newTripId = res.data?._id || res.data?.id;
+      showToast('Itinerary saved to My Trips!', 'success');
+      if (newTripId) {
+        navigate(`/trips/${newTripId}`);
+        setIsOpen(false);
+      } else {
+        navigate('/my-trips');
+        setIsOpen(false);
+      }
+    } catch {
+      showToast('Could not save itinerary. Please login to save.', 'error');
+    } finally {
+      setSavingTripId(null);
+    }
+  };
 
   useEffect(() => {
     if (isAdmin) {
@@ -118,7 +134,7 @@ export default function AiChatWidget({ tripContext = null }) {
         {
           id: 'user-welcome',
           sender: 'assistant',
-          text: "Hello! I'm your WanderSync AI Travel Concierge powered by Google Gemini. Ask me for destination advice, itinerary plans, packing tips, or explore our travel community!",
+          text: "Hello! I'm your WanderSync AI Travel Concierge powered by OpenAI GPT-4o & Gemini. Ask me for complete travel plans (e.g. 'Mujhe 5 days ka Tokyo plan bana kar do'), destination advice, or packing tips!",
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           actions: [
             { label: 'Plan a New Trip', path: '/create-trip' },
@@ -138,22 +154,6 @@ export default function AiChatWidget({ tripContext = null }) {
       scrollToBottom();
     }
   }, [messages, isOpen, loading]);
-
-  useEffect(() => {
-    if (loading) {
-      setThinkingStep(0);
-      setThinkingSeconds(0);
-      thinkingTimerRef.current = setInterval(() => {
-        setThinkingSeconds((s) => s + 1);
-        setThinkingStep((step) => (step + 1) % thinkingSteps.length);
-      }, 1100);
-    } else {
-      if (thinkingTimerRef.current) clearInterval(thinkingTimerRef.current);
-    }
-    return () => {
-      if (thinkingTimerRef.current) clearInterval(thinkingTimerRef.current);
-    };
-  }, [loading]);
 
   useEffect(() => {
     const handleOpenChat = () => setIsOpen(true);
@@ -204,7 +204,9 @@ export default function AiChatWidget({ tripContext = null }) {
         sender: 'assistant',
         text: res.data?.reply || 'I am ready to assist you further.',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        actions: detected.length > 0 ? detected : undefined
+        actions: detected.length > 0 ? detected : undefined,
+        generatedItinerary: res.data?.generatedItinerary || null,
+        provider: res.data?.provider || 'AI Engine'
       };
       setMessages((prev) => [...prev, botMsg]);
     } catch {
@@ -213,7 +215,7 @@ export default function AiChatWidget({ tripContext = null }) {
         {
           id: (Date.now() + 1).toString(),
           sender: 'assistant',
-          text: 'Sorry, I ran into an issue connecting to Gemini AI. Please try again in a moment.',
+          text: 'Sorry, I ran into an issue connecting to the AI engine. Please try again in a moment.',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -336,32 +338,101 @@ export default function AiChatWidget({ tripContext = null }) {
                         ))}
                       </div>
                     )}
+
+                    {msg.generatedItinerary && (
+                      <div className="mt-3 p-3 rounded-xl bg-[#121215] border border-orange-500/30 space-y-2.5 text-left shadow-md">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-0.5 min-w-0">
+                            <span className="px-2 py-0.5 rounded-md bg-orange-500/15 text-orange-400 border border-orange-500/30 text-[9px] font-bold uppercase tracking-wider">
+                              {msg.generatedItinerary.durationDays || msg.generatedItinerary.days?.length || 3} Days • {msg.generatedItinerary.budgetLevel || 'Moderate'}
+                            </span>
+                            <h4 className="text-xs font-bold text-foreground truncate pt-1">
+                              {msg.generatedItinerary.title}
+                            </h4>
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <MapPin className="size-3 text-orange-400 shrink-0" />
+                              <span className="truncate">
+                                {msg.generatedItinerary.destination?.city || ''}{msg.generatedItinerary.destination?.country ? `, ${msg.generatedItinerary.destination?.country}` : ''}
+                              </span>
+                            </div>
+                          </div>
+                          {msg.generatedItinerary.estimatedTotalCost > 0 && (
+                            <div className="px-2 py-1 rounded-lg bg-secondary/80 border border-border text-right shrink-0">
+                              <span className="text-[9px] text-muted-foreground block">Est. Cost</span>
+                              <span className="text-xs font-bold text-foreground">
+                                ${msg.generatedItinerary.estimatedTotalCost}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {msg.generatedItinerary.overview && (
+                          <p className="text-[11px] text-zinc-300 line-clamp-2 leading-relaxed">
+                            {msg.generatedItinerary.overview}
+                          </p>
+                        )}
+
+                        {msg.generatedItinerary.highlights && msg.generatedItinerary.highlights.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pt-0.5">
+                            {msg.generatedItinerary.highlights.slice(0, 3).map((h, idx) => (
+                              <span key={idx} className="px-1.5 py-0.5 rounded bg-secondary/60 text-zinc-300 text-[9px] font-medium border border-border/60 flex items-center gap-1">
+                                <Sparkles className="size-2 text-orange-400" />
+                                <span className="truncate max-w-[120px]">{h}</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {msg.generatedItinerary.days && msg.generatedItinerary.days.length > 0 && (
+                          <div className="pt-2 border-t border-border/50 space-y-1.5">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                              Day-by-Day Plan ({msg.generatedItinerary.days.length} Days)
+                            </span>
+                            <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar pr-1">
+                              {msg.generatedItinerary.days.map((day) => (
+                                <div key={day.dayNumber} className="p-1.5 rounded-lg bg-secondary/30 border border-border/40 text-[10px] space-y-0.5">
+                                  <div className="flex items-center justify-between font-bold text-orange-300">
+                                    <span>Day {day.dayNumber}: {day.title || day.theme}</span>
+                                    <span className="text-[9px] text-muted-foreground">{day.activities?.length || 0} stops</span>
+                                  </div>
+                                  {day.activities?.[0] && (
+                                    <p className="text-muted-foreground line-clamp-1 text-[9px]">
+                                      • {day.activities[0].timeSlot}: {day.activities[0].title}
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="pt-1.5">
+                          <button
+                            type="button"
+                            disabled={savingTripId === (msg.generatedItinerary.title || 'saving')}
+                            onClick={() => handleSaveGeneratedTrip(msg.generatedItinerary)}
+                            className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-orange-950/40 cursor-pointer disabled:opacity-50 min-h-[36px]"
+                          >
+                            <Sparkles className="size-3.5" />
+                            <span>{savingTripId === (msg.generatedItinerary.title || 'saving') ? 'Saving Plan...' : 'Save & Open Itinerary'}</span>
+                            <ArrowRight className="size-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <span className="text-[9px] text-muted-foreground/60 mt-1 px-1">
-                    {msg.time}
+                    {msg.time} {msg.provider && `• ${msg.provider}`}
                   </span>
                 </div>
               );
             })}
 
             {loading && (
-              <div className="self-start max-w-[90%] rounded-2xl p-3 bg-secondary/40 border border-orange-500/30 space-y-2 animate-in fade-in duration-200">
-                <div className="flex items-center gap-2 text-orange-400">
-                  <Brain className="size-3.5 animate-spin" />
-                  <span className="text-[11px] font-bold">
-                    {isAdmin ? 'Processing Ops Directive' : 'Thinking Process'}
-                  </span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-orange-950/80 text-orange-300 font-mono border border-orange-800/60 ml-auto">
-                    {thinkingSeconds}s
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                  <Zap className="size-3 text-amber-400 shrink-0" />
-                  <span className="animate-pulse">{thinkingSteps[thinkingStep]}</span>
-                </div>
-                <div className="w-full bg-secondary/80 h-1 rounded-full overflow-hidden">
-                  <div className="bg-gradient-to-r from-orange-500 to-amber-400 h-full w-2/3 animate-pulse rounded-full" />
-                </div>
+              <div className="self-start flex items-center gap-1.5 px-4 py-3 rounded-2xl bg-[#18181b] border border-border/80 rounded-bl-none shadow-sm animate-in fade-in duration-150">
+                <span className="size-2 rounded-full bg-orange-400 animate-bounce [animation-delay:-0.3s]" />
+                <span className="size-2 rounded-full bg-orange-400 animate-bounce [animation-delay:-0.15s]" />
+                <span className="size-2 rounded-full bg-orange-400 animate-bounce" />
               </div>
             )}
             <div ref={messagesEndRef} />

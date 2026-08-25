@@ -61,7 +61,7 @@ export default function ValidatedInput({
           min={min}
           max={max}
           step={step}
-          className={`w-full px-3 py-1.5 rounded-lg bg-secondary/60 text-xs text-foreground placeholder-muted-foreground/50 transition-colors focus:outline-none ${
+          className={`w-full px-3.5 py-2 min-h-[38px] rounded-xl bg-secondary/60 text-xs sm:text-sm text-foreground placeholder-muted-foreground/50 transition-colors focus:outline-none ${
             hasError
               ? 'border border-rose-500/80 focus:ring-1 focus:ring-rose-500/60 bg-rose-950/10'
               : 'border border-border focus:ring-1 focus:ring-orange-500/50'

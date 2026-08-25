@@ -323,12 +323,14 @@ export default function AdminTourPOSTerminal() {
                 />
 
                 <div className="space-y-0.5">
-                  <label className="text-[11px] font-bold text-zinc-300 flex items-center justify-between">
+                  <label htmlFor="contactPhone" className="text-[11px] font-bold text-zinc-300 flex items-center justify-between cursor-pointer">
                     <span>Contact Phone</span>
                     <span className="text-[10px] text-muted-foreground font-normal">(Optional)</span>
                   </label>
                   <div className="flex items-center gap-1.5">
                     <select
+                      id="phoneCountryCode"
+                      aria-label="Country Calling Code"
                       value={phoneCountryCode}
                       onChange={(e) => {
                         const newCode = e.target.value;
@@ -349,16 +351,20 @@ export default function AdminTourPOSTerminal() {
                     </select>
 
                     <input
+                      id="contactPhone"
+                      name="contactPhone"
                       type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
                       value={phoneNumber}
                       onChange={(e) => {
                         const selected = countryCallingCodes.find((c) => c.code === phoneCountryCode) || countryCallingCodes[0];
                         setPhoneNumber(formatPhoneNumber(e.target.value, selected.mask));
                       }}
                       placeholder={
-                        countryCallingCodes.find((c) => c.code === phoneCountryCode)?.mask.replace(/#/g, '0') || '(555) 000-0000'
+                        countryCallingCodes.find((c) => c.code === phoneCountryCode)?.sample || '300 1234567'
                       }
-                      className="w-full px-2.5 py-1 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 h-[30px]"
+                      className="w-full px-2.5 py-1 rounded-lg bg-[#121215] border border-border/80 text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/40 h-[30px] select-text font-mono"
                     />
                   </div>
                 </div>

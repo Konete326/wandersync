@@ -35,6 +35,7 @@ import { fetchSpots } from '@/services/spotService';
 import { fetchVehicles } from '@/services/vehicleService';
 import { fetchFlights } from '@/services/flightService';
 import { fetchCountries } from '@/services/countryService';
+import { fetchEvents } from '@/services/externalTravelService';
 import { useModal } from '@/context/ModalContext';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
@@ -56,6 +57,7 @@ export default function DestinationExplorer() {
   const [spots, setSpots] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [flights, setFlights] = useState([]);
+  const [events, setEvents] = useState([]);
   const [countryInfo, setCountryInfo] = useState(null);
 
   const [selectedCity, setSelectedCity] = useState(initialDest?.city || '');
@@ -100,12 +102,13 @@ export default function DestinationExplorer() {
       try {
         const targetCity = selectedCity || destination.city || '';
         
-        const [hotelsRes, spotsRes, vehiclesRes, flightsRes, countriesRes] = await Promise.allSettled([
+        const [hotelsRes, spotsRes, vehiclesRes, flightsRes, countriesRes, eventsRes] = await Promise.allSettled([
           fetchHotels(1, 20, destination.country, targetCity),
           fetchSpots(1, 30, destination.country, targetCity),
           fetchVehicles(1, 20, '', destination.country, targetCity),
           fetchFlights(1, 20, '', destination.country, targetCity),
-          fetchCountries(1, 50, '', destination.country)
+          fetchCountries(1, 50, '', destination.country),
+          fetchEvents(targetCity || destination.city || 'Tokyo')
         ]);
 
         if (hotelsRes.status === 'fulfilled' && hotelsRes.value.data?.hotels) {
@@ -138,6 +141,10 @@ export default function DestinationExplorer() {
           if (liveFlights.length > 0 && !selectedFlight) {
             setSelectedFlight(liveFlights[0]);
           }
+        }
+
+        if (eventsRes.status === 'fulfilled' && eventsRes.value.data) {
+          setEvents(eventsRes.value.data);
         }
 
         if (countriesRes.status === 'fulfilled' && countriesRes.value.data?.countries) {

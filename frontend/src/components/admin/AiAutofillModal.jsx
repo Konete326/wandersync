@@ -91,14 +91,14 @@ export default function AiAutofillModal({ isOpen, onClose, entityType = 'country
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="e.g. Japan, Hunza Valley, Burj Al Arab, Toyota Land Cruiser..."
-                className="w-full pl-3.5 pr-10 h-[38px] rounded-xl bg-[#18181b] border border-border/80 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/40"
+                className="w-full pl-4 pr-11 h-11 rounded-xl bg-[#18181b] border border-border/80 text-xs sm:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/40"
               />
-              <Wand2 className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-orange-400/80" />
+              <Wand2 className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-orange-400/80" />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <span className="text-[10px] font-bold text-muted-foreground">Quick Suggestions:</span>
+            <span className="text-[11px] font-bold text-muted-foreground">Quick Suggestions:</span>
             <div className="flex flex-wrap gap-1.5">
               {suggestions.map((sug) => (
                 <button
@@ -109,7 +109,7 @@ export default function AiAutofillModal({ isOpen, onClose, entityType = 'country
                     setQuery(sug);
                     handleGenerate(sug);
                   }}
-                  className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#18181b] hover:bg-orange-500/10 text-muted-foreground hover:text-orange-400 border border-border/80 hover:border-orange-500/40 transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#18181b] hover:bg-orange-500/10 text-muted-foreground hover:text-orange-400 border border-border/80 hover:border-orange-500/40 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {sug}
                 </button>
@@ -117,12 +117,12 @@ export default function AiAutofillModal({ isOpen, onClose, entityType = 'country
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/80">
+          <div className="flex items-center justify-end gap-2.5 pt-3.5 border-t border-border/80">
             <button
               type="button"
               disabled={loading}
               onClick={onClose}
-              className="px-3.5 h-[34px] rounded-xl bg-secondary/80 hover:bg-secondary text-muted-foreground hover:text-foreground text-xs font-semibold cursor-pointer disabled:opacity-50"
+              className="px-4 h-10 rounded-xl bg-secondary/80 hover:bg-secondary text-muted-foreground hover:text-foreground text-xs sm:text-sm font-semibold cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>
@@ -131,16 +131,16 @@ export default function AiAutofillModal({ isOpen, onClose, entityType = 'country
               type="submit"
               disabled={loading || !query.trim()}
               size="sm"
-              innerClassName="h-[34px] px-4 text-xs font-bold flex items-center gap-1.5"
+              innerClassName="h-10 px-5 text-xs sm:text-sm font-bold flex items-center gap-2"
             >
               {loading ? (
                 <>
-                  <Loader2 className="size-3.5 animate-spin" />
+                  <Loader2 className="size-4 animate-spin" />
                   <span>Generating Telemetry...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="size-3.5" />
+                  <Sparkles className="size-4" />
                   <span>Auto-Fill Form</span>
                 </>
               )}

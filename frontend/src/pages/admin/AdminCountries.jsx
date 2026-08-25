@@ -31,14 +31,15 @@ export default function AdminCountries() {
   const navigate = useNavigate();
   const { showModal, showToast } = useModal();
 
+  const [continent, setContinent] = useState('All');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+
   const cacheKey = `countries_${continent}_${page}_${search}`;
   const initialData = getCachedData(cacheKey);
 
   const [countries, setCountries] = useState(initialData?.countries || []);
   const [loading, setLoading] = useState(!initialData);
-  const [continent, setContinent] = useState('All');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(initialData?.page || 1);
   const [totalPages, setTotalPages] = useState(initialData?.pages || 1);
   const [total, setTotal] = useState(initialData?.total || 0);
 

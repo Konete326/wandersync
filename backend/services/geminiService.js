@@ -67,12 +67,23 @@ JSON schema:
 };
 
 export const chatWithGemini = async (message, history = [], tripContext = null, isAdmin = false) => {
-  let prompt = isAdmin
-    ? `You are WanderSync AI Operations Copilot & Agency Commander. You have full command access across the WanderSync system (Group Tours, Tour POS Terminal, Trips Maestro, Travelers, Staff & Task Delegation, Travel Catalog [Countries, Spots, Hotels, Vehicles, Flights, Media], AI Analytics, Expenses, and System Settings).
-Assist the administrator with operations, catalog navigation, task delegation, and metric analytics. Provide clear, actionable operational advice.\n`
-    : `You are WanderSync AI Travel Concierge, an expert global travel advisor.\n`;
+  if (isAdmin) {
+    let prompt = `You are WanderSync AI Operations Copilot & Agency Commander. Return JSON: {"reply":"...", "generatedItinerary": null}\n`;
+    if (history && history.length > 0) prompt += `\nHISTORY:\n` + history.slice(-6).map((h) => `${h.sender === 'user' ? 'User' : 'Assistant'}: ${h.text}`).join('\n') + `\n`;
+    prompt += `\nUser's Message: ${message}\nAssistant:`;
+    return await executeWithRetryAndFallback(prompt, true);
+  }
+
+  let prompt = `You are WanderSync AI Travel Concierge, an expert global travel advisor.
+If the user asks to generate a full travel plan, create an itinerary, or says "pura plan bana kar do", "create 5-day plan for Tokyo", etc., return a JSON object with:
+1. "reply": A warm, encouraging, conversational response summarizing the trip highlights.
+2. "generatedItinerary": A complete valid Trip object (title, destination: {city, country, coordinates: {lat: Number, lng: Number}}, overview, highlights: [3-5 strings], budgetLevel, estimatedTotalCost: Number, currency: "USD", days: [{dayNumber: 1, title, theme, activities: [{timeSlot: "Morning"|"Afternoon"|"Evening"|"Night", title, description, locationName, coordinates: {lat: Number, lng: Number}, durationHours: Number, estimatedCost: Number, category: "Sightseeing"|"Food"|"Culture"|"Adventure"|"Relaxation"|"Transit", bookingLink: ""}]}], travelTips: {packing: [], localEtiquette: [], transitAdvice: []}).
+If the user is only chatting or asking general travel questions, set "generatedItinerary": null and provide your answer in "reply".
+Always output valid JSON in this exact structure: {"reply": "...", "generatedItinerary": null | {...}}\n`;
+
   if (tripContext) prompt += `\nACTIVE CONTEXT: ${typeof tripContext === 'string' ? tripContext : JSON.stringify(tripContext)}\n`;
   if (history && history.length > 0) prompt += `\nHISTORY:\n` + history.slice(-6).map((h) => `${h.sender === 'user' ? 'User' : 'Assistant'}: ${h.text}`).join('\n') + `\n`;
   prompt += `\nUser's Message: ${message}\nAssistant:`;
-  return await executeWithRetryAndFallback(prompt, false);
+
+  return await executeWithRetryAndFallback(prompt, true);
 };

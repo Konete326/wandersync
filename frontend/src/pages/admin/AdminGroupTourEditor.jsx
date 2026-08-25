@@ -379,7 +379,7 @@ export default function AdminGroupTourEditor() {
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none cursor-pointer"
+                    className="w-full px-3.5 py-2 min-h-[38px] rounded-xl bg-secondary/60 border border-border text-xs sm:text-sm text-foreground focus:outline-none cursor-pointer"
                   >
                     {tourCategories.map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -473,7 +473,7 @@ export default function AdminGroupTourEditor() {
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none cursor-pointer"
+                    className="w-full px-3.5 py-2 min-h-[38px] rounded-xl bg-secondary/60 border border-border text-xs sm:text-sm text-foreground focus:outline-none cursor-pointer"
                   >
                     {tourStatuses.map((st) => (
                       <option key={st} value={st}>{st}</option>
@@ -528,12 +528,12 @@ export default function AdminGroupTourEditor() {
                   }
                 }}
                 placeholder="e.g. 5-Star Hotel, Buffet Breakfast, Airport Transfers, Entry Tickets"
-                className="flex-1 px-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                className="flex-1 px-3.5 py-2 min-h-[38px] rounded-xl bg-secondary/50 border border-border text-xs sm:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               />
               <button
                 type="button"
                 onClick={handleAddInclusion}
-                className="px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground text-xs font-bold border border-border cursor-pointer flex items-center gap-1"
+                className="px-3.5 py-2 min-h-[38px] rounded-xl bg-secondary hover:bg-secondary/80 text-foreground text-xs font-bold border border-border cursor-pointer flex items-center gap-1"
               >
                 <Plus className="size-3.5 text-orange-400" />
                 <span>Add Perk</span>

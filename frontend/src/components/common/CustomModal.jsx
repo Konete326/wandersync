@@ -116,7 +116,7 @@ const CustomModal = ({
             <button
               type="button"
               onClick={handleCancel}
-              className="px-3.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground bg-secondary/60 hover:bg-secondary border border-border rounded-xl transition-all cursor-pointer min-h-[34px]"
+              className="px-4 py-2 text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground bg-secondary/60 hover:bg-secondary border border-border rounded-xl transition-all cursor-pointer min-h-[40px]"
             >
               {cancelText}
             </button>
@@ -125,7 +125,7 @@ const CustomModal = ({
             ref={confirmBtnRef}
             type="button"
             onClick={handleConfirm}
-            className={`px-4 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer min-h-[34px] shadow-sm flex items-center gap-1.5 ${getConfirmBtnClass()}`}
+            className={`px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer min-h-[40px] shadow-sm flex items-center gap-1.5 ${getConfirmBtnClass()}`}
           >
             {isDeleteAction && <Trash2 className="size-3.5" />}
             <span>{confirmText}</span>
