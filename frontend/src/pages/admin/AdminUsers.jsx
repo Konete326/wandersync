@@ -77,6 +77,10 @@ export default function AdminUsers() {
   };
 
   const handleToggleRole = (user) => {
+    if (currentAdmin?._id === user._id || currentAdmin?.email?.toLowerCase() === user.email?.toLowerCase()) {
+      showToast('You cannot modify your own administrator account role', 'error');
+      return;
+    }
     const newRole = user.role === 'admin' ? 'user' : 'admin';
     const actionText = newRole === 'admin' ? 'promote this user to Administrator' : 'demote this user to standard Traveler';
 
@@ -99,6 +103,10 @@ export default function AdminUsers() {
   };
 
   const handleToggleStatus = (user) => {
+    if (currentAdmin?._id === user._id || currentAdmin?.email?.toLowerCase() === user.email?.toLowerCase()) {
+      showToast('You cannot ban or suspend your own account', 'error');
+      return;
+    }
     const newStatus = user.status === 'banned' ? 'active' : 'banned';
     const isBanning = newStatus === 'banned';
 
@@ -123,6 +131,10 @@ export default function AdminUsers() {
   };
 
   const handleDeleteUser = (user) => {
+    if (currentAdmin?._id === user._id || currentAdmin?.email?.toLowerCase() === user.email?.toLowerCase()) {
+      showToast('You cannot delete your own administrator account', 'error');
+      return;
+    }
     showModal({
       title: 'Permanently Delete User Account?',
       message: `Are you sure you want to delete ${user.name} (${user.email}) and all their generated itineraries? This action is permanent and cannot be undone.`,
@@ -246,11 +258,10 @@ export default function AdminUsers() {
               </thead>
               <tbody className="divide-y divide-border/60">
                 {users.map((u) => {
-                  const isCurrent = currentAdmin?._id === u._id;
+                  const isCurrent = currentAdmin?._id === u._id || currentAdmin?.email?.toLowerCase() === u.email?.toLowerCase();
                   const isBanned = u.status === 'banned' || u.status === 'suspended';
                   return (
                     <tr key={u._id} className="hover:bg-secondary/30 transition-colors">
-                      {/* User Avatar + Name + Email */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
                           <div className="size-9 rounded-xl border border-orange-500/30 overflow-hidden bg-secondary shrink-0">
@@ -274,7 +285,6 @@ export default function AdminUsers() {
                         </div>
                       </td>
 
-                      {/* Role Badge */}
                       <td className="py-3.5 px-4">
                         {u.role === 'admin' ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
@@ -289,7 +299,6 @@ export default function AdminUsers() {
                         )}
                       </td>
 
-                      {/* Account Status Badge */}
                       <td className="py-3.5 px-4">
                         {isBanned ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
@@ -304,14 +313,12 @@ export default function AdminUsers() {
                         )}
                       </td>
 
-                      {/* Trips Count */}
                       <td className="py-3.5 px-4 font-mono font-bold text-foreground">
                         <span className="px-2 py-0.5 rounded-lg bg-secondary/60 border border-border text-[11px]">
                           {u.tripsCount || 0} Trips
                         </span>
                       </td>
 
-                      {/* Joined Date */}
                       <td className="py-3.5 px-4 text-muted-foreground text-[11px]">
                         {new Date(u.createdAt).toLocaleDateString(undefined, {
                           year: 'numeric',
@@ -320,43 +327,42 @@ export default function AdminUsers() {
                         })}
                       </td>
 
-                      {/* Actions */}
                       <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Role Toggle Button */}
-                          <button
-                            disabled={isCurrent}
-                            onClick={() => handleToggleRole(u)}
-                            className="p-1.5 rounded-lg bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border disabled:opacity-30 cursor-pointer transition-colors"
-                            title={u.role === 'admin' ? 'Demote to Traveler' : 'Promote to Admin'}
-                          >
-                            <ShieldCheck className={`size-3.5 ${u.role === 'admin' ? 'text-amber-400' : 'text-zinc-400'}`} />
-                          </button>
+                        {isCurrent ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/20">
+                            Protected (You)
+                          </span>
+                        ) : (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleToggleRole(u)}
+                              className="p-1.5 rounded-lg bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border cursor-pointer transition-colors"
+                              title={u.role === 'admin' ? 'Demote to Traveler' : 'Promote to Admin'}
+                            >
+                              <ShieldCheck className={`size-3.5 ${u.role === 'admin' ? 'text-amber-400' : 'text-zinc-400'}`} />
+                            </button>
 
-                          {/* Status Ban / Activate Toggle */}
-                          <button
-                            disabled={isCurrent}
-                            onClick={() => handleToggleStatus(u)}
-                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer disabled:opacity-30 ${
-                              isBanned
-                                ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border-emerald-500/30'
-                                : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border-amber-500/30'
-                            }`}
-                            title={isBanned ? 'Activate Account' : 'Ban Account'}
-                          >
-                            {isBanned ? <UserCheck className="size-3.5" /> : <UserX className="size-3.5" />}
-                          </button>
+                            <button
+                              onClick={() => handleToggleStatus(u)}
+                              className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                isBanned
+                                  ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border-emerald-500/30'
+                                  : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border-amber-500/30'
+                              }`}
+                              title={isBanned ? 'Activate Account' : 'Ban Account'}
+                            >
+                              {isBanned ? <UserCheck className="size-3.5" /> : <UserX className="size-3.5" />}
+                            </button>
 
-                          {/* Delete Account */}
-                          <button
-                            disabled={isCurrent}
-                            onClick={() => handleDeleteUser(u)}
-                            className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 disabled:opacity-30 cursor-pointer transition-colors"
-                            title="Delete Account"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        </div>
+                            <button
+                              onClick={() => handleDeleteUser(u)}
+                              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 cursor-pointer transition-colors"
+                              title="Delete Account"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );
