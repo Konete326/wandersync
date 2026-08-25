@@ -22,6 +22,7 @@ import {
 export const navGroups = [
   {
     label: 'Core Operations',
+    icon: <LayoutGrid className="size-4" />,
     defaultOpen: true,
     items: [
       {
@@ -58,6 +59,7 @@ export const navGroups = [
   },
   {
     label: 'Travel Catalog & Fleet',
+    icon: <Globe className="size-4" />,
     defaultOpen: false,
     items: [
       {
@@ -94,6 +96,7 @@ export const navGroups = [
   },
   {
     label: 'AI & Intelligence',
+    icon: <Sparkles className="size-4" />,
     defaultOpen: false,
     items: [
       {
@@ -110,6 +113,7 @@ export const navGroups = [
   },
   {
     label: 'System & Control',
+    icon: <Settings className="size-4" />,
     defaultOpen: false,
     items: [
       {

@@ -17,9 +17,9 @@ import {
 } from '@/components/ui/sidebar';
 import { ChevronDown, ChevronRightIcon } from 'lucide-react';
 
-export function NavGroup({ label, items, defaultOpen = false }) {
+export function NavGroup({ label, icon, items, defaultOpen = false }) {
   const location = useLocation();
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
   const hasActiveChild = items.some((item) => {
@@ -40,13 +40,39 @@ export function NavGroup({ label, items, defaultOpen = false }) {
     }
   }, [hasActiveChild]);
 
+  const groupIcon = icon || items[0]?.icon;
+
+  const handleCollapsedGroupClick = () => {
+    setOpen(true);
+    setIsOpen(true);
+  };
+
+  if (isCollapsed) {
+    return (
+      <SidebarGroup className="p-0 py-1 flex items-center justify-center">
+        <SidebarMenu className="w-full flex items-center justify-center">
+          <SidebarMenuItem className="flex justify-center w-full">
+            <SidebarMenuButton
+              isActive={hasActiveChild}
+              tooltip={`${label} (Click to open)`}
+              onClick={handleCollapsedGroupClick}
+              className="size-9 justify-center cursor-pointer transition-all hover:border-orange-500/40"
+            >
+              {groupIcon}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
+    );
+  }
+
   return (
-    <SidebarGroup className="py-1 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:py-1">
-      {label && !isCollapsed && (
+    <SidebarGroup className="py-1">
+      {label && (
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className="flex items-center justify-between w-full px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors cursor-pointer group select-none rounded-lg hover:bg-secondary/40 group-data-[collapsible=icon]:hidden"
+          className="flex items-center justify-between w-full px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors cursor-pointer group select-none rounded-lg hover:bg-secondary/40"
         >
           <span className="truncate">{label}</span>
           <ChevronDown
@@ -57,7 +83,7 @@ export function NavGroup({ label, items, defaultOpen = false }) {
         </button>
       )}
 
-      {(isOpen || isCollapsed) && (
+      {isOpen && (
         <SidebarMenu className="mt-0.5 space-y-0.5 animate-in fade-in duration-150">
           {items.map((item) => {
             const isItemActive =
