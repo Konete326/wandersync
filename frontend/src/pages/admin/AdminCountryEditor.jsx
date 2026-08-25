@@ -706,11 +706,6 @@ export default function AdminCountryEditor() {
                         <span className="text-[11px] font-bold text-white tracking-wide">
                           {formData.name || 'Country'}
                         </span>
-                        {formData.code && (
-                          <span className="text-[9px] font-mono font-bold text-orange-400 bg-orange-500/20 px-1 py-0.2 rounded border border-orange-500/30">
-                            {formData.code}
-                          </span>
-                        )}
                       </div>
                       <button
                         type="button"
@@ -747,11 +742,6 @@ export default function AdminCountryEditor() {
                         <span className="text-[11px] font-bold text-white tracking-wide">
                           {formData.name || 'Country'}
                         </span>
-                        {formData.code && (
-                          <span className="text-[9px] font-mono font-bold text-orange-400 bg-orange-500/20 px-1 py-0.2 rounded border border-orange-500/30">
-                            {formData.code}
-                          </span>
-                        )}
                       </div>
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2 z-20">
                         <button

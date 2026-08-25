@@ -228,16 +228,11 @@ export default function AdminCountries() {
                     alt={item.name}
                     containerClassName="h-28 sm:h-30 w-full"
                     overlayChildren={
-                      <div className="absolute top-2 left-2 right-2 flex items-center justify-between z-10 pointer-events-none">
+                      <div className="absolute top-2 left-2 z-10 pointer-events-none">
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-black/75 backdrop-blur-md text-white border border-white/15 flex items-center gap-1.5 shadow-xs">
                           <span className="text-sm leading-none">{getCountryFlag(item.code || item.name)}</span>
                           <span className="uppercase text-[9px]">{item.continent}</span>
                         </span>
-                        {item.code && (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-orange-500 text-zinc-950">
-                            {item.code}
-                          </span>
-                        )}
                       </div>
                     }
                   />
