@@ -31,24 +31,17 @@ import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
-import { WORLD_COUNTRIES, findCountryPreset } from '@/utils/worldCountriesData';
+import {
+  WORLD_COUNTRIES,
+  GLOBAL_COUNTRY_DICTIONARY,
+  findCountryPreset,
+  detectCountryTelemetry
+} from '@/utils/worldCountriesData';
 import { broadcastRealtimeUpdate } from '@/utils/realtimeSync';
 
 const continents = ['Asia', 'Europe', 'North America', 'South America', 'Africa', 'Oceania'];
 
-const popularPresetChips = [
-  'Pakistan',
-  'Japan',
-  'United Arab Emirates',
-  'Switzerland',
-  'Turkey',
-  'Saudi Arabia',
-  'United States',
-  'United Kingdom',
-  'France',
-  'Italy',
-  'Spain'
-];
+
 
 const CURRENCY_SUGGESTIONS = [
   'PKR (Rs)',
@@ -215,6 +208,20 @@ export default function AdminCountryEditor() {
   const handleCountryNameChange = (val) => {
     setFormData((prev) => ({ ...prev, name: val }));
     setCountryFilter(val);
+
+    const detected = detectCountryTelemetry(val);
+    if (detected) {
+      setFormData((prev) => ({
+        ...prev,
+        name: val,
+        code: detected.code || prev.code,
+        continent: detected.continent || prev.continent,
+        currency: detected.currency || prev.currency,
+        language: detected.language || prev.language,
+        timezone: detected.timezone || prev.timezone
+      }));
+    }
+
     const matched = findCountryPreset(val);
     if (matched && matched.name.toLowerCase() === val.trim().toLowerCase()) {
       applyCountryPreset(matched, false);
@@ -412,9 +419,10 @@ export default function AdminCountryEditor() {
     }
   };
 
-  const filteredCountriesList = WORLD_COUNTRIES.filter((c) =>
+  const filteredCountriesList = GLOBAL_COUNTRY_DICTIONARY.filter((c) =>
     c.name.toLowerCase().includes((countryFilter || '').toLowerCase()) ||
-    c.code.toLowerCase().includes((countryFilter || '').toLowerCase())
+    c.code.toLowerCase().includes((countryFilter || '').toLowerCase()) ||
+    (c.aliases && c.aliases.some((a) => a.includes((countryFilter || '').toLowerCase())))
   );
 
   if (loading) {
@@ -481,27 +489,7 @@ export default function AdminCountryEditor() {
             </span>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar py-0.5">
-              <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap mr-1">
-                Quick Select:
-              </span>
-              {popularPresetChips.map((chip) => (
-                <button
-                  key={chip}
-                  type="button"
-                  onClick={() => applyCountryPreset(findCountryPreset(chip))}
-                  className={`text-[10px] px-2.5 py-0.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${
-                    formData.name.toLowerCase() === chip.toLowerCase()
-                      ? 'bg-orange-500 text-zinc-950 font-bold border-orange-500 shadow-xs'
-                      : 'bg-[#18181b] hover:bg-orange-500/10 text-muted-foreground hover:text-orange-400 border-border/80 hover:border-orange-500/40'
-                  }`}
-                >
-                  {chip}
-                </button>
-              ))}
-            </div>
-          </div>
+
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-8 space-y-3">
@@ -530,18 +518,26 @@ export default function AdminCountryEditor() {
                   </div>
 
                   {countryDropdownOpen && (
-                    <div className="absolute left-0 right-0 top-full mt-1 z-30 max-h-56 overflow-y-auto custom-scrollbar bg-[#18181b] border border-orange-500/40 rounded-xl shadow-2xl p-1 space-y-0.5">
+                    <div className="absolute left-0 right-0 top-full mt-1 z-30 max-h-60 overflow-y-auto custom-scrollbar bg-[#18181b] border border-orange-500/40 rounded-xl shadow-2xl p-1 space-y-0.5">
                       {filteredCountriesList.length > 0 ? (
                         filteredCountriesList.map((c) => (
                           <button
-                            key={c.code}
+                            key={c.code + c.name}
                             type="button"
-                            onClick={() => applyCountryPreset(c)}
+                            onClick={() => {
+                              const preset = findCountryPreset(c.name) || c;
+                              applyCountryPreset(preset, true);
+                            }}
                             className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs flex items-center justify-between hover:bg-orange-500/15 text-foreground hover:text-orange-400 transition-colors cursor-pointer"
                           >
-                            <span className="font-semibold">{c.name}</span>
-                            <span className="text-[10px] font-mono text-muted-foreground bg-secondary/80 px-1.5 py-0.2 rounded border border-border/60">
-                              {c.code} • {c.continent}
+                            <div className="flex flex-col">
+                              <span className="font-semibold">{c.name}</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {c.currency} • {c.timezone}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-mono text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/30 font-bold">
+                              {c.code}
                             </span>
                           </button>
                         ))

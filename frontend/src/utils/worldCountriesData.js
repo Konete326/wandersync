@@ -43,8 +43,7 @@ export const WORLD_COUNTRIES = [
     popularCities: [
       { name: 'Dubai', description: 'Home to Burj Khalifa, Palm Jumeirah, and futuristic world attractions', images: ['https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&auto=format&fit=crop&q=80'] },
       { name: 'Abu Dhabi', description: 'Capital city with Sheikh Zayed Grand Mosque and Louvre cultural district', images: ['https://images.unsplash.com/photo-1518684079-3c830dcef090?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Sharjah', description: 'UNESCO cultural and literary capital of the Arab world', images: ['https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Ras Al Khaimah', description: 'Adventure hub featuring the world longest zipline on Jebel Jais', images: ['https://images.unsplash.com/photo-1578895101408-1a36b834405b?w=800&auto=format&fit=crop&q=80'] }
+      { name: 'Sharjah', description: 'UNESCO cultural and literary capital of the Arab world', images: ['https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=800&auto=format&fit=crop&q=80'] }
     ]
   },
   {
@@ -59,8 +58,7 @@ export const WORLD_COUNTRIES = [
     popularCities: [
       { name: 'Zurich', description: 'Cosmopolitan banking and art hub on the shores of Lake Zurich', images: ['https://images.unsplash.com/photo-1515488764276-beab7607c1e6?w=800&auto=format&fit=crop&q=80'] },
       { name: 'Geneva', description: 'Global diplomatic capital with iconic Jet dEau and Lake Geneva views', images: ['https://images.unsplash.com/photo-1573155993874-d5d48af862ba?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Lucerne', description: 'Medieval bridge city surrounded by dramatic Swiss Alps', images: ['https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Zermatt', description: 'Car-free alpine village nestled at the foot of the iconic Matterhorn', images: ['https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=800&auto=format&fit=crop&q=80'] }
+      { name: 'Lucerne', description: 'Medieval bridge city surrounded by dramatic Swiss Alps', images: ['https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=800&auto=format&fit=crop&q=80'] }
     ]
   },
   {
@@ -74,8 +72,7 @@ export const WORLD_COUNTRIES = [
     description: 'Turkey bridges East and West with rich Byzantine and Ottoman history, hot air balloon flights over Cappadocia, turquoise Mediterranean coastlines, and bustling spice bazaars.',
     popularCities: [
       { name: 'Istanbul', description: 'Historic transcontinental city of Hagia Sophia and Bosphorus strait', images: ['https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Cappadocia', description: 'Fairy-tale landscape of cave dwellings and morning hot air balloons', images: ['https://images.unsplash.com/photo-1609137144822-26155998a44c?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Antalya', description: 'Turquoise Coast resort haven with ancient Greco-Roman ruins', images: ['https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80'] }
+      { name: 'Cappadocia', description: 'Fairy-tale landscape of cave dwellings and morning hot air balloons', images: ['https://images.unsplash.com/photo-1609137144822-26155998a44c?w=800&auto=format&fit=crop&q=80'] }
     ]
   },
   {
@@ -89,8 +86,7 @@ export const WORLD_COUNTRIES = [
     description: 'Saudi Arabia features spiritual sanctuaries, ancient UNESCO tombs in AlUla, Red Sea coral reefs, and futuristic mega-developments.',
     popularCities: [
       { name: 'Riyadh', description: 'Dynamic capital city blending historic Diriyah with modern skyline', images: ['https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Jeddah', description: 'Coastal Red Sea gateway with historic Al-Balad coral architecture', images: ['https://images.unsplash.com/photo-1578895101408-1a36b834405b?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'AlUla', description: 'Breathtaking ancient Nabataean rock tombs and desert sandstone formations', images: ['https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?w=800&auto=format&fit=crop&q=80'] }
+      { name: 'Jeddah', description: 'Coastal Red Sea gateway with historic Al-Balad coral architecture', images: ['https://images.unsplash.com/photo-1578895101408-1a36b834405b?w=800&auto=format&fit=crop&q=80'] }
     ]
   },
   {
@@ -131,8 +127,7 @@ export const WORLD_COUNTRIES = [
     coverImage: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&auto=format&fit=crop&q=80',
     description: 'France captivates travelers with romantic Parisian boulevards, world-class gastronomy, sun-drenched French Riviera beaches, and historic Loire Valley chateaux.',
     popularCities: [
-      { name: 'Paris', description: 'City of Light with the Eiffel Tower, Louvre, and haute cuisine', images: ['https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Nice', description: 'Cote dAzur Mediterranean gem with the Promenade des Anglais', images: ['https://images.unsplash.com/photo-1533105079780-92b9be482077?w=800&auto=format&fit=crop&q=80'] }
+      { name: 'Paris', description: 'City of Light with the Eiffel Tower, Louvre, and haute cuisine', images: ['https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&auto=format&fit=crop&q=80'] }
     ]
   },
   {
@@ -146,8 +141,7 @@ export const WORLD_COUNTRIES = [
     description: 'Italy is an open-air museum of ancient Roman ruins, Renaissance masterpieces, romantic Venetian canals, scenic Amalfi Coast cliffs, and authentic cuisine.',
     popularCities: [
       { name: 'Rome', description: 'Eternal City with the Colosseum, Vatican City, and Trevi Fountain', images: ['https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Florence', description: 'Renaissance capital of the Uffizi Gallery and Brunelleschi Duomo', images: ['https://images.unsplash.com/photo-1543429776-2782fc8e1acd?w=800&auto=format&fit=crop&q=80'] },
-      { name: 'Venice', description: 'Floating city of romantic gondola canals and St. Marks Square', images: ['https://images.unsplash.com/photo-1514890547357-a9ee288728e0?w=800&auto=format&fit=crop&q=80'] }
+      { name: 'Florence', description: 'Renaissance capital of the Uffizi Gallery and Brunelleschi Duomo', images: ['https://images.unsplash.com/photo-1543429776-2782fc8e1acd?w=800&auto=format&fit=crop&q=80'] }
     ]
   },
   {
@@ -165,6 +159,80 @@ export const WORLD_COUNTRIES = [
     ]
   }
 ];
+
+export const GLOBAL_COUNTRY_DICTIONARY = [
+  { name: 'Pakistan', code: 'PK', continent: 'Asia', currency: 'PKR (Rs)', language: 'Urdu / English', timezone: 'UTC+5 (PKT)', aliases: ['pakistan', 'pak', 'pk'] },
+  { name: 'Japan', code: 'JP', continent: 'Asia', currency: 'JPY (¥)', language: 'Japanese', timezone: 'UTC+9 (JST)', aliases: ['japan', 'jpn', 'jp', 'tokyo'] },
+  { name: 'United Arab Emirates', code: 'AE', continent: 'Asia', currency: 'AED (د.إ)', language: 'Arabic / English', timezone: 'UTC+4 (GST)', aliases: ['united arab emirates', 'uae', 'emirates', 'dubai', 'abu dhabi', 'are', 'ae'] },
+  { name: 'Saudi Arabia', code: 'SA', continent: 'Asia', currency: 'SAR (﷼)', language: 'Arabic', timezone: 'UTC+3 (AST)', aliases: ['saudi arabia', 'saudi', 'ksa', 'sau', 'sa', 'riyadh', 'jeddah'] },
+  { name: 'United States', code: 'US', continent: 'North America', currency: 'USD ($)', language: 'English', timezone: 'UTC-5 (EST)', aliases: ['united states', 'usa', 'united states of america', 'us', 'america'] },
+  { name: 'United Kingdom', code: 'GB', continent: 'Europe', currency: 'GBP (£)', language: 'English', timezone: 'UTC+0 (GMT)', aliases: ['united kingdom', 'uk', 'great britain', 'britain', 'england', 'gbr', 'gb'] },
+  { name: 'Switzerland', code: 'CH', continent: 'Europe', currency: 'CHF (Fr.)', language: 'German / French / Italian', timezone: 'UTC+1 (CET)', aliases: ['switzerland', 'swiss', 'che', 'ch', 'zurich'] },
+  { name: 'Turkey', code: 'TR', continent: 'Europe', currency: 'TRY (₺)', language: 'Turkish', timezone: 'UTC+3 (TRT)', aliases: ['turkey', 'turkiye', 'türkiye', 'tur', 'tr', 'istanbul'] },
+  { name: 'France', code: 'FR', continent: 'Europe', currency: 'EUR (€)', language: 'French', timezone: 'UTC+1 (CET)', aliases: ['france', 'fra', 'fr', 'paris'] },
+  { name: 'Germany', code: 'DE', continent: 'Europe', currency: 'EUR (€)', language: 'German', timezone: 'UTC+1 (CET)', aliases: ['germany', 'deutschland', 'deu', 'de', 'berlin', 'munich'] },
+  { name: 'Italy', code: 'IT', continent: 'Europe', currency: 'EUR (€)', language: 'Italian', timezone: 'UTC+1 (CET)', aliases: ['italy', 'italia', 'ita', 'it', 'rome', 'florence'] },
+  { name: 'Spain', code: 'ES', continent: 'Europe', currency: 'EUR (€)', language: 'Spanish', timezone: 'UTC+1 (CET)', aliases: ['spain', 'espana', 'españa', 'esp', 'es', 'barcelona', 'madrid'] },
+  { name: 'Canada', code: 'CA', continent: 'North America', currency: 'CAD ($)', language: 'English / French', timezone: 'UTC-5 (EST)', aliases: ['canada', 'can', 'ca', 'toronto', 'vancouver'] },
+  { name: 'Australia', code: 'AU', continent: 'Oceania', currency: 'AUD ($)', language: 'English', timezone: 'UTC+10 (AEST)', aliases: ['australia', 'aus', 'au', 'sydney', 'melbourne'] },
+  { name: 'China', code: 'CN', continent: 'Asia', currency: 'CNY (¥)', language: 'Mandarin', timezone: 'UTC+8 (CST)', aliases: ['china', 'chn', 'cn', 'beijing', 'shanghai'] },
+  { name: 'India', code: 'IN', continent: 'Asia', currency: 'INR (₹)', language: 'Hindi / English', timezone: 'UTC+5:30 (IST)', aliases: ['india', 'ind', 'in', 'delhi', 'mumbai'] },
+  { name: 'Singapore', code: 'SG', continent: 'Asia', currency: 'SGD ($)', language: 'English / Malay / Mandarin', timezone: 'UTC+8 (SGT)', aliases: ['singapore', 'sgp', 'sg'] },
+  { name: 'Malaysia', code: 'MY', continent: 'Asia', currency: 'MYR (RM)', language: 'Malay / English', timezone: 'UTC+8 (MYT)', aliases: ['malaysia', 'mys', 'my', 'kuala lumpur'] },
+  { name: 'Thailand', code: 'TH', continent: 'Asia', currency: 'THB (฿)', language: 'Thai', timezone: 'UTC+7 (ICT)', aliases: ['thailand', 'tha', 'th', 'bangkok', 'phuket'] },
+  { name: 'Indonesia', code: 'ID', continent: 'Asia', currency: 'IDR (Rp)', language: 'Indonesian', timezone: 'UTC+7 (WIB)', aliases: ['indonesia', 'idn', 'id', 'bali', 'jakarta'] },
+  { name: 'Qatar', code: 'QA', continent: 'Asia', currency: 'QAR (QR)', language: 'Arabic / English', timezone: 'UTC+3 (AST)', aliases: ['qatar', 'qat', 'qa', 'doha'] },
+  { name: 'Oman', code: 'OM', continent: 'Asia', currency: 'OMR (RO)', language: 'Arabic / English', timezone: 'UTC+4 (GST)', aliases: ['oman', 'omn', 'om', 'muscat'] },
+  { name: 'Kuwait', code: 'KW', continent: 'Asia', currency: 'KWD (KD)', language: 'Arabic / English', timezone: 'UTC+3 (AST)', aliases: ['kuwait', 'kwt', 'kw'] },
+  { name: 'Bahrain', code: 'BH', continent: 'Asia', currency: 'BHD (BD)', language: 'Arabic / English', timezone: 'UTC+3 (AST)', aliases: ['bahrain', 'bhr', 'bh', 'manama'] },
+  { name: 'Egypt', code: 'EG', continent: 'Africa', currency: 'EGP (E£)', language: 'Arabic', timezone: 'UTC+2 (EET)', aliases: ['egypt', 'egy', 'eg', 'cairo'] },
+  { name: 'Morocco', code: 'MA', continent: 'Africa', currency: 'MAD (DH)', language: 'Arabic / French', timezone: 'UTC+1 (CET)', aliases: ['morocco', 'mar', 'ma', 'marrakech', 'casablanca'] },
+  { name: 'South Africa', code: 'ZA', continent: 'Africa', currency: 'ZAR (R)', language: 'English / Afrikaans', timezone: 'UTC+2 (SAST)', aliases: ['south africa', 'zaf', 'za', 'cape town'] },
+  { name: 'New Zealand', code: 'NZ', continent: 'Oceania', currency: 'NZD ($)', language: 'English', timezone: 'UTC+12 (NZST)', aliases: ['new zealand', 'nzl', 'nz', 'auckland'] },
+  { name: 'Netherlands', code: 'NL', continent: 'Europe', currency: 'EUR (€)', language: 'Dutch / English', timezone: 'UTC+1 (CET)', aliases: ['netherlands', 'holland', 'nld', 'nl', 'amsterdam'] },
+  { name: 'Greece', code: 'GR', continent: 'Europe', currency: 'EUR (€)', language: 'Greek', timezone: 'UTC+2 (EET)', aliases: ['greece', 'grc', 'gr', 'athens', 'santorini'] },
+  { name: 'Portugal', code: 'PT', continent: 'Europe', currency: 'EUR (€)', language: 'Portuguese', timezone: 'UTC+0 (WET)', aliases: ['portugal', 'prt', 'pt', 'lisbon', 'porto'] },
+  { name: 'Austria', code: 'AT', continent: 'Europe', currency: 'EUR (€)', language: 'German', timezone: 'UTC+1 (CET)', aliases: ['austria', 'aut', 'at', 'vienna'] },
+  { name: 'Norway', code: 'NO', continent: 'Europe', currency: 'NOK (kr)', language: 'Norwegian', timezone: 'UTC+1 (CET)', aliases: ['norway', 'nor', 'no', 'oslo'] },
+  { name: 'Sweden', code: 'SE', continent: 'Europe', currency: 'SEK (kr)', language: 'Swedish', timezone: 'UTC+1 (CET)', aliases: ['sweden', 'swe', 'se', 'stockholm'] },
+  { name: 'Denmark', code: 'DK', continent: 'Europe', currency: 'DKK (kr)', language: 'Danish', timezone: 'UTC+1 (CET)', aliases: ['denmark', 'dnk', 'dk', 'copenhagen'] },
+  { name: 'Finland', code: 'FI', continent: 'Europe', currency: 'EUR (€)', language: 'Finnish / English', timezone: 'UTC+2 (EET)', aliases: ['finland', 'fin', 'fi', 'helsinki'] },
+  { name: 'Brazil', code: 'BR', continent: 'South America', currency: 'BRL (R$)', language: 'Portuguese', timezone: 'UTC-3 (BRT)', aliases: ['brazil', 'brasil', 'bra', 'br', 'rio de janeiro'] },
+  { name: 'Mexico', code: 'MX', continent: 'North America', currency: 'MXN ($)', language: 'Spanish', timezone: 'UTC-6 (CST)', aliases: ['mexico', 'mex', 'mx', 'cancun'] },
+  { name: 'Argentina', code: 'AR', continent: 'South America', currency: 'ARS ($)', language: 'Spanish', timezone: 'UTC-3 (ART)', aliases: ['argentina', 'arg', 'ar', 'buenos aires'] },
+  { name: 'Maldives', code: 'MV', continent: 'Asia', currency: 'MVR (Rf)', language: 'Dhivehi / English', timezone: 'UTC+5 (MVT)', aliases: ['maldives', 'mdv', 'mv', 'male'] },
+  { name: 'Sri Lanka', code: 'LK', continent: 'Asia', currency: 'LKR (Rs)', language: 'Sinhala / Tamil / English', timezone: 'UTC+5:30 (SLST)', aliases: ['sri lanka', 'lka', 'lk', 'colombo'] },
+  { name: 'Nepal', code: 'NP', continent: 'Asia', currency: 'NPR (Rs)', language: 'Nepali / English', timezone: 'UTC+5:45 (NPT)', aliases: ['nepal', 'npl', 'np', 'kathmandu'] },
+  { name: 'Vietnam', code: 'VN', continent: 'Asia', currency: 'VND (₫)', language: 'Vietnamese', timezone: 'UTC+7 (ICT)', aliases: ['vietnam', 'vnm', 'vn', 'hanoi', 'da nang'] },
+  { name: 'South Korea', code: 'KR', continent: 'Asia', currency: 'KRW (₩)', language: 'Korean', timezone: 'UTC+9 (KST)', aliases: ['south korea', 'korea', 'kor', 'kr', 'seoul'] },
+  { name: 'Azerbaijan', code: 'AZ', continent: 'Asia', currency: 'AZN (₼)', language: 'Azerbaijani', timezone: 'UTC+4 (AZT)', aliases: ['azerbaijan', 'aze', 'az', 'baku'] },
+  { name: 'Georgia', code: 'GE', continent: 'Europe', currency: 'GEL (₾)', language: 'Georgian', timezone: 'UTC+4 (GET)', aliases: ['georgia', 'geo', 'ge', 'tbilisi'] },
+  { name: 'Jordan', code: 'JO', continent: 'Asia', currency: 'JOD (JD)', language: 'Arabic', timezone: 'UTC+3 (AST)', aliases: ['jordan', 'jor', 'jo', 'amman', 'petra'] },
+  { name: 'Lebanon', code: 'LB', continent: 'Asia', currency: 'LBP (LL)', language: 'Arabic / French', timezone: 'UTC+2 (EET)', aliases: ['lebanon', 'lbn', 'lb', 'beirut'] },
+  { name: 'Kenya', code: 'KE', continent: 'Africa', currency: 'KES (KSh)', language: 'Swahili / English', timezone: 'UTC+3 (EAT)', aliases: ['kenya', 'ken', 'ke', 'nairobi'] }
+];
+
+export const detectCountryTelemetry = (input) => {
+  if (!input || typeof input !== 'string' || !input.trim()) return null;
+  const q = input.trim().toLowerCase();
+
+  const exactMatch = GLOBAL_COUNTRY_DICTIONARY.find(
+    (c) => c.name.toLowerCase() === q || c.code.toLowerCase() === q || c.aliases.includes(q)
+  );
+  if (exactMatch) return exactMatch;
+
+  const startsMatch = GLOBAL_COUNTRY_DICTIONARY.find(
+    (c) => c.name.toLowerCase().startsWith(q) || c.aliases.some((a) => a.startsWith(q))
+  );
+  if (startsMatch) return startsMatch;
+
+  const includesMatch = GLOBAL_COUNTRY_DICTIONARY.find(
+    (c) => c.name.toLowerCase().includes(q) || c.aliases.some((a) => a.includes(q))
+  );
+  if (includesMatch) return includesMatch;
+
+  return null;
+};
 
 export const findCountryPreset = (searchQuery) => {
   if (!searchQuery || !searchQuery.trim()) return null;

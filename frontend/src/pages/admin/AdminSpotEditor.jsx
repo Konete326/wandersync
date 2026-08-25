@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -13,7 +13,9 @@ import {
   Images,
   MapPin,
   Globe,
-  Sparkles
+  Sparkles,
+  Link as LinkIcon,
+  Check
 } from 'lucide-react';
 import { uploadImage } from '@/services/mediaService';
 import { compressImage } from '@/utils/imageCompressor';
@@ -28,10 +30,70 @@ import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
 import ValidatedInput from '@/components/common/ValidatedInput';
 import AiAutofillModal from '@/components/admin/AiAutofillModal';
-import { SPOT_PRESETS } from '@/utils/entityPresetsData';
 import { broadcastRealtimeUpdate } from '@/utils/realtimeSync';
 
-const spotCategories = ['Landmark', 'Temple & Shrine', 'Nature & Park', 'Museum', 'Beach', 'Historical Site', 'Viewpoint'];
+const spotCategories = [
+  'All',
+  'Landmark',
+  'Natural',
+  'Historical',
+  'Cultural',
+  'Adventure',
+  'Beach',
+  'Mountain',
+  'Urban'
+];
+
+const SPOT_PRESETS = [
+  {
+    name: 'Fushimi Inari-taisha',
+    country: 'Japan',
+    city: 'Kyoto',
+    category: 'Cultural',
+    ticketPrice: 'Free',
+    duration: '2-3 hours',
+    bestTimeToVisit: 'Early Morning / Dusk',
+    address: '68 Fukakusa Yabunouchicho, Fushimi Ward, Kyoto',
+    description: 'Iconic Shinto shrine famed for thousands of vibrant vermilion torii gates winding through sacred mount inari forests.',
+    coverImage: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&auto=format&fit=crop&q=80'
+  },
+  {
+    name: 'Burj Khalifa Sky Deck',
+    country: 'United Arab Emirates',
+    city: 'Dubai',
+    category: 'Landmark',
+    ticketPrice: '179 AED (~$49)',
+    duration: '1.5-2 hours',
+    bestTimeToVisit: 'Sunset (5:30 PM)',
+    address: '1 Sheikh Mohammed bin Rashid Blvd, Downtown Dubai',
+    description: 'World highest observation deck at level 148 offering breathtaking 360-degree views of Dubai futuristic skyline and the Arabian Gulf.',
+    coverImage: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&auto=format&fit=crop&q=80'
+  },
+  {
+    name: 'Eiffel Tower Summit',
+    country: 'France',
+    city: 'Paris',
+    category: 'Landmark',
+    ticketPrice: '€28.30',
+    duration: '2 hours',
+    bestTimeToVisit: 'Evening Twilight',
+    address: 'Champ de Mars, 5 Avenue Anatole France, 75007 Paris',
+    description: 'Iconic iron lattice tower on the Champ de Mars, offering summit panorama of Paris monuments and hourly night beacon sparkles.',
+    coverImage: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&auto=format&fit=crop&q=80'
+  },
+  {
+    name: 'Badshahi Mosque & Fort',
+    country: 'Pakistan',
+    city: 'Lahore',
+    category: 'Historical',
+    ticketPrice: 'Free / 500 PKR Fort',
+    duration: '3 hours',
+    bestTimeToVisit: 'Late Afternoon',
+    address: 'Walled City of Lahore, Punjab, Pakistan',
+    description: 'Grand Mughal architectural masterpiece crafted in red sandstone and marble, standing across from the historic Lahore Fort.',
+    coverImage: 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=1200&auto=format&fit=crop&q=80'
+  }
+];
 
 export default function AdminSpotEditor() {
   const { id } = useParams();
@@ -44,6 +106,15 @@ export default function AdminSpotEditor() {
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [countriesList, setCountriesList] = useState([]);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+  const [coverMode, setCoverMode] = useState('upload');
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState('');
+  const coverFileInputRef = useRef(null);
+  const galleryFileInputRef = useRef(null);
+
+  const [galleryUrlInput, setGalleryUrlInput] = useState('');
+  const [showGalleryUrlInput, setShowGalleryUrlInput] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -60,9 +131,6 @@ export default function AdminSpotEditor() {
     featured: false
   });
 
-  const [coverFile, setCoverFile] = useState(null);
-  const [coverPreview, setCoverPreview] = useState('');
-
   useEffect(() => {
     const loadCountryOptions = async () => {
       try {
@@ -70,8 +138,7 @@ export default function AdminSpotEditor() {
         if (res.data?.countries) {
           setCountriesList(res.data.countries);
         }
-      } catch {
-      }
+      } catch {}
     };
     loadCountryOptions();
   }, []);
@@ -107,15 +174,52 @@ export default function AdminSpotEditor() {
       };
       loadItem();
     }
-  }, [id, isEditing]);
+  }, [id, isEditing, navigate, showToast]);
 
-  const handleCoverChange = async (e) => {
-    const file = e.target.files?.[0];
+  const handleCoverChange = (e) => {
+    const file = e.target?.files?.[0];
     if (file) {
-      const compressed = await compressImage(file);
-      setCoverFile(compressed);
-      setCoverPreview(URL.createObjectURL(compressed));
+      setCoverFile(file);
+      try {
+        const previewUrl = URL.createObjectURL(file);
+        setCoverPreview(previewUrl);
+      } catch {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setCoverPreview(event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+      setFormData((prev) => ({ ...prev, coverImage: '' }));
+      if (coverFileInputRef.current) {
+        coverFileInputRef.current.value = '';
+      }
     }
+  };
+
+  const handleCoverDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer?.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setCoverFile(file);
+      try {
+        const previewUrl = URL.createObjectURL(file);
+        setCoverPreview(previewUrl);
+      } catch {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setCoverPreview(event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+      setFormData((prev) => ({ ...prev, coverImage: '' }));
+    }
+  };
+
+  const handleCoverUrlChange = (url) => {
+    setFormData((prev) => ({ ...prev, coverImage: url }));
+    setCoverFile(null);
+    setCoverPreview(url);
   };
 
   const handleAddGalleryImages = async (files) => {
@@ -128,13 +232,27 @@ export default function AdminSpotEditor() {
       const newUrls = results.map((r) => r.data?.url).filter(Boolean);
       if (newUrls.length > 0) {
         setFormData((prev) => ({ ...prev, images: [...prev.images, ...newUrls] }));
-        showToast(`${newUrls.length} spot photo(s) compressed & uploaded`, 'success');
+        showToast(`${newUrls.length} spot photo(s) uploaded successfully!`, 'success');
       }
     } catch {
       showToast('Failed to upload some images', 'error');
     } finally {
       setUploadingGallery(false);
+      if (galleryFileInputRef.current) {
+        galleryFileInputRef.current.value = '';
+      }
     }
+  };
+
+  const handleAddGalleryUrl = () => {
+    if (!galleryUrlInput.trim()) return;
+    setFormData((prev) => ({
+      ...prev,
+      images: [...prev.images, galleryUrlInput.trim()]
+    }));
+    setGalleryUrlInput('');
+    setShowGalleryUrlInput(false);
+    showToast('Photo URL added to gallery!', 'success');
   };
 
   const handleRemoveGalleryImage = (idx) => {
@@ -146,11 +264,11 @@ export default function AdminSpotEditor() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.country || !formData.city) {
+    if (!formData.name.trim() || !formData.country.trim() || !formData.city.trim()) {
       showToast('Name, country, and city are mandatory fields', 'warning');
       return;
     }
-    if (!coverFile && !formData.coverImage) {
+    if (!coverFile && !formData.coverImage && !coverPreview) {
       showToast('Please upload an attraction cover photo', 'warning');
       return;
     }
@@ -171,31 +289,35 @@ export default function AdminSpotEditor() {
       body.append('images', JSON.stringify(formData.images.filter(Boolean)));
 
       if (coverFile) {
-        const compressedCover = await compressImage(coverFile);
-        body.append('image', compressedCover);
+        try {
+          const compressedCover = await compressImage(coverFile);
+          body.append('image', compressedCover);
+        } catch {
+          body.append('image', coverFile);
+        }
       } else {
-        const fallback = formData.coverImage || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80';
+        const fallback = formData.coverImage || coverPreview || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80';
         body.append('coverImage', fallback);
       }
 
       if (isEditing) {
         await updateSpot(id, body);
         broadcastRealtimeUpdate('spots');
-        showToast('Attraction updated successfully', 'success');
+        showToast('Tourist spot updated successfully', 'success');
       } else {
         await createSpot(body);
         broadcastRealtimeUpdate('spots');
-        showToast('New attraction added to catalog', 'success');
+        showToast('New tourist attraction saved', 'success');
       }
       navigate('/admin/spots');
     } catch {
-      showToast('Failed to save attraction', 'error');
+      showToast('Failed to save tourist spot', 'error');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleAiAutofill = (data) => {
+  const handleAiGeneratedData = (data) => {
     setFormData((prev) => ({
       ...prev,
       name: data.title || data.name || prev.name,
@@ -227,6 +349,7 @@ export default function AdminSpotEditor() {
     }));
     if (preset.coverImage) {
       setCoverPreview(preset.coverImage);
+      setCoverFile(null);
     }
     showToast(`Auto-filled details for ${preset.name}!`, 'success');
   };
@@ -350,7 +473,7 @@ export default function AdminSpotEditor() {
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:border-orange-500/60"
                   >
                     {spotCategories.filter((c) => c !== 'All').map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -385,7 +508,7 @@ export default function AdminSpotEditor() {
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                     placeholder="e.g. 2-3 hours"
-                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:border-orange-500/60"
                   />
                 </div>
               </div>
@@ -400,56 +523,166 @@ export default function AdminSpotEditor() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="History, iconic sights, and best visiting advice (Optional)..."
-                  className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none resize-none leading-relaxed"
+                  className="w-full px-3 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground focus:outline-none focus:border-orange-500/60 resize-none leading-relaxed"
                 />
               </div>
             </div>
 
-            
-            <div className="md:col-span-4 space-y-1">
-              <label className="text-[11px] font-bold text-zinc-300">Primary Spot Photo *</label>
-              <div className="relative h-44 w-full rounded-xl border border-dashed border-border hover:border-orange-500/40 bg-secondary/30 flex flex-col items-center justify-center overflow-hidden transition-colors">
-                {coverPreview ? (
-                  <div className="relative size-full group">
-                    <img src={coverPreview} alt="Cover Preview" className="size-full object-cover" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <label className="px-2.5 py-1 rounded-lg bg-orange-500 text-zinc-950 font-bold text-xs cursor-pointer">
-                        Change Photo
-                        <input type="file" accept="image/*" onChange={handleCoverChange} className="hidden" />
-                      </label>
-                    </div>
-                  </div>
-                ) : (
-                  <label className="size-full flex flex-col items-center justify-center p-4 cursor-pointer text-center space-y-1.5">
-                    <UploadCloud className="size-6 text-orange-400" />
-                    <span className="text-xs font-bold text-foreground">Upload Photo</span>
-                    <span className="text-[10px] text-muted-foreground">PNG, JPG, WebP</span>
-                    <input type="file" accept="image/*" onChange={handleCoverChange} className="hidden" />
-                  </label>
-                )}
+            <div className="md:col-span-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-zinc-300">
+                  Primary Spot Photo *
+                </label>
+                <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#18181b] border border-border/80 text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => setCoverMode('upload')}
+                    className={`px-2 py-0.5 rounded-md font-semibold cursor-pointer transition-all ${
+                      coverMode === 'upload'
+                        ? 'bg-orange-500 text-zinc-950 font-bold'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Upload File
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCoverMode('url')}
+                    className={`px-2 py-0.5 rounded-md font-semibold cursor-pointer transition-all ${
+                      coverMode === 'url'
+                        ? 'bg-orange-500 text-zinc-950 font-bold'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Image URL
+                  </button>
+                </div>
               </div>
+
+              {coverMode === 'url' ? (
+                <div className="space-y-2">
+                  <div className="relative">
+                    <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={formData.coverImage}
+                      onChange={(e) => handleCoverUrlChange(e.target.value)}
+                      placeholder="Paste HTTPS image link..."
+                      className="w-full pl-8 pr-2.5 py-1.5 rounded-lg bg-secondary/60 border border-border text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-orange-500/60"
+                    />
+                  </div>
+                  {coverPreview && (
+                    <div className="relative h-36 w-full rounded-xl overflow-hidden border border-border group">
+                      <img src={coverPreview} alt="Preview" className="size-full object-cover" />
+                      <div className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded bg-black/80 text-[9px] font-mono text-emerald-400 border border-emerald-500/30">
+                        Live Preview
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleCoverDrop}
+                  className="relative h-44 w-full rounded-xl border border-dashed border-border/90 hover:border-orange-500/50 bg-[#151518] flex flex-col items-center justify-center overflow-hidden transition-all group"
+                >
+                  {coverPreview ? (
+                    <div className="relative size-full">
+                      <img src={coverPreview} alt="Cover Preview" className="size-full object-cover" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <label className="px-2.5 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-bold text-xs cursor-pointer shadow-md">
+                          Change Photo
+                          <input
+                            ref={coverFileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleCoverChange}
+                            className="hidden"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCoverPreview('');
+                            setCoverFile(null);
+                            setFormData((prev) => ({ ...prev, coverImage: '' }));
+                          }}
+                          className="p-1 rounded-lg bg-rose-500/80 hover:bg-rose-500 text-white cursor-pointer"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="size-full flex flex-col items-center justify-center p-4 cursor-pointer text-center space-y-1.5">
+                      <UploadCloud className="size-6 text-orange-400 group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-foreground">Upload Primary Photo</span>
+                      <span className="text-[10px] text-muted-foreground">PNG, JPG, WebP (Drag & Drop)</span>
+                      <input
+                        ref={coverFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCoverChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          
-          <div className="pt-3 border-t border-border/70 space-y-2">
+          <div className="pt-3 border-t border-border/70 space-y-2.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <Images className="size-3.5 text-orange-400" />
-                <span>Multiple Attraction Photos ({formData.images.length})</span>
+                <span>Attraction Gallery ({formData.images.length})</span>
               </label>
-              <label className="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 cursor-pointer">
-                <Plus className="size-3" />
-                <span>{uploadingGallery ? 'Uploading...' : 'Add Another Photo'}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  disabled={uploadingGallery}
-                  onChange={(e) => handleAddGalleryImage(e.target.files?.[0])}
-                  className="hidden"
-                />
-              </label>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowGalleryUrlInput((prev) => !prev)}
+                  className="text-[11px] font-semibold text-zinc-400 hover:text-foreground flex items-center gap-1 cursor-pointer"
+                >
+                  <LinkIcon className="size-3" />
+                  <span>Paste URL</span>
+                </button>
+
+                <label className="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 cursor-pointer bg-orange-500/10 border border-orange-500/30 px-2 py-0.5 rounded-lg">
+                  <Plus className="size-3" />
+                  <span>{uploadingGallery ? 'Uploading...' : 'Upload Photos'}</span>
+                  <input
+                    ref={galleryFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    disabled={uploadingGallery}
+                    onChange={(e) => handleAddGalleryImages(e.target.files)}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
+
+            {showGalleryUrlInput && (
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-[#151518] border border-border/80">
+                <input
+                  type="text"
+                  value={galleryUrlInput}
+                  onChange={(e) => setGalleryUrlInput(e.target.value)}
+                  placeholder="Paste attraction photo image link..."
+                  className="flex-1 px-3 py-1 text-xs bg-secondary/60 border border-border rounded-lg text-foreground focus:outline-none focus:border-orange-500/60"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddGalleryUrl}
+                  className="px-3 py-1 rounded-lg bg-orange-500 text-zinc-950 font-bold text-xs cursor-pointer flex items-center gap-1"
+                >
+                  <Check className="size-3" /> Add
+                </button>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
               {formData.images.map((imgUrl, idx) => (
@@ -458,7 +691,7 @@ export default function AdminSpotEditor() {
                   <button
                     type="button"
                     onClick={() => handleRemoveGalleryImage(idx)}
-                    className="absolute top-1 right-1 p-1 rounded bg-black/70 text-rose-400 opacity-0 group-hover:opacity-100 cursor-pointer"
+                    className="absolute top-1 right-1 p-1 rounded bg-black/70 text-rose-400 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
                   >
                     <X className="size-3" />
                   </button>
@@ -468,7 +701,6 @@ export default function AdminSpotEditor() {
           </div>
         </div>
 
-        
         <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/80">
           <button
             type="button"
@@ -479,13 +711,13 @@ export default function AdminSpotEditor() {
           </button>
 
           <GlowingButton
-            type="submit"
+            onClick={handleSubmit}
             disabled={saving}
-            size="md"
-            innerClassName="py-2.5 px-6 text-xs sm:text-sm font-bold flex items-center gap-2"
+            size="sm"
+            innerClassName="px-4 py-2 text-xs font-bold flex items-center gap-1.5"
           >
-            <Save className="size-4 text-orange-400" />
-            <span>{saving ? 'Saving...' : isEditing ? 'Update Spot' : 'Publish Spot'}</span>
+            <Save className="size-3.5 text-orange-400" />
+            <span>{saving ? 'Saving...' : isEditing ? 'Update Tourist Spot' : 'Save Tourist Spot'}</span>
           </GlowingButton>
         </div>
       </form>
@@ -493,8 +725,9 @@ export default function AdminSpotEditor() {
       <AiAutofillModal
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
-        entityType="spot"
-        onAutofill={handleAiAutofill}
+        onDataGenerated={handleAiGeneratedData}
+        category="attraction"
+        targetName={formData.name || 'Tourist Spot'}
       />
     </div>
   );
