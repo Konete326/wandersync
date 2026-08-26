@@ -5,6 +5,7 @@ export const notFound = (req, res, next) => {
 };
 
 export const errorHandler = (err, req, res, next) => {
+  console.error(`[SERVER 500 ERROR] ${req.method} ${req.originalUrl}:`, err);
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   sendError(res, err.message || 'Internal Server Error', statusCode, process.env.NODE_ENV === 'development' ? err.stack : null);
 };

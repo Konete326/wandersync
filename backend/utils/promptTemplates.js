@@ -7,14 +7,19 @@ export const buildItineraryPrompt = ({
   travelStyle,
   companions,
   interests,
-  currency = 'USD'
+  currency = 'USD',
+  personalizedInsights
 }) => {
+  const embeddingNote = personalizedInsights
+    ? `\n[Personalization Vector Embedding Memory Insights (Cosine Similarity: ${personalizedInsights.embeddingScore})]: User's historical preferences highlight interests: ${personalizedInsights.topInterests.join(', ')}. Align recommendations accordingly.`
+    : '';
+
   return `You are a world-class travel maestro. Create a detailed ${durationDays}-day travel itinerary for ${destination}.
 Travel Dates: ${startDate} to ${endDate}.
 Budget Level: ${budgetLevel}.
 Travel Style: ${travelStyle}.
 Companions: ${companions || 'Solo'}.
-Interests: ${interests || 'Sightseeing, Culture, Food'}.
+Interests: ${interests || 'Sightseeing, Culture, Food'}.${embeddingNote}
 Currency: ${currency}.
 
 Return a STRICT JSON object matching this exact schema:

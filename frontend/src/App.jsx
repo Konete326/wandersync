@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { Agentation } from 'agentation';
 import { AuthProvider } from './context/AuthContext';
 import { ModalProvider } from './context/ModalContext';
 import Navbar from './components/common/Navbar';
@@ -207,7 +206,6 @@ function App() {
           >
             <AppLayout />
           </Suspense>
-          {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
         </ModalProvider>
       </AuthProvider>
     </Router>

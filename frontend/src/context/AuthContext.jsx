@@ -7,8 +7,9 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('wandersync_token') || '');
   const [user, setUser] = useState(() => {
     try {
+      const storedToken = localStorage.getItem('wandersync_token');
       const cached = localStorage.getItem('wandersync_user');
-      return cached ? JSON.parse(cached) : null;
+      return storedToken && cached ? JSON.parse(cached) : null;
     } catch {
       return null;
     }

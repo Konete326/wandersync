@@ -117,12 +117,13 @@ const CreateTrip = () => {
       return;
     }
 
-    if (!user) {
+    const authToken = localStorage.getItem('wandersync_token');
+    if (!user || !authToken) {
       showModal({
         title: 'Sign In Required',
-        message: 'Please sign in or create an account to generate and save your AI travel itinerary.',
+        message: 'Please sign in or create a free account to generate and save your AI travel itinerary.',
         type: 'info',
-        confirmText: 'Sign In Now',
+        confirmText: 'Sign In / Register',
         onConfirm: () => navigate('/login')
       });
       return;
@@ -146,11 +147,22 @@ const CreateTrip = () => {
       navigate(`/trips/${savedTrip.data._id}`);
     } catch (error) {
       setCooldown(5);
-      showModal({
-        title: 'Generation Failed',
-        message: error.response?.data?.message || error.message || 'Failed to generate itinerary. Please try again.',
-        type: 'danger'
-      });
+      const isAuthErr = error.response?.status === 401 || error.message?.includes('token');
+      if (isAuthErr) {
+        showModal({
+          title: 'Session Expired',
+          message: 'Your login session has expired. Please sign in to save your itinerary.',
+          type: 'warning',
+          confirmText: 'Sign In Now',
+          onConfirm: () => navigate('/login')
+        });
+      } else {
+        showModal({
+          title: 'Generation Failed',
+          message: error.response?.data?.message || error.message || 'Failed to generate itinerary. Please try again.',
+          type: 'danger'
+        });
+      }
     } finally {
       setLoading(false);
     }

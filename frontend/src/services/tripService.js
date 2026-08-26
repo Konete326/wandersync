@@ -49,3 +49,19 @@ export const chatWithAiAssistant = async (message, history = [], tripContext = n
   const response = await api.post('/ai/chat', { message, history, tripContext });
   return response.data;
 };
+
+export const getTripCollaborators = async (tripId) => {
+  const response = await api.get(`/trips/${tripId}/collaborators`);
+  return response.data;
+};
+
+export const addCollaboratorToTrip = async (tripId, email, role = 'editor') => {
+  const response = await api.post(`/trips/${tripId}/collaborators`, { email, role });
+  return response.data;
+};
+
+export const removeCollaboratorFromTrip = async (tripId, collaboratorId) => {
+  const response = await api.delete(`/trips/${tripId}/collaborators/${collaboratorId}`);
+  return response.data;
+};
+

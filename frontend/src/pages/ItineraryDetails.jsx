@@ -2,15 +2,24 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Calendar, MapPin, DollarSign, Download, Share2, MessageSquare, Trash2,
-  CheckCircle2, Clock, Sparkles, Send, CloudSun, AlertTriangle, ShieldCheck
+  CheckCircle2, Clock, Sparkles, Send, CloudSun, ShieldCheck,
+  Users, UserPlus, BrainCircuit, X, UserCheck, Plane, Building, Car
 } from 'lucide-react';
-import { getTripDetails, updateTripData, deleteTripById, refineItineraryWithAi } from '../services/tripService';
+import {
+  getTripDetails, updateTripData, deleteTripById, refineItineraryWithAi,
+  addCollaboratorToTrip, removeCollaboratorFromTrip
+} from '../services/tripService';
 import { fetchWeatherForecast } from '../services/weatherService';
 import { exportItineraryToPdf } from '../services/pdfService';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import Loader from '../components/common/Loader';
-import { getCachedData, setCachedData } from '@/utils/realtimeSync';
+import { getCachedData, setCachedData, subscribeRealtimeUpdate, broadcastRealtimeUpdate } from '@/utils/realtimeSync';
+
+import TripLogisticsSummary from '../components/trip/TripLogisticsSummary';
+import TripFlightSelector from '../components/trip/TripFlightSelector';
+import TripHotelSelector from '../components/trip/TripHotelSelector';
+import TripVehicleCabSelector from '../components/trip/TripVehicleCabSelector';
 
 const ItineraryDetails = () => {
   const { id } = useParams();
@@ -23,12 +32,19 @@ const ItineraryDetails = () => {
 
   const [trip, setTrip] = useState(initialTrip || null);
   const [loading, setLoading] = useState(!initialTrip);
+  const [activeTab, setActiveTab] = useState('itinerary');
   const [selectedDay, setSelectedDay] = useState(1);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [chatLoading, setChatLoading] = useState(false);
   const [weather, setWeather] = useState(null);
+  const [serviceLoading, setServiceLoading] = useState(false);
+
+  const [collabModalOpen, setCollabModalOpen] = useState(false);
+  const [collabEmail, setCollabEmail] = useState('');
+  const [collabRole, setCollabRole] = useState('editor');
+  const [collabLoading, setCollabLoading] = useState(false);
 
   useEffect(() => {
     const loadTrip = async () => {
@@ -64,6 +80,19 @@ const ItineraryDetails = () => {
     loadTrip();
   }, [id]);
 
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeUpdate('trips', async () => {
+      try {
+        const res = await getTripDetails(id);
+        if (res.data) {
+          setTrip(res.data);
+          setCachedData(cacheKey, res.data);
+        }
+      } catch {}
+    });
+    return () => unsubscribe();
+  }, [id]);
+
   const handleDelete = () => {
     showModal({
       title: 'Delete Itinerary',
@@ -87,6 +116,7 @@ const ItineraryDetails = () => {
     try {
       const updated = await updateTripData(id, { isPublic: true });
       setTrip(updated.data);
+      setCachedData(cacheKey, updated.data);
       const shareUrl = `${window.location.origin}/share/${updated.data.shareSlug}`;
       await navigator.clipboard.writeText(shareUrl);
       showModal({
@@ -96,6 +126,154 @@ const ItineraryDetails = () => {
       });
     } catch (err) {
       showToast('Failed to generate share link', 'error');
+    }
+  };
+
+  const handleSelectFlight = async (flightId) => {
+    setServiceLoading(true);
+    try {
+      const res = await updateTripData(id, { selectedFlight: flightId });
+      setTrip(res.data);
+      setCachedData(cacheKey, res.data);
+      showToast(flightId ? 'Flight plane linked to itinerary!' : 'Flight removed from trip', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to update flight selection', 'error');
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  const handleSelectHotel = async (hotelId) => {
+    setServiceLoading(true);
+    try {
+      const res = await updateTripData(id, { selectedHotel: hotelId });
+      setTrip(res.data);
+      setCachedData(cacheKey, res.data);
+      showToast(hotelId ? 'Hotel reserved for itinerary!' : 'Hotel removed from trip', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to update hotel selection', 'error');
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  const handleSelectVehicle = async (vehicleId) => {
+    setServiceLoading(true);
+    try {
+      const res = await updateTripData(id, {
+        selectedVehicle: vehicleId,
+        selectedCabService: { pickupLocation: '', dropoffLocation: '', cabType: 'Standard Sedan', estimatedFare: 0 }
+      });
+      setTrip(res.data);
+      setCachedData(cacheKey, res.data);
+      showToast(vehicleId ? 'Rental car attached to itinerary!' : 'Vehicle rental removed', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to update vehicle selection', 'error');
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  const handleBookCab = async (cabData) => {
+    setServiceLoading(true);
+    try {
+      const res = await updateTripData(id, {
+        selectedCabService: cabData,
+        selectedVehicle: null
+      });
+      setTrip(res.data);
+      setCachedData(cacheKey, res.data);
+      showToast('Cab transfer booked for your trip!', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to book cab', 'error');
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  const handleRequestBooking = async (bookingData) => {
+    setServiceLoading(true);
+    try {
+      const res = await updateTripData(id, { bookingRequest: bookingData });
+      setTrip(res.data);
+      setCachedData(cacheKey, res.data);
+      broadcastRealtimeUpdate('trips');
+      showToast('Booking request sent to Admin successfully! Status is now Pending.', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to submit booking request', 'error');
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  const handleRequestCancellation = async ({ itemType, reason }) => {
+    setServiceLoading(true);
+    try {
+      const res = await updateTripData(id, {
+        bookingRequest: {
+          ...trip.bookingRequest,
+          cancellationRequest: {
+            isPending: true,
+            itemType,
+            reason,
+            requestedAt: new Date()
+          }
+        }
+      });
+      setTrip(res.data);
+      setCachedData(cacheKey, res.data);
+      broadcastRealtimeUpdate('trips');
+      showToast('Cancellation request submitted to Admin for confirmation!', 'info');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to submit cancellation request', 'error');
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  const handleRemoveService = async (type) => {
+    setServiceLoading(true);
+    try {
+      let payload = {};
+      if (type === 'flight') payload = { selectedFlight: null };
+      if (type === 'hotel') payload = { selectedHotel: null };
+      if (type === 'vehicle') payload = { selectedVehicle: null };
+      if (type === 'cab') payload = { selectedCabService: { pickupLocation: '', dropoffLocation: '', cabType: 'Standard Sedan', estimatedFare: 0 } };
+
+      const res = await updateTripData(id, payload);
+      setTrip(res.data);
+      setCachedData(cacheKey, res.data);
+      showToast(`Selected ${type} removed from itinerary`, 'info');
+    } catch (err) {
+      showToast('Failed to update trip services', 'error');
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  const handleAddCollaborator = async (e) => {
+    e.preventDefault();
+    if (!collabEmail.trim() || collabLoading) return;
+    setCollabLoading(true);
+    try {
+      const res = await addCollaboratorToTrip(id, collabEmail.trim(), collabRole);
+      setTrip((prev) => ({ ...prev, collaborators: res.data }));
+      setCollabEmail('');
+      showToast('Collaborator added successfully!', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to add collaborator', 'error');
+    } finally {
+      setCollabLoading(false);
+    }
+  };
+
+  const handleRemoveCollaborator = async (collabId) => {
+    try {
+      const res = await removeCollaboratorFromTrip(id, collabId);
+      setTrip((prev) => ({ ...prev, collaborators: res.data }));
+      showToast('Collaborator removed', 'info');
+    } catch (err) {
+      showToast('Failed to remove collaborator', 'error');
     }
   };
 
@@ -136,15 +314,29 @@ const ItineraryDetails = () => {
   if (!trip) return null;
 
   const currentDayData = trip.days?.find((d) => d.dayNumber === selectedDay) || trip.days?.[0];
+  const isOwner = user && (trip.user === user._id || trip.user?._id === user._id);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <div className="liquid-glass-card rounded-3xl p-6 sm:p-10 border border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold uppercase">
-            <Sparkles className="w-3.5 h-3.5" />
-            {trip.durationDays} Days • {trip.budgetLevel} Tier
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold uppercase">
+              <Sparkles className="w-3.5 h-3.5" />
+              {trip.durationDays} Days • {trip.budgetLevel} Tier
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-semibold">
+              <BrainCircuit className="w-3.5 h-3.5 text-purple-400" />
+              Embedding Memory Vector Active
+            </span>
+            {trip.collaborators?.length > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                <Users className="w-3.5 h-3.5" />
+                {trip.collaborators.length + 1} Co-Creators Access
+              </span>
+            )}
           </div>
+
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white">{trip.title}</h1>
           <p className="text-slate-300 text-sm sm:text-base max-w-2xl">{trip.overview}</p>
 
@@ -168,6 +360,15 @@ const ItineraryDetails = () => {
             <Download className="w-4 h-4 text-cyan-400" />
             PDF Export
           </button>
+
+          <button
+            onClick={() => setCollabModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl liquid-glass border border-purple-500/40 text-purple-300 hover:text-white text-sm font-medium flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-purple-500/10"
+          >
+            <Users className="w-4 h-4 text-purple-400" />
+            Collaborate ({trip.collaborators?.length || 0})
+          </button>
+
           <button
             onClick={handleShare}
             className="px-4 py-2.5 rounded-xl liquid-glass border border-slate-700 hover:border-cyan-500/40 text-slate-200 hover:text-white text-sm font-medium flex items-center gap-2 transition-all cursor-pointer"
@@ -175,6 +376,7 @@ const ItineraryDetails = () => {
             <Share2 className="w-4 h-4 text-emerald-400" />
             Share Link
           </button>
+
           <button
             onClick={() => setChatOpen(!chatOpen)}
             className="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-cyan-500/20"
@@ -182,7 +384,8 @@ const ItineraryDetails = () => {
             <MessageSquare className="w-4 h-4" />
             Refine with AI
           </button>
-          {user && trip.user === user._id && (
+
+          {isOwner && (
             <button
               onClick={handleDelete}
               className="p-2.5 rounded-xl liquid-glass border border-rose-500/30 hover:bg-rose-500/20 text-rose-400 transition-all cursor-pointer"
@@ -194,179 +397,380 @@ const ItineraryDetails = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
-            {trip.days?.map((day) => (
-              <button
-                key={day.dayNumber}
-                onClick={() => setSelectedDay(day.dayNumber)}
-                className={`px-5 py-3 rounded-2xl font-semibold text-sm whitespace-nowrap transition-all cursor-pointer ${
-                  selectedDay === day.dayNumber
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25 border-cyan-400/50'
-                    : 'liquid-glass text-slate-300 hover:text-white hover:bg-slate-800/80 border-slate-800'
-                } border`}
-              >
-                Day {day.dayNumber}
-              </button>
-            ))}
-          </div>
+      <TripLogisticsSummary
+        trip={trip}
+        onSelectTab={setActiveTab}
+        onRemoveService={handleRemoveService}
+        onRequestBooking={handleRequestBooking}
+        onRequestCancellation={handleRequestCancellation}
+        isRequesting={serviceLoading}
+      />
 
-          {currentDayData && (
-            <div className="liquid-glass-card rounded-3xl p-6 sm:p-8 border border-slate-800 space-y-6">
-              <div className="border-b border-slate-800 pb-4">
-                <h2 className="text-xl sm:text-2xl font-bold text-white">Day {currentDayData.dayNumber}: {currentDayData.title}</h2>
-                {currentDayData.theme && (
-                  <p className="text-xs sm:text-sm text-cyan-400 font-medium mt-1">Theme: {currentDayData.theme}</p>
-                )}
-              </div>
+      <div className="flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto custom-scrollbar">
+        <button
+          onClick={() => setActiveTab('itinerary')}
+          className={`px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 transition-all cursor-pointer ${
+            activeTab === 'itinerary'
+              ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 border-cyan-400/50'
+              : 'liquid-glass text-slate-400 hover:text-white hover:bg-slate-850 border-slate-800'
+          } border`}
+        >
+          <Calendar className="w-4 h-4" />
+          Day-by-Day Plan
+        </button>
 
-              <div className="space-y-4">
-                {currentDayData.activities?.map((act, idx) => (
-                  <div
-                    key={idx}
-                    className="p-5 rounded-2xl liquid-glass border border-slate-800 hover:border-slate-700 transition-all space-y-3"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                          {act.timeSlot}
-                        </span>
-                        <span className="text-xs font-medium text-slate-400 flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          {act.durationHours} hrs
+        <button
+          onClick={() => setActiveTab('flights')}
+          className={`px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 transition-all cursor-pointer ${
+            activeTab === 'flights'
+              ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 border-cyan-400/50'
+              : 'liquid-glass text-slate-400 hover:text-white hover:bg-slate-850 border-slate-800'
+          } border`}
+        >
+          <Plane className="w-4 h-4 text-cyan-400" />
+          Travel Plane / Flights
+          {trip.selectedFlight && (
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('hotels')}
+          className={`px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 transition-all cursor-pointer ${
+            activeTab === 'hotels'
+              ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/20 border-amber-400/50'
+              : 'liquid-glass text-slate-400 hover:text-white hover:bg-slate-850 border-slate-800'
+          } border`}
+        >
+          <Building className="w-4 h-4 text-amber-400" />
+          Hotels & Stay
+          {trip.selectedHotel && (
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('transport')}
+          className={`px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 transition-all cursor-pointer ${
+            activeTab === 'transport'
+              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 border-emerald-400/50'
+              : 'liquid-glass text-slate-400 hover:text-white hover:bg-slate-850 border-slate-800'
+          } border`}
+        >
+          <Car className="w-4 h-4 text-emerald-400" />
+          Rent a Car & Cabs
+          {(trip.selectedVehicle || trip.selectedCabService?.pickupLocation) && (
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
+          )}
+        </button>
+      </div>
+
+      {activeTab === 'flights' && (
+        <TripFlightSelector
+          trip={trip}
+          onSelectFlight={handleSelectFlight}
+          selectedFlightId={trip.selectedFlight?._id}
+          isSelecting={serviceLoading}
+        />
+      )}
+
+      {activeTab === 'hotels' && (
+        <TripHotelSelector
+          trip={trip}
+          onSelectHotel={handleSelectHotel}
+          selectedHotelId={trip.selectedHotel?._id}
+          isSelecting={serviceLoading}
+        />
+      )}
+
+      {activeTab === 'transport' && (
+        <TripVehicleCabSelector
+          trip={trip}
+          onSelectVehicle={handleSelectVehicle}
+          selectedVehicleId={trip.selectedVehicle?._id}
+          isSelecting={serviceLoading}
+          onBookCab={handleBookCab}
+          selectedCab={trip.selectedCabService}
+        />
+      )}
+
+      {activeTab === 'itinerary' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+              {trip.days?.map((day) => (
+                <button
+                  key={day.dayNumber}
+                  onClick={() => setSelectedDay(day.dayNumber)}
+                  className={`px-5 py-3 rounded-2xl font-semibold text-sm whitespace-nowrap transition-all cursor-pointer ${
+                    selectedDay === day.dayNumber
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25 border-cyan-400/50'
+                      : 'liquid-glass text-slate-300 hover:text-white hover:bg-slate-800/80 border-slate-800'
+                  } border`}
+                >
+                  Day {day.dayNumber}
+                </button>
+              ))}
+            </div>
+
+            {currentDayData && (
+              <div className="liquid-glass-card rounded-3xl p-6 sm:p-8 border border-slate-800 space-y-6">
+                <div className="border-b border-slate-800 pb-4">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white">Day {currentDayData.dayNumber}: {currentDayData.title}</h2>
+                  {currentDayData.theme && (
+                    <p className="text-xs sm:text-sm text-cyan-400 font-medium mt-1">Theme: {currentDayData.theme}</p>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  {currentDayData.activities?.map((act, idx) => (
+                    <div
+                      key={idx}
+                      className="p-5 rounded-2xl liquid-glass border border-slate-800 hover:border-slate-700 transition-all space-y-3"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                            {act.timeSlot}
+                          </span>
+                          <span className="text-xs font-medium text-slate-400 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {act.durationHours} hrs
+                          </span>
+                        </div>
+                        <span className="text-xs font-semibold text-emerald-400">
+                          ${act.estimatedCost || 0}
                         </span>
                       </div>
-                      <span className="text-xs font-semibold text-emerald-400">
-                        ${act.estimatedCost || 0}
-                      </span>
+
+                      <h3 className="text-base font-semibold text-white">{act.title}</h3>
+                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{act.description}</p>
+
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400 pt-1">
+                        <MapPin className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>{act.locationName}</span>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
-                    <h3 className="text-base font-semibold text-white">{act.title}</h3>
-                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{act.description}</p>
+          <div className="space-y-6">
+            {weather?.daily && (
+              <div className="liquid-glass-card rounded-3xl p-6 border border-slate-800 space-y-3">
+                <div className="flex items-center gap-2 text-white font-semibold text-base">
+                  <CloudSun className="w-5 h-5 text-amber-400" />
+                  <span>Destination Forecast</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                    <p className="text-xs text-slate-400">Max Temp</p>
+                    <p className="text-lg font-bold text-white">{weather.daily.temperature_2m_max[0]}°C</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                    <p className="text-xs text-slate-400">Min Temp</p>
+                    <p className="text-lg font-bold text-white">{weather.daily.temperature_2m_min[0]}°C</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-                    <div className="flex items-center gap-1.5 text-xs text-slate-400 pt-1">
-                      <MapPin className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>{act.locationName}</span>
+            {trip.travelTips && (
+              <div className="liquid-glass-card rounded-3xl p-6 border border-slate-800 space-y-4">
+                <div className="flex items-center gap-2 text-white font-semibold text-base">
+                  <ShieldCheck className="w-5 h-5 text-cyan-400" />
+                  <span>Maestro Travel Tips</span>
+                </div>
+
+                {trip.travelTips.packing?.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Packing Checklist</h4>
+                    <ul className="text-xs text-slate-300 space-y-1.5">
+                      {trip.travelTips.packing.map((p, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {chatOpen && (
+              <div className="liquid-glass-card rounded-3xl p-6 border border-cyan-500/40 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-white font-semibold text-sm">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                    <span>AI Plan Refinement</span>
+                  </div>
+                  <button
+                    onClick={() => setChatOpen(false)}
+                    className="text-xs text-slate-400 hover:text-white"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                <div className="h-48 overflow-y-auto space-y-2 p-2 rounded-xl bg-slate-950/60 border border-slate-800 text-xs custom-scrollbar">
+                  {chatHistory.length === 0 ? (
+                    <p className="text-slate-500 italic p-2">Ask Gemini to swap activities, make Day 2 more relaxed, or adjust budgets...</p>
+                  ) : (
+                    chatHistory.map((msg, i) => (
+                      <div
+                        key={i}
+                        className={`p-2.5 rounded-xl ${
+                          msg.sender === 'user' ? 'bg-cyan-600/30 text-white ml-6 border border-cyan-500/30' : 'bg-slate-850 text-slate-200 mr-6 border border-slate-700'
+                        }`}
+                      >
+                        <p className="font-semibold text-[10px] uppercase text-cyan-300 mb-0.5">{msg.sender === 'user' ? 'You' : 'Maestro AI'}</p>
+                        <p>{msg.text}</p>
+                      </div>
+                    ))
+                  )}
+                  {chatLoading && <p className="text-cyan-400 text-xs italic animate-pulse">Maestro is updating your plan...</p>}
+                </div>
+
+                <form onSubmit={handleChatSubmit} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={chatMessage}
+                    onChange={(e) => setChatMessage(e.target.value)}
+                    placeholder="e.g. Add a sushi spot to Day 2..."
+                    className="flex-1 px-3 py-2 text-xs rounded-xl glass-input text-white focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={chatLoading}
+                    className="p-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white transition-colors cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {collabModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="liquid-glass-card rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-purple-500/30 space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Co-Create & Collaborate</h3>
+                  <p className="text-xs text-slate-400">Invite teammates or friends to edit this trip</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setCollabModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {isOwner ? (
+              <form onSubmit={handleAddCollaborator} className="space-y-3">
+                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
+                  Invite Co-Creator by Email
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    required
+                    value={collabEmail}
+                    onChange={(e) => setCollabEmail(e.target.value)}
+                    placeholder="friend@example.com"
+                    className="flex-1 px-4 py-2.5 rounded-xl glass-input text-sm text-white focus:outline-none border border-slate-800 focus:border-purple-500/50"
+                  />
+                  <select
+                    value={collabRole}
+                    onChange={(e) => setCollabRole(e.target.value)}
+                    className="px-3 py-2.5 rounded-xl glass-input text-xs text-purple-300 font-semibold border border-slate-800 focus:outline-none"
+                  >
+                    <option value="editor">Editor (Can edit)</option>
+                    <option value="viewer">Viewer (Read-only)</option>
+                  </select>
+                  <button
+                    type="submit"
+                    disabled={collabLoading}
+                    className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm flex items-center gap-1.5 transition-colors shrink-0"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Invite
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-purple-400 shrink-0" />
+                <span>You are a co-creator editor on this itinerary. You can make live edits and refine with AI.</span>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Active Collaborators</h4>
+              <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs">
+                      {trip.user?.name ? trip.user.name[0].toUpperCase() : 'O'}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">{trip.user?.name || 'Trip Owner'}</p>
+                      <p className="text-[10px] text-slate-400">{trip.user?.email || 'Creator'}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-6">
-          {weather?.daily && (
-            <div className="liquid-glass-card rounded-3xl p-6 border border-slate-800 space-y-3">
-              <div className="flex items-center gap-2 text-white font-semibold text-base">
-                <CloudSun className="w-5 h-5 text-amber-400" />
-                <span>Destination Forecast</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <p className="text-xs text-slate-400">Max Temp</p>
-                  <p className="text-lg font-bold text-white">{weather.daily.temperature_2m_max[0]}°C</p>
+                  <span className="px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-semibold text-[10px] uppercase">
+                    Owner
+                  </span>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <p className="text-xs text-slate-400">Min Temp</p>
-                  <p className="text-lg font-bold text-white">{weather.daily.temperature_2m_min[0]}°C</p>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {trip.travelTips && (
-            <div className="liquid-glass-card rounded-3xl p-6 border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2 text-white font-semibold text-base">
-                <ShieldCheck className="w-5 h-5 text-cyan-400" />
-                <span>Maestro Travel Tips</span>
-              </div>
-
-              {trip.travelTips.packing?.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Packing Checklist</h4>
-                  <ul className="text-xs text-slate-300 space-y-1.5">
-                    {trip.travelTips.packing.map((p, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                        <span>{p}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {trip.travelTips.transitAdvice?.length > 0 && (
-                <div className="pt-2 border-t border-slate-800">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Transit Advice</h4>
-                  <ul className="text-xs text-slate-300 space-y-1.5">
-                    {trip.travelTips.transitAdvice.map((t, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                        <span>{t}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-
-          {chatOpen && (
-            <div className="liquid-glass-card rounded-3xl p-6 border border-cyan-500/40 space-y-4 shadow-2xl">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-white font-semibold text-sm">
-                  <Sparkles className="w-4 h-4 text-cyan-400" />
-                  <span>AI Plan Refinement</span>
-                </div>
-                <button
-                  onClick={() => setChatOpen(false)}
-                  className="text-xs text-slate-400 hover:text-white"
-                >
-                  Close
-                </button>
-              </div>
-
-              <div className="h-48 overflow-y-auto space-y-2 p-2 rounded-xl bg-slate-950/60 border border-slate-800 text-xs custom-scrollbar">
-                {chatHistory.length === 0 ? (
-                  <p className="text-slate-500 italic p-2">Ask Gemini to swap activities, make Day 2 more relaxed, or adjust budgets...</p>
+                {trip.collaborators?.length === 0 ? (
+                  <p className="text-xs text-slate-500 italic p-2 text-center">No co-creators added yet.</p>
                 ) : (
-                  chatHistory.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={`p-2.5 rounded-xl ${
-                        msg.sender === 'user' ? 'bg-cyan-600/30 text-white ml-6 border border-cyan-500/30' : 'bg-slate-850 text-slate-200 mr-6 border border-slate-700'
-                      }`}
-                    >
-                      <p className="font-semibold text-[10px] uppercase text-cyan-300 mb-0.5">{msg.sender === 'user' ? 'You' : 'Maestro AI'}</p>
-                      <p>{msg.text}</p>
+                  trip.collaborators?.map((collab) => (
+                    <div key={collab._id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs">
+                          {collab.user?.name ? collab.user.name[0].toUpperCase() : collab.email[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-white">{collab.user?.name || collab.email.split('@')[0]}</p>
+                          <p className="text-[10px] text-slate-400">{collab.email}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 font-semibold text-[10px] uppercase">
+                          {collab.role}
+                        </span>
+                        {isOwner && (
+                          <button
+                            onClick={() => handleRemoveCollaborator(collab._id)}
+                            className="p-1 rounded-lg text-rose-400 hover:bg-rose-500/20 transition-colors"
+                            title="Remove collaborator"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))
                 )}
-                {chatLoading && <p className="text-cyan-400 text-xs italic animate-pulse">Maestro is updating your plan...</p>}
               </div>
-
-              <form onSubmit={handleChatSubmit} className="flex gap-2">
-                <input
-                  type="text"
-                  value={chatMessage}
-                  onChange={(e) => setChatMessage(e.target.value)}
-                  placeholder="e.g. Add a sushi spot to Day 2..."
-                  className="flex-1 px-3 py-2 text-xs rounded-xl glass-input text-white focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  disabled={chatLoading}
-                  className="p-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white transition-colors cursor-pointer"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </form>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

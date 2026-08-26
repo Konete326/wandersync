@@ -25,14 +25,20 @@ export const getAdminNotifications = async () => {
   return response.data;
 };
 
-export const getAdminAllTrips = async (page = 1, limit = 8, search = '', visibility = 'all', country = 'All', featured = '') => {
+export const getAdminAllTrips = async (page = 1, limit = 8, search = '', visibility = 'all', country = 'All', featured = '', bookingStatus = 'all') => {
   const params = new URLSearchParams({ page, limit });
   if (search) params.append('search', search);
   if (visibility && visibility !== 'all') params.append('visibility', visibility);
   if (country && country !== 'All') params.append('country', country);
   if (featured) params.append('featured', featured);
+  if (bookingStatus && bookingStatus !== 'all') params.append('bookingStatus', bookingStatus);
 
   const response = await api.get(`/admin/trips/all?${params.toString()}`);
+  return response.data;
+};
+
+export const updateTripBookingStatusAdmin = async (id, status, adminNotes = '', itemType = null, itemStatus = null) => {
+  const response = await api.patch(`/admin/trips/${id}/booking-status`, { status, adminNotes, itemType, itemStatus });
   return response.data;
 };
 

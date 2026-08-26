@@ -8,6 +8,7 @@ import {
 } from '../controllers/adminController.js';
 import {
   getAdminAllTrips,
+  updateTripBookingStatusAdmin,
   toggleTripFeaturedAdmin,
   toggleTripVisibilityAdmin,
   deleteTripAdmin
@@ -51,6 +52,7 @@ router.get('/activity', getAdminActivityFeed);
 router.get('/notifications', getAdminNotifications);
 
 router.get('/trips/all', getAdminAllTrips);
+router.patch('/trips/:id/booking-status', updateTripBookingStatusAdmin);
 router.patch('/trips/:id/feature', toggleTripFeaturedAdmin);
 router.patch('/trips/:id/visibility', toggleTripVisibilityAdmin);
 router.delete('/trips/:id', deleteTripAdmin);

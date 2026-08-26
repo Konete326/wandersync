@@ -3,6 +3,7 @@ import { generateOpenAiItinerary, refineOpenAiItinerary, chatWithOpenAi } from '
 import { isOpenAiConfigured } from '../config/openai.js';
 import { autofillEntityData } from '../services/geminiEntityService.js';
 import { sendSuccess, sendError } from '../utils/apiResponse.js';
+import { saveUserPreferenceEmbedding, getPersonalizedContext } from '../services/embeddingService.js';
 
 export const generateItinerary = async (req, res) => {
   try {
@@ -10,6 +11,18 @@ export const generateItinerary = async (req, res) => {
     if (!destination || !durationDays) {
       return sendError(res, 'Destination and duration are required', 400);
     }
+
+    const userId = req.user?._id;
+    if (userId) {
+      saveUserPreferenceEmbedding(userId, `${destination} ${interests || ''}`, 'trip_query', {
+        destination,
+        travelStyle,
+        budgetLevel
+      });
+    }
+
+    const personalizedInsights = userId ? await getPersonalizedContext(userId, destination, interests) : null;
+
     const params = {
       destination,
       startDate: startDate || new Date().toISOString().split('T')[0],
@@ -19,13 +32,17 @@ export const generateItinerary = async (req, res) => {
       travelStyle: travelStyle || 'moderate',
       companions: companions || 'Solo',
       interests: interests || 'Sightseeing, Culture, Food',
-      currency: currency || 'USD'
+      currency: currency || 'USD',
+      personalizedInsights
     };
     let itinerary;
     if (isOpenAiConfigured()) {
       try { itinerary = await generateOpenAiItinerary(params); } catch { itinerary = await generateAiItinerary(params); }
     } else {
       itinerary = await generateAiItinerary(params);
+    }
+    if (itinerary && personalizedInsights) {
+      itinerary.personalizedEmbeddingScore = personalizedInsights.embeddingScore;
     }
     return sendSuccess(res, 'AI Itinerary generated successfully', itinerary);
   } catch (error) {

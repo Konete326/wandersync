@@ -19,9 +19,26 @@ export const getAdminAllTrips = async (req, res) => {
     if (req.query.country && req.query.country !== 'All') {
       filter['destination.country'] = new RegExp(`^${req.query.country}$`, 'i');
     }
+    if (req.query.bookingStatus && req.query.bookingStatus !== 'all') {
+      if (req.query.bookingStatus === 'cancellation_requested') {
+        filter['bookingRequest.cancellationRequest.isPending'] = true;
+      } else if (req.query.bookingStatus === 'pending') {
+        filter.$or = [
+          { 'bookingRequest.status': 'pending' },
+          { 'bookingRequest.flightStatus': 'pending' },
+          { 'bookingRequest.hotelStatus': 'pending' },
+          { 'bookingRequest.vehicleStatus': 'pending' }
+        ];
+      } else {
+        filter['bookingRequest.status'] = req.query.bookingStatus;
+      }
+    }
     const total = await Trip.countDocuments(filter);
     const trips = await Trip.find(filter)
       .populate('user', 'name email avatar')
+      .populate('selectedFlight')
+      .populate('selectedHotel')
+      .populate('selectedVehicle')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
@@ -37,13 +54,82 @@ export const getAdminAllTrips = async (req, res) => {
   }
 };
 
+export const updateTripBookingStatusAdmin = async (req, res) => {
+  try {
+    const { status, itemType, itemStatus, adminNotes } = req.body;
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) return sendError(res, 'Trip not found', 404);
+    trip.bookingRequest = trip.bookingRequest || {};
+
+    if (itemType && ['flight', 'hotel', 'vehicle'].includes(itemType)) {
+      if (itemType === 'flight') trip.bookingRequest.flightStatus = itemStatus;
+      if (itemType === 'hotel') trip.bookingRequest.hotelStatus = itemStatus;
+      if (itemType === 'vehicle') trip.bookingRequest.vehicleStatus = itemStatus;
+      const sArr = [
+        trip.selectedFlight ? (trip.bookingRequest.flightStatus || 'pending') : null,
+        trip.selectedHotel ? (trip.bookingRequest.hotelStatus || 'pending') : null,
+        (trip.selectedVehicle || trip.selectedCabService?.pickupLocation) ? (trip.bookingRequest.vehicleStatus || 'pending') : null
+      ].filter(Boolean);
+      if (sArr.length > 0 && sArr.every(s => s === 'confirmed')) trip.bookingRequest.status = 'confirmed';
+      else if (sArr.length > 0 && sArr.every(s => s === 'rejected')) trip.bookingRequest.status = 'rejected';
+      else if (sArr.some(s => s === 'pending')) trip.bookingRequest.status = 'pending';
+      else if (sArr.some(s => s === 'confirmed')) trip.bookingRequest.status = 'partially_confirmed';
+      else trip.bookingRequest.status = 'none';
+    } else if (status === 'approve_cancellation') {
+      const itc = trip.bookingRequest.cancellationRequest?.itemType || 'all';
+      if (itc === 'flight') { trip.selectedFlight = null; trip.bookingRequest.flightStatus = 'none'; }
+      if (itc === 'hotel') { trip.selectedHotel = null; trip.bookingRequest.hotelStatus = 'none'; }
+      if (itc === 'vehicle' || itc === 'cab') {
+        trip.selectedVehicle = null;
+        trip.selectedCabService = { pickupLocation: '', dropoffLocation: '', cabType: 'Standard Sedan', estimatedFare: 0, bookedAt: null };
+        trip.bookingRequest.vehicleStatus = 'none';
+      }
+      if (itc === 'all') {
+        trip.selectedFlight = null; trip.selectedHotel = null; trip.selectedVehicle = null;
+        trip.selectedCabService = { pickupLocation: '', dropoffLocation: '', cabType: 'Standard Sedan', estimatedFare: 0, bookedAt: null };
+        trip.bookingRequest.status = 'none';
+        trip.bookingRequest.flightStatus = 'none';
+        trip.bookingRequest.hotelStatus = 'none';
+        trip.bookingRequest.vehicleStatus = 'none';
+      }
+      trip.bookingRequest.cancellationRequest = { isPending: false, itemType: '', reason: '', requestedAt: null };
+      trip.bookingRequest.adminNotes = adminNotes || 'Cancellation approved by admin.';
+    } else if (status === 'reject_cancellation') {
+      trip.bookingRequest.cancellationRequest = { isPending: false, itemType: '', reason: '', requestedAt: null };
+      trip.bookingRequest.adminNotes = adminNotes || 'Cancellation declined by admin.';
+    } else if (status === 'confirmed') {
+      trip.bookingRequest.status = 'confirmed';
+      if (trip.selectedFlight) trip.bookingRequest.flightStatus = 'confirmed';
+      if (trip.selectedHotel) trip.bookingRequest.hotelStatus = 'confirmed';
+      if (trip.selectedVehicle || trip.selectedCabService?.pickupLocation) trip.bookingRequest.vehicleStatus = 'confirmed';
+      trip.bookingRequest.confirmedAt = new Date();
+    } else if (status === 'rejected') {
+      trip.bookingRequest.status = 'rejected';
+      if (trip.selectedFlight) trip.bookingRequest.flightStatus = 'rejected';
+      if (trip.selectedHotel) trip.bookingRequest.hotelStatus = 'rejected';
+      if (trip.selectedVehicle || trip.selectedCabService?.pickupLocation) trip.bookingRequest.vehicleStatus = 'rejected';
+    }
+
+    if (adminNotes) trip.bookingRequest.adminNotes = adminNotes;
+    await trip.save();
+    const populated = await Trip.findById(trip._id)
+      .populate('user', 'name email avatar')
+      .populate('selectedFlight')
+      .populate('selectedHotel')
+      .populate('selectedVehicle');
+    return sendSuccess(res, `Booking updated`, populated);
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
 export const toggleTripFeaturedAdmin = async (req, res) => {
   try {
     const trip = await Trip.findById(req.params.id);
     if (!trip) return sendError(res, 'Trip not found', 404);
     trip.featured = !trip.featured;
     await trip.save();
-    return sendSuccess(res, `Trip ${trip.featured ? 'featured on homepage' : 'unfeatured'}`, trip);
+    return sendSuccess(res, `Trip ${trip.featured ? 'featured' : 'unfeatured'}`, trip);
   } catch (error) {
     return sendError(res, error.message, 500);
   }
@@ -69,7 +155,7 @@ export const deleteTripAdmin = async (req, res) => {
     const trip = await Trip.findById(req.params.id);
     if (!trip) return sendError(res, 'Trip not found', 404);
     await trip.deleteOne();
-    return sendSuccess(res, 'Trip itinerary removed from platform');
+    return sendSuccess(res, 'Trip deleted');
   } catch (error) {
     return sendError(res, error.message, 500);
   }

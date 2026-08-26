@@ -10,8 +10,8 @@ export const getFlights = async (req, res) => {
     if (req.query.search) {
       filter.$or = [{ airline: new RegExp(req.query.search, 'i') }, { flightNumber: new RegExp(req.query.search, 'i') }, { destinationCity: new RegExp(req.query.search, 'i') }, { destinationCountry: new RegExp(req.query.search, 'i') }, { originCity: new RegExp(req.query.search, 'i') }];
     }
-    if (req.query.destinationCountry && req.query.destinationCountry !== 'All') filter.destinationCountry = new RegExp(`^${req.query.destinationCountry}$`, 'i');
-    if (req.query.destinationCity && req.query.destinationCity !== 'All') filter.destinationCity = new RegExp(`^${req.query.destinationCity}$`, 'i');
+    if (req.query.destinationCountry && req.query.destinationCountry !== 'All') filter.destinationCountry = new RegExp(req.query.destinationCountry.trim(), 'i');
+    if (req.query.destinationCity && req.query.destinationCity !== 'All') filter.destinationCity = new RegExp(req.query.destinationCity.trim(), 'i');
     if (req.query.cabinClass && req.query.cabinClass !== 'All') filter.cabinClass = req.query.cabinClass;
     const total = await Flight.countDocuments(filter);
     const flights = await Flight.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean();

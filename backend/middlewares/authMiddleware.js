@@ -20,9 +20,22 @@ export const protect = async (req, res, next) => {
   return sendError(res, 'Not authorized, no token provided', 401);
 };
 
+export const optionalProtect = async (req, res, next) => {
+  let token;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id).select('-password');
+    } catch {}
+  }
+  return next();
+};
+
 export const adminOnly = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
     return next();
   }
   return sendError(res, 'Access denied: Administrator privileges required', 403);
 };
+
