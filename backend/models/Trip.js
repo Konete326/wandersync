@@ -65,6 +65,8 @@ const tripSchema = new mongoose.Schema({
     role: { type: String, enum: ['editor', 'viewer'], default: 'editor' },
     addedAt: { type: Date, default: Date.now }
   }],
+  travelerPartyType: { type: String, default: 'Solo Explorer' },
+  travelerCount: { type: Number, default: 1 },
   selectedFlight: { type: mongoose.Schema.Types.ObjectId, ref: 'Flight', default: null },
   selectedHotel: { type: mongoose.Schema.Types.ObjectId, ref: 'Hotel', default: null },
   selectedVehicle: { type: mongoose.Schema.Types.ObjectId, ref: 'Vehicle', default: null },

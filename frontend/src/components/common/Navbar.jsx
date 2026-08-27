@@ -4,6 +4,7 @@ import { LogOut, Menu, X, Sparkles, Shield, Image as ImageIcon } from 'lucide-re
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import GlowingButton from './GlowingButton';
+import NotificationBell from './NotificationBell';
 import logoImg from '../../assets/logo.png';
 
 const Navbar = () => {
@@ -128,7 +129,9 @@ const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-3">
           {user ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
+              <NotificationBell />
+
               <Link
                 to="/profile"
                 className="flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-secondary/40 hover:bg-secondary transition-colors"
@@ -167,12 +170,15 @@ const Navbar = () => {
           )}
         </div>
 
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
-        >
-          {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          {user && <NotificationBell />}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
+          >
+            {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
       </div>
 
       {mobileMenuOpen && (

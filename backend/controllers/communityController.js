@@ -1,4 +1,6 @@
 import Message from '../models/Message.js';
+import User from '../models/User.js';
+import Notification from '../models/Notification.js';
 import { uploadImageBuffer } from '../services/cloudinaryService.js';
 import { sendSuccess, sendError } from '../utils/apiResponse.js';
 
@@ -13,7 +15,7 @@ export const getCommunityMessages = async (req, res) => {
       filter.text = new RegExp(req.query.search, 'i');
     }
     const messages = await Message.find(filter)
-      .populate('user', 'name email avatar role')
+      .populate('user', 'name email avatar role createdAt preferences')
       .sort({ createdAt: 1 })
       .limit(limit)
       .lean();
@@ -51,6 +53,36 @@ export const createCommunityMessage = async (req, res) => {
       destinationTag: destinationTag || ''
     });
     const populated = await Message.findById(message._id).populate('user', 'name email avatar role');
+
+    // Parse and notify @mentions
+    try {
+      const mentionMatches = (text || '').match(/@([a-zA-Z0-9_ -]+?)(?=\s|$|[.,!?])/g);
+      if (mentionMatches && mentionMatches.length > 0) {
+        const rawNames = Array.from(new Set(mentionMatches.map((m) => m.substring(1).trim()).filter(Boolean)));
+        const mentionedUsers = await User.find({
+          name: { $in: rawNames.map((n) => new RegExp(`^${n}$`, 'i')) },
+          _id: { $ne: req.user._id }
+        }).select('_id name');
+
+        for (const mUser of mentionedUsers) {
+          await Notification.create({
+            recipient: mUser._id,
+            sender: req.user._id,
+            type: 'mention',
+            title: 'New Mention in Lounge',
+            message: `${req.user.name} mentioned you in ${room || 'Global Lounge'}`,
+            link: `/community?tab=chat&room=${encodeURIComponent(room || 'global-lounge')}`,
+            metadata: {
+              room: room || 'global-lounge',
+              messageId: message._id.toString()
+            }
+          });
+        }
+      }
+    } catch (notifErr) {
+      console.warn('Mention notification error:', notifErr.message);
+    }
+
     return sendSuccess(res, 'Message posted to community', populated, 201);
   } catch (error) {
     return sendError(res, error.message, 500);
