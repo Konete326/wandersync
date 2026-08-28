@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Calendar, MapPin, DollarSign, Download, Share2, MessageSquare, Trash2,
   CheckCircle2, Clock, Sparkles, Send, CloudSun, ShieldCheck,
-  Users, UserPlus, BrainCircuit, X, UserCheck, Plane, Building, Car
+  Users, UserPlus, BrainCircuit, X, UserCheck, Plane, Building, Car, Search, Check, AlertCircle, Mail
 } from 'lucide-react';
 import {
   getTripDetails, updateTripData, deleteTripById, refineItineraryWithAi,
-  addCollaboratorToTrip, removeCollaboratorFromTrip
+  addCollaboratorToTrip, removeCollaboratorFromTrip, searchCollaboratorUsers
 } from '../services/tripService';
 import { fetchWeatherForecast } from '../services/weatherService';
 import { exportItineraryToPdf } from '../services/pdfService';
@@ -40,11 +40,16 @@ const ItineraryDetails = () => {
   const [chatLoading, setChatLoading] = useState(false);
   const [weather, setWeather] = useState(null);
   const [serviceLoading, setServiceLoading] = useState(false);
-
   const [collabModalOpen, setCollabModalOpen] = useState(false);
   const [collabEmail, setCollabEmail] = useState('');
   const [collabRole, setCollabRole] = useState('editor');
   const [collabLoading, setCollabLoading] = useState(false);
+
+  // User search for collaboration
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState([]);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+  const [inviteRoles, setInviteRoles] = useState({});
 
   useEffect(() => {
     const loadTrip = async () => {
@@ -251,20 +256,48 @@ const ItineraryDetails = () => {
     }
   };
 
-  const handleAddCollaborator = async (e) => {
-    e.preventDefault();
-    if (!collabEmail.trim() || collabLoading) return;
+  useEffect(() => {
+    if (!userSearchQuery.trim()) {
+      setUserSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearchingUsers(true);
+      try {
+        const res = await searchCollaboratorUsers(userSearchQuery.trim());
+        setUserSearchResults(res.data || []);
+      } catch {
+        setUserSearchResults([]);
+      } finally {
+        setIsSearchingUsers(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [userSearchQuery]);
+
+  const handleInviteUser = async (targetUser = null, directEmail = null, selectedRole = 'editor') => {
+    const emailToUse = (targetUser?.email || directEmail || collabEmail).trim();
+    const roleToUse = selectedRole || collabRole;
+    if (!emailToUse || collabLoading) return;
+
     setCollabLoading(true);
     try {
-      const res = await addCollaboratorToTrip(id, collabEmail.trim(), collabRole);
+      const res = await addCollaboratorToTrip(id, emailToUse, roleToUse, targetUser?._id);
       setTrip((prev) => ({ ...prev, collaborators: res.data }));
       setCollabEmail('');
-      showToast('Collaborator added successfully!', 'success');
+      setUserSearchQuery('');
+      setUserSearchResults([]);
+      showToast(`Collaboration invitation sent to ${targetUser?.name || emailToUse}!`, 'success');
     } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to add collaborator', 'error');
+      showToast(err.response?.data?.message || 'Failed to send invite', 'error');
     } finally {
       setCollabLoading(false);
     }
+  };
+
+  const handleAddCollaborator = async (e) => {
+    e.preventDefault();
+    handleInviteUser(null, collabEmail.trim(), collabRole);
   };
 
   const handleRemoveCollaborator = async (collabId) => {
@@ -658,114 +691,313 @@ const ItineraryDetails = () => {
 
       {collabModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="liquid-glass-card rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-purple-500/30 space-y-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="liquid-glass-card rounded-3xl p-5 sm:p-7 max-w-lg w-full border border-purple-500/30 space-y-5 shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Co-Create & Collaborate</h3>
-                  <p className="text-xs text-slate-400">Invite teammates or friends to edit this trip</p>
+                  <h3 className="text-base sm:text-lg font-bold text-white">Co-Create & Collaborate</h3>
+                  <p className="text-xs text-slate-400">Search users and invite friends to co-edit this itinerary</p>
                 </div>
               </div>
               <button
                 onClick={() => setCollabModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {isOwner ? (
-              <form onSubmit={handleAddCollaborator} className="space-y-3">
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
-                  Invite Co-Creator by Email
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    required
-                    value={collabEmail}
-                    onChange={(e) => setCollabEmail(e.target.value)}
-                    placeholder="friend@example.com"
-                    className="flex-1 px-4 py-2.5 rounded-xl glass-input text-sm text-white focus:outline-none border border-slate-800 focus:border-purple-500/50"
-                  />
-                  <select
-                    value={collabRole}
-                    onChange={(e) => setCollabRole(e.target.value)}
-                    className="px-3 py-2.5 rounded-xl glass-input text-xs text-purple-300 font-semibold border border-slate-800 focus:outline-none"
-                  >
-                    <option value="editor">Editor (Can edit)</option>
-                    <option value="viewer">Viewer (Read-only)</option>
-                  </select>
-                  <button
-                    type="submit"
-                    disabled={collabLoading}
-                    className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm flex items-center gap-1.5 transition-colors shrink-0"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    Invite
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 flex items-center gap-2">
-                <UserCheck className="w-4 h-4 text-purple-400 shrink-0" />
-                <span>You are a co-creator editor on this itinerary. You can make live edits and refine with AI.</span>
-              </div>
-            )}
+            <div className="overflow-y-auto custom-scrollbar space-y-5 pr-1 flex-1">
+              {isOwner ? (
+                <div className="space-y-3">
+                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
+                    Search User by Name or Email
+                  </label>
 
-            <div className="space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Active Collaborators</h4>
-              <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs">
-                      {trip.user?.name ? trip.user.name[0].toUpperCase() : 'O'}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white">{trip.user?.name || 'Trip Owner'}</p>
-                      <p className="text-[10px] text-slate-400">{trip.user?.email || 'Creator'}</p>
-                    </div>
+                  {/* Real-time Search Input */}
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-purple-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={userSearchQuery}
+                      onChange={(e) => setUserSearchQuery(e.target.value)}
+                      placeholder="Type name or email (e.g. John, Sarah@gmail.com)..."
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-sm text-white focus:outline-none border border-slate-800 focus:border-purple-500/50"
+                    />
+                    {isSearchingUsers && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-purple-400 font-semibold animate-pulse">
+                        Searching...
+                      </div>
+                    )}
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-semibold text-[10px] uppercase">
-                    Owner
-                  </span>
-                </div>
 
-                {trip.collaborators?.length === 0 ? (
-                  <p className="text-xs text-slate-500 italic p-2 text-center">No co-creators added yet.</p>
-                ) : (
-                  trip.collaborators?.map((collab) => (
-                    <div key={collab._id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs">
-                          {collab.user?.name ? collab.user.name[0].toUpperCase() : collab.email[0].toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-white">{collab.user?.name || collab.email.split('@')[0]}</p>
-                          <p className="text-[10px] text-slate-400">{collab.email}</p>
-                        </div>
-                      </div>
+                  {/* Search Results Dropdown List */}
+                  {userSearchResults.length > 0 && (
+                    <div className="p-2 rounded-2xl bg-slate-900/90 border border-purple-500/40 space-y-2 shadow-xl animate-in fade-in duration-150">
+                      <p className="text-[10px] uppercase font-bold text-purple-400 px-2 pt-1">
+                        Matching Users ({userSearchResults.length})
+                      </p>
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar">
+                        {userSearchResults.map((foundUser) => {
+                          const currentRole = inviteRoles[foundUser._id] || 'editor';
+                          const existing = trip.collaborators?.find(
+                            (c) =>
+                              (c.user?._id && c.user._id.toString() === foundUser._id.toString()) ||
+                              (c.email && c.email.toLowerCase() === foundUser.email?.toLowerCase())
+                          );
 
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 font-semibold text-[10px] uppercase">
-                          {collab.role}
-                        </span>
-                        {isOwner && (
-                          <button
-                            onClick={() => handleRemoveCollaborator(collab._id)}
-                            className="p-1 rounded-lg text-rose-400 hover:bg-rose-500/20 transition-colors"
-                            title="Remove collaborator"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
+                          return (
+                            <div
+                              key={foundUser._id}
+                              className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-purple-500/50 transition-all text-xs"
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                {foundUser.avatar?.url ? (
+                                  <img
+                                    src={foundUser.avatar.url}
+                                    alt={foundUser.name}
+                                    className="w-8 h-8 rounded-full object-cover border border-purple-500/30 shrink-0"
+                                  />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 font-bold flex items-center justify-center shrink-0">
+                                    {foundUser.name ? foundUser.name[0].toUpperCase() : 'U'}
+                                  </div>
+                                )}
+                                <div className="truncate">
+                                  <p className="font-semibold text-white truncate">{foundUser.name}</p>
+                                  <p className="text-[10px] text-slate-400 truncate">{foundUser.email}</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                {existing?.status === 'accepted' ? (
+                                  <span className="px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
+                                    ✓ Active
+                                  </span>
+                                ) : existing?.status === 'pending' ? (
+                                  <span className="px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
+                                    ⏳ Request Sent
+                                  </span>
+                                ) : (
+                                  <>
+                                    <select
+                                      value={currentRole}
+                                      onChange={(e) =>
+                                        setInviteRoles((prev) => ({ ...prev, [foundUser._id]: e.target.value }))
+                                      }
+                                      className="px-2 py-1 rounded-lg glass-input text-[11px] text-purple-300 border border-slate-800 focus:outline-none"
+                                    >
+                                      <option value="editor">Editor</option>
+                                      <option value="viewer">Viewer</option>
+                                    </select>
+                                    <button
+                                      type="button"
+                                      disabled={collabLoading}
+                                      onClick={() => handleInviteUser(foundUser, null, currentRole)}
+                                      className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer shadow-md"
+                                    >
+                                      <UserPlus className="w-3.5 h-3.5" />
+                                      <span>Invite</span>
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  ))
-                )}
+                  )}
+
+                  {/* Fallback Direct Email Invite Form */}
+                  <form onSubmit={handleAddCollaborator} className="pt-2 border-t border-slate-800/80 space-y-2">
+                    <label className="text-[11px] font-medium text-slate-400 block">
+                      Or invite by direct email address:
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="email"
+                        value={collabEmail}
+                        onChange={(e) => setCollabEmail(e.target.value)}
+                        placeholder="co-creator@domain.com"
+                        className="flex-1 px-3 py-2 rounded-xl glass-input text-xs text-white focus:outline-none border border-slate-800 focus:border-purple-500/50"
+                      />
+                      <select
+                        value={collabRole}
+                        onChange={(e) => setCollabRole(e.target.value)}
+                        className="px-2.5 py-2 rounded-xl glass-input text-xs text-purple-300 font-semibold border border-slate-800 focus:outline-none"
+                      >
+                        <option value="editor">Editor</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
+                      <button
+                        type="submit"
+                        disabled={collabLoading || !collabEmail.trim()}
+                        className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
+                      >
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>Send</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 flex items-center gap-2">
+                  <UserCheck className="w-4 h-4 text-purple-400 shrink-0" />
+                  <span>You are a co-creator editor on this itinerary. You can make live edits and refine with AI.</span>
+                </div>
+              )}
+
+              {/* Pending Invitations Section */}
+              {trip.collaborators?.some((c) => c.status === 'pending') && (
+                <div className="space-y-2.5 pt-2 border-t border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>Pending Invitations (Awaiting Acceptance)</span>
+                    </h4>
+                    <span className="text-[10px] text-slate-500">
+                      {trip.collaborators.filter((c) => c.status === 'pending').length} pending
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar">
+                    {trip.collaborators
+                      ?.filter((c) => c.status === 'pending')
+                      .map((collab) => (
+                        <div
+                          key={collab._id}
+                          className="flex items-center justify-between p-2.5 rounded-xl bg-amber-950/15 border border-amber-500/30 text-xs"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {collab.user?.avatar?.url ? (
+                              <img
+                                src={collab.user.avatar.url}
+                                alt={collab.user.name}
+                                className="w-7 h-7 rounded-full object-cover border border-amber-500/30 shrink-0"
+                              />
+                            ) : (
+                              <div className="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs shrink-0">
+                                {collab.user?.name ? collab.user.name[0].toUpperCase() : collab.email[0].toUpperCase()}
+                              </div>
+                            )}
+                            <div className="truncate">
+                              <p className="font-semibold text-white truncate">
+                                {collab.user?.name || collab.email.split('@')[0]}
+                              </p>
+                              <p className="text-[10px] text-slate-400 truncate">{collab.email}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 font-semibold text-[10px] uppercase">
+                              {collab.role}
+                            </span>
+                            <span className="text-[10px] text-amber-400/80 italic hidden sm:inline">
+                              Pending accept...
+                            </span>
+                            {isOwner && (
+                              <button
+                                onClick={() => handleRemoveCollaborator(collab._id)}
+                                className="p-1 rounded-lg text-rose-400 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                                title="Cancel invitation"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Active Collaborators Section */}
+              <div className="space-y-2.5 pt-2 border-t border-slate-800">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Active Co-Creators</span>
+                </h4>
+
+                <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                  {/* Trip Owner */}
+                  <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {trip.user?.avatar?.url ? (
+                        <img
+                          src={trip.user.avatar.url}
+                          alt={trip.user.name}
+                          className="w-8 h-8 rounded-full object-cover border border-cyan-500/40 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs shrink-0">
+                          {trip.user?.name ? trip.user.name[0].toUpperCase() : 'O'}
+                        </div>
+                      )}
+                      <div className="truncate">
+                        <p className="font-semibold text-white truncate">{trip.user?.name || 'Trip Owner'}</p>
+                        <p className="text-[10px] text-slate-400 truncate">{trip.user?.email || 'Creator'}</p>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-semibold text-[10px] uppercase">
+                      Owner
+                    </span>
+                  </div>
+
+                  {/* Accepted Collaborators */}
+                  {trip.collaborators?.filter((c) => c.status === 'accepted' || !c.status).length === 0 ? (
+                    <p className="text-xs text-slate-500 italic p-2 text-center">
+                      No accepted co-creators yet. Search above to invite teammates.
+                    </p>
+                  ) : (
+                    trip.collaborators
+                      ?.filter((c) => c.status === 'accepted' || !c.status)
+                      .map((collab) => (
+                        <div
+                          key={collab._id}
+                          className="flex items-center justify-between p-3 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {collab.user?.avatar?.url ? (
+                              <img
+                                src={collab.user.avatar.url}
+                                alt={collab.user.name}
+                                className="w-8 h-8 rounded-full object-cover border border-purple-500/30 shrink-0"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs shrink-0">
+                                {collab.user?.name ? collab.user.name[0].toUpperCase() : collab.email[0].toUpperCase()}
+                              </div>
+                            )}
+                            <div className="truncate">
+                              <p className="font-semibold text-white truncate">
+                                {collab.user?.name || collab.email.split('@')[0]}
+                              </p>
+                              <p className="text-[10px] text-slate-400 truncate">{collab.email}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 font-semibold text-[10px] uppercase">
+                              {collab.role}
+                            </span>
+                            {isOwner && (
+                              <button
+                                onClick={() => handleRemoveCollaborator(collab._id)}
+                                className="p-1 rounded-lg text-rose-400 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                                title="Remove collaborator"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                  )}
+                </div>
               </div>
             </div>
           </div>

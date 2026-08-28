@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Compass, Plus, Search, Calendar, MapPin, DollarSign, Trash2, ArrowRight } from 'lucide-react';
-import { getMyTrips, deleteTripById } from '../services/tripService';
+import {
+  Compass, Plus, Search, MapPin, DollarSign, Trash2,
+  Users, CheckCircle2, XCircle, Bell, Clock
+} from 'lucide-react';
+import { getMyTrips, deleteTripById, getPendingTripInvites, respondToTripInvite } from '../services/tripService';
 import { useModal } from '../context/ModalContext';
 import Loader from '../components/common/Loader';
 import { getCachedData, setCachedData } from '@/utils/realtimeSync';
@@ -11,12 +14,14 @@ const MyTrips = () => {
   const initialTrips = getCachedData(cacheKey);
 
   const [trips, setTrips] = useState(initialTrips || []);
+  const [pendingInvites, setPendingInvites] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(!initialTrips);
+  const [respondingId, setRespondingId] = useState(null);
   const { showModal, showToast } = useModal();
   const navigate = useNavigate();
 
-  const loadTrips = async (isBackground = false) => {
+  const loadTrips = useCallback(async (isBackground = false) => {
     if (!isBackground && !initialTrips) {
       setLoading(true);
     }
@@ -32,10 +37,20 @@ const MyTrips = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const loadPendingInvites = useCallback(async () => {
+    try {
+      const res = await getPendingTripInvites();
+      setPendingInvites(res.data || []);
+    } catch {
+      // silently ignore
+    }
+  }, []);
 
   useEffect(() => {
     loadTrips(!!initialTrips);
+    loadPendingInvites();
   }, []);
 
   const handleDelete = (tripId, tripTitle, e) => {
@@ -60,6 +75,24 @@ const MyTrips = () => {
     });
   };
 
+  const handleRespondToInvite = async (tripId, tripTitle, action) => {
+    setRespondingId(`${tripId}_${action}`);
+    try {
+      await respondToTripInvite(tripId, action);
+      if (action === 'accept') {
+        showToast(`🎉 You joined "${tripTitle}" as a co-creator!`, 'success');
+        await loadTrips(true);
+      } else {
+        showToast(`Invitation to "${tripTitle}" declined.`, 'info');
+      }
+      setPendingInvites((prev) => prev.filter((inv) => inv._id !== tripId));
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Failed to respond to invite', 'error');
+    } finally {
+      setRespondingId(null);
+    }
+  };
+
   const filteredTrips = trips.filter((t) =>
     t.title?.toLowerCase().includes(search.toLowerCase()) ||
     t.destination?.city?.toLowerCase().includes(search.toLowerCase()) ||
@@ -76,6 +109,7 @@ const MyTrips = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-white">My Trips Library</h1>
@@ -90,6 +124,102 @@ const MyTrips = () => {
           <span>New Itinerary</span>
         </Link>
       </div>
+
+      {/* ─── Pending Collaboration Invitations ─── */}
+      {pendingInvites.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
+              <Bell className="w-4 h-4" />
+            </div>
+            <h2 className="text-base font-bold text-white">Trip Collaboration Invitations</h2>
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              {pendingInvites.length}
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {pendingInvites.map((invite) => {
+              const myEntry = invite.collaborators?.find((c) => c.status === 'pending');
+              const inviterName = invite.user?.name || 'Someone';
+              const inviterAvatar = invite.user?.avatar?.url;
+              const role = myEntry?.role || 'editor';
+
+              return (
+                <div
+                  key={invite._id}
+                  className="liquid-glass-card rounded-2xl p-4 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center gap-4 shadow-lg shadow-amber-500/5"
+                >
+                  {/* Trip Info */}
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/30 to-cyan-500/30 border border-purple-500/30 flex items-center justify-center shrink-0">
+                      <Users className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-bold text-white truncate">{invite.title}</h3>
+                      <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3 text-cyan-400 shrink-0" />
+                        {invite.destination?.city}{invite.destination?.country ? `, ${invite.destination.country}` : ''}
+                        {invite.durationDays ? ` · ${invite.durationDays} Days` : ''}
+                      </p>
+                      {/* Inviter info */}
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        {inviterAvatar ? (
+                          <img src={inviterAvatar} alt={inviterName} className="w-5 h-5 rounded-full border border-purple-500/40 object-cover" />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 text-[9px] font-bold flex items-center justify-center">
+                            {inviterName[0]?.toUpperCase()}
+                          </div>
+                        )}
+                        <span className="text-[11px] text-slate-400">
+                          <span className="text-purple-300 font-semibold">{inviterName}</span> invited you as{' '}
+                          <span className="text-amber-300 font-semibold capitalize">{role}</span>
+                        </span>
+                        <Clock className="w-3 h-3 text-slate-600" />
+                        <span className="text-[10px] text-slate-600">Pending</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cost badge */}
+                  {invite.estimatedTotalCost > 0 && (
+                    <div className="hidden sm:flex items-center gap-1 text-xs text-emerald-400 font-semibold shrink-0">
+                      <DollarSign className="w-3.5 h-3.5" />
+                      ${invite.estimatedTotalCost}
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => handleRespondToInvite(invite._id, invite.title, 'decline')}
+                      disabled={!!respondingId}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-rose-500/40 text-rose-400 hover:bg-rose-500/10 text-xs font-semibold transition-all disabled:opacity-40 cursor-pointer"
+                    >
+                      <XCircle className="w-3.5 h-3.5" />
+                      <span>Decline</span>
+                    </button>
+                    <button
+                      onClick={() => handleRespondToInvite(invite._id, invite.title, 'accept')}
+                      disabled={!!respondingId}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-500/25 transition-all disabled:opacity-40 cursor-pointer"
+                    >
+                      {respondingId === `${invite._id}_accept` ? (
+                        <span className="animate-pulse">Joining...</span>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Accept & Join</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="relative max-w-md">
         <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -129,9 +259,17 @@ const MyTrips = () => {
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                    {trip.durationDays} Days
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                      {trip.durationDays} Days
+                    </span>
+                    {trip.collaborators?.some(c => c.status === 'accepted') && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
+                        <Users className="w-2.5 h-2.5" />
+                        Collab
+                      </span>
+                    )}
+                  </div>
                   <button
                     onClick={(e) => handleDelete(trip._id, trip.title, e)}
                     className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"

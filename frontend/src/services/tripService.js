@@ -50,13 +50,28 @@ export const chatWithAiAssistant = async (message, history = [], tripContext = n
   return response.data;
 };
 
+export const searchCollaboratorUsers = async (query) => {
+  const response = await api.get(`/trips/search-users?query=${encodeURIComponent(query)}`);
+  return response.data;
+};
+
+export const getPendingTripInvites = async () => {
+  const response = await api.get('/trips/invites/pending');
+  return response.data;
+};
+
+export const respondToTripInvite = async (tripId, action) => {
+  const response = await api.post(`/trips/${tripId}/collaborators/respond`, { action });
+  return response.data;
+};
+
 export const getTripCollaborators = async (tripId) => {
   const response = await api.get(`/trips/${tripId}/collaborators`);
   return response.data;
 };
 
-export const addCollaboratorToTrip = async (tripId, email, role = 'editor') => {
-  const response = await api.post(`/trips/${tripId}/collaborators`, { email, role });
+export const addCollaboratorToTrip = async (tripId, email, role = 'editor', userId = null) => {
+  const response = await api.post(`/trips/${tripId}/collaborators`, { email, role, userId });
   return response.data;
 };
 

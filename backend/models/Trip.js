@@ -63,7 +63,10 @@ const tripSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     email: { type: String, required: true },
     role: { type: String, enum: ['editor', 'viewer'], default: 'editor' },
-    addedAt: { type: Date, default: Date.now }
+    status: { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
+    invitedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    addedAt: { type: Date, default: Date.now },
+    respondedAt: { type: Date, default: null }
   }],
   travelerPartyType: { type: String, default: 'Solo Explorer' },
   travelerCount: { type: Number, default: 1 },

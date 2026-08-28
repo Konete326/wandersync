@@ -1,5 +1,6 @@
 import Trip from '../models/Trip.js';
 import User from '../models/User.js';
+import Notification from '../models/Notification.js';
 import { sendSuccess, sendError } from '../utils/apiResponse.js';
 
 const generateSlug = () => Math.random().toString(36).substring(2, 10);
@@ -11,8 +12,14 @@ export const getUserTrips = async (req, res) => {
     const trips = await Trip.find({
       $or: [
         { user: req.user._id },
-        { 'collaborators.user': req.user._id },
-        { 'collaborators.email': userEmail }
+        { 
+          collaborators: { 
+            $elemMatch: { 
+              $or: [{ user: req.user._id }, { email: userEmail }],
+              status: { $in: ['accepted', undefined] } // include accepted or legacy collaborators
+            } 
+          } 
+        }
       ]
     }).sort({ createdAt: -1 }).lean();
     return sendSuccess(res, 'Trips retrieved successfully', trips);
@@ -210,36 +217,191 @@ export const deleteTrip = async (req, res) => {
   }
 };
 
+// Search registered users for trip collaboration by name or email
+export const searchCollaboratorUsers = async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query || !query.trim()) {
+      return sendSuccess(res, 'No search query provided', []);
+    }
+
+    const currentUserId = req.user._id;
+    const searchRegex = new RegExp(query.trim(), 'i');
+
+    const users = await User.find({
+      _id: { $ne: currentUserId },
+      $or: [{ name: searchRegex }, { email: searchRegex }],
+      status: { $ne: 'banned' }
+    })
+      .select('name email avatar role preferences.homeCity')
+      .limit(10)
+      .lean();
+
+    return sendSuccess(res, 'Users found', users);
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+// Invite collaborator (sends pending invitation and notification to user)
 export const addCollaborator = async (req, res) => {
   try {
-    const { email, role = 'editor' } = req.body;
-    if (!email) return sendError(res, 'Collaborator email is required', 400);
+    const { email, role = 'editor', userId } = req.body;
+    if (!email && !userId) return sendError(res, 'Collaborator email or userId is required', 400);
 
     const trip = await Trip.findById(req.params.id);
     if (!trip) return sendError(res, 'Trip not found', 404);
 
     if (trip.user.toString() !== req.user._id.toString()) {
-      return sendError(res, 'Only the trip owner can add collaborators', 403);
+      return sendError(res, 'Only the trip owner can invite collaborators', 403);
     }
 
-    const cleanEmail = email.toLowerCase().trim();
-    const existingUser = await User.findOne({ email: cleanEmail }).select('_id email name avatar').lean();
-
-    const alreadyAdded = trip.collaborators.some(c => c.email.toLowerCase() === cleanEmail);
-    if (alreadyAdded) {
-      return sendError(res, 'User is already a collaborator on this trip', 400);
+    let targetUser = null;
+    if (userId) {
+      targetUser = await User.findById(userId).select('_id email name avatar').lean();
+    }
+    if (!targetUser && email) {
+      targetUser = await User.findOne({ email: email.toLowerCase().trim() }).select('_id email name avatar').lean();
     }
 
-    trip.collaborators.push({
-      user: existingUser ? existingUser._id : null,
-      email: cleanEmail,
-      role,
-      addedAt: new Date()
-    });
+    const cleanEmail = (targetUser?.email || email || '').toLowerCase().trim();
+
+    if (targetUser && targetUser._id.toString() === req.user._id.toString()) {
+      return sendError(res, 'You are the owner of this trip and cannot invite yourself', 400);
+    }
+
+    const existingCollab = trip.collaborators.find(c => 
+      (c.email && c.email.toLowerCase() === cleanEmail) || 
+      (targetUser && c.user && c.user.toString() === targetUser._id.toString())
+    );
+
+    if (existingCollab) {
+      if (existingCollab.status === 'accepted') {
+        return sendError(res, `${targetUser?.name || cleanEmail} is already an active collaborator on this trip`, 400);
+      }
+      if (existingCollab.status === 'pending') {
+        return sendError(res, `Collaboration invitation has already been sent to ${targetUser?.name || cleanEmail}`, 400);
+      }
+      // If declined previously, reset to pending
+      existingCollab.status = 'pending';
+      existingCollab.role = role;
+      existingCollab.invitedBy = req.user._id;
+      existingCollab.addedAt = new Date();
+      existingCollab.respondedAt = null;
+    } else {
+      trip.collaborators.push({
+        user: targetUser ? targetUser._id : null,
+        email: cleanEmail,
+        role,
+        status: 'pending',
+        invitedBy: req.user._id,
+        addedAt: new Date()
+      });
+    }
 
     await trip.save();
+
+    // Create a real-time Notification for the invited user
+    if (targetUser) {
+      try {
+        await Notification.create({
+          recipient: targetUser._id,
+          sender: req.user._id,
+          type: 'trip_invite',
+          title: 'Trip Collaboration Invite',
+          message: `${req.user.name} invited you to co-create "${trip.title}" (${trip.destination?.city || trip.destination?.country || ''}) as ${role === 'editor' ? 'an Editor' : 'a Viewer'}.`,
+          link: '/my-trips',
+          metadata: { tripId: trip._id }
+        });
+      } catch (err) {
+        console.error('Notification creation error:', err);
+      }
+    }
+
     const updatedTrip = await Trip.findById(trip._id).populate('collaborators.user', 'name email avatar').lean();
-    return sendSuccess(res, 'Collaborator added successfully', updatedTrip.collaborators);
+    return sendSuccess(res, `Collaboration invitation sent to ${targetUser?.name || cleanEmail}!`, updatedTrip.collaborators);
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+// Accept or Decline a Trip Collaboration Request
+export const respondToTripInvite = async (req, res) => {
+  try {
+    const { action } = req.body; // 'accept' or 'decline'
+    if (!['accept', 'decline'].includes(action)) {
+      return sendError(res, 'Action must be "accept" or "decline"', 400);
+    }
+
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) return sendError(res, 'Trip not found', 404);
+
+    const userEmail = req.user.email?.toLowerCase().trim();
+    const collabEntry = trip.collaborators.find(c =>
+      (c.user && c.user.toString() === req.user._id.toString()) ||
+      (c.email && c.email.toLowerCase().trim() === userEmail)
+    );
+
+    if (!collabEntry) {
+      return sendError(res, 'No collaboration invitation found for this trip', 404);
+    }
+
+    if (action === 'accept') {
+      collabEntry.status = 'accepted';
+      collabEntry.user = req.user._id;
+      collabEntry.respondedAt = new Date();
+
+      // Recalculate total party count (Owner + Accepted Collaborators)
+      const acceptedCount = trip.collaborators.filter(c => c.status === 'accepted').length;
+      trip.travelerCount = 1 + acceptedCount;
+
+      await trip.save();
+
+      // Send confirmation notification to trip owner
+      try {
+        await Notification.create({
+          recipient: trip.user,
+          sender: req.user._id,
+          type: 'trip_joined',
+          title: 'Collaboration Invitation Accepted',
+          message: `${req.user.name} accepted your invitation to collaborate on "${trip.title}".`,
+          link: `/trips/${trip._id}`,
+          metadata: { tripId: trip._id }
+        });
+      } catch (err) {
+        console.error('Notification creation error:', err);
+      }
+
+      return sendSuccess(res, `You have joined "${trip.title}" as a co-creator!`, trip);
+    } else {
+      collabEntry.status = 'declined';
+      collabEntry.respondedAt = new Date();
+      await trip.save();
+      return sendSuccess(res, `Invitation for "${trip.title}" declined.`, null);
+    }
+  } catch (error) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+// Get pending collaboration invites for logged-in user
+export const getPendingTripInvites = async (req, res) => {
+  try {
+    const userEmail = req.user.email?.toLowerCase().trim();
+    const pendingTrips = await Trip.find({
+      collaborators: {
+        $elemMatch: {
+          $or: [{ user: req.user._id }, { email: userEmail }],
+          status: 'pending'
+        }
+      }
+    })
+      .populate('user', 'name email avatar')
+      .select('title destination coverImage startDate endDate durationDays estimatedTotalCost currency collaborators overview')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return sendSuccess(res, 'Pending invitations fetched', pendingTrips);
   } catch (error) {
     return sendError(res, error.message, 500);
   }
@@ -256,6 +418,11 @@ export const removeCollaborator = async (req, res) => {
     }
 
     trip.collaborators = trip.collaborators.filter(c => c._id.toString() !== collaboratorId);
+    
+    // Recalculate travelers count
+    const acceptedCount = trip.collaborators.filter(c => c.status === 'accepted').length;
+    trip.travelerCount = 1 + acceptedCount;
+
     await trip.save();
     return sendSuccess(res, 'Collaborator removed successfully', trip.collaborators);
   } catch (error) {
