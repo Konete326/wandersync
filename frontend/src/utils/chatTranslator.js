@@ -185,7 +185,7 @@ class AsyncQueue {
   }
 }
 
-const translationQueue = new AsyncQueue(3);
+const translationQueue = new AsyncQueue(6);
 
 // Translate function calling backend AI with instant caching & fallback
 export const translateMessageContent = async (text, userPreferredLang = 'en') => {
@@ -257,7 +257,7 @@ export const translateMessageContent = async (text, userPreferredLang = 'en') =>
           targetLang,
           sourceLang: detectedLang
         },
-        { timeout: 4500 }
+        { timeout: 8000 }
       );
 
       if (res.data?.data?.translatedText) {

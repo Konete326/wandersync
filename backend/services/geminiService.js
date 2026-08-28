@@ -323,20 +323,26 @@ ${cleanInput}
 
 Translation:`;
 
-      // Use flash-lite or flash without JSON schema constraint for max speed
-      const model = getGeminiModel('gemini-2.5-flash-lite', false) || getGeminiModel('gemini-3.6-flash', false);
-      if (model) {
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2400));
-        const genPromise = model.generateContent(prompt);
-        const result = await Promise.race([genPromise, timeoutPromise]);
-        const rawTranslation = result?.response?.text()?.trim();
-        if (rawTranslation) {
-          const cleaned = sanitizeTranslationOutput(rawTranslation, cleanInput);
-          if (cleaned && cleaned.length > 0) {
-            if (serverTranslationCache.size > 2000) serverTranslationCache.clear();
-            serverTranslationCache.set(cacheKey, cleaned);
-            return cleaned;
+      const candidateModels = ['gemini-2.5-flash-lite', 'gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-3.6-flash'];
+      for (const mName of candidateModels) {
+        try {
+          const model = getGeminiModel(mName, false);
+          if (model) {
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5500));
+            const genPromise = model.generateContent(prompt);
+            const result = await Promise.race([genPromise, timeoutPromise]);
+            const rawTranslation = result?.response?.text()?.trim();
+            if (rawTranslation) {
+              const cleaned = sanitizeTranslationOutput(rawTranslation, cleanInput);
+              if (cleaned && cleaned.length > 0) {
+                if (serverTranslationCache.size > 2000) serverTranslationCache.clear();
+                serverTranslationCache.set(cacheKey, cleaned);
+                return cleaned;
+              }
+            }
           }
+        } catch {
+          // Try next candidate model
         }
       }
     } catch {
@@ -348,7 +354,7 @@ Translation:`;
   try {
     const googleTarget = normalizedTarget === 'pk' ? 'ur' : normalizedTarget === 'in' ? 'hi' : (normalizedTarget || 'ur');
     const gtUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${googleTarget}&dt=t&q=${encodeURIComponent(cleanInput)}`;
-    const response = await axios.get(gtUrl, { timeout: 1500 });
+    const response = await axios.get(gtUrl, { timeout: 2500 });
     if (response.data && response.data[0]) {
       const translatedParts = response.data[0].map((item) => item[0]).filter(Boolean).join('');
       if (translatedParts) {
