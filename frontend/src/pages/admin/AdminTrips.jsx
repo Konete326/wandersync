@@ -51,6 +51,7 @@ import {
   getCachedData,
   setCachedData
 } from '@/utils/realtimeSync';
+import { getDestinationCoverImage } from '@/utils/destinationImages';
 
 export default function AdminTrips() {
   const navigate = useNavigate();
@@ -362,7 +363,7 @@ export default function AdminTrips() {
                 <div>
                   <div className="relative h-36 w-full overflow-hidden bg-secondary/30">
                     <img
-                      src={trip.coverImage?.url || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=500&auto=format&fit=crop&q=80'}
+                      src={getDestinationCoverImage(trip)}
                       alt={trip.title}
                       className="size-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
