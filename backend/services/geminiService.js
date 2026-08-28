@@ -309,7 +309,7 @@ export const translateChatMessage = async (text, targetLang = 'ur', sourceLang =
       } else if (isTargetHindi) {
         instruction = 'Translate into natural Roman Hindi written in English alphabet. Output ONLY the single translated sentence as raw plain text without JSON, markdown, or quotation marks.';
       } else if (isTargetEnglish) {
-        instruction = 'Translate this message into clear, natural English. Output ONLY the single translated sentence as raw plain text without JSON, markdown, or quotation marks.';
+        instruction = 'Translate this message (which is in Roman Urdu, Hindi, Urdu script, or another language) into clear, natural, proper English. For example, "kya haal hai" -> "How are you doing?", "mausam kaisa hai" -> "How is the weather there?", "bhai ye destination kesi hai" -> "Brother, how is this destination?". If the input is already standard grammatically correct English, return it unchanged. Output ONLY the single translated sentence as raw plain text without JSON, markdown, or quotation marks.';
       } else {
         const langDesc = LANGUAGE_DESCRIPTIONS[normalizedTarget] || normalizedTarget;
         instruction = `Translate this message into ${langDesc}. Output ONLY the single translated sentence as raw plain text without JSON, markdown, or quotation marks.`;

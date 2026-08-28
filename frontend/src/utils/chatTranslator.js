@@ -85,31 +85,39 @@ const PHRASE_MAP = {
 const ROMAN_URDU_KEYWORDS = [
   'karein', 'kare', 'karna', 'karta', 'karti', 'karte', 'hain', 'hai', 'hon', 'hoon', 'mein', 'me', 
   'bohat', 'bahut', 'bohot', 'shukriya', 'zaroor', 'zarur', 'kese', 'kaise', 'kaisi', 'kaisa', 
-  'yahan', 'wahan', 'bhi', 'kuch', 'hoga', 'hogi', 'hoge', 'mera', 'meri', 'mere', 'khana', 
-  'gaye', 'gayi', 'gaya', 'jana', 'jane', 'chahiye', 'bhai', 'apka', 'aapka', 'apki', 'aapki', 
-  'accha', 'achha', 'achi', 'achhi', 'pyara', 'pyari', 'zabardast', 'theek', 'thik', 'kya', 
-  'kyun', 'kab', 'kahan', 'kitna', 'kitni', 'kitne', 'sath', 'saath', 'wala', 'wali', 'wale', 
-  'hum', 'tum', 'aap', 'woh', 'yeh', 'raha', 'rahi', 'rahe', 'baat', 'waqt', 'shandar', 
-  'shandaar', 'behtareen', 'lazeez', 'mausam', 'safari', 'jagah', 'jageh', 'gari', 'gaari'
+  'yahan', 'wahan', 'bhi', 'kuch', 'hoga', 'hogi', 'hoge', 'hona', 'mera', 'meri', 'mere', 'khana', 
+  'gaye', 'gayi', 'gaya', 'jana', 'jane', 'jao', 'jaenge', 'chahiye', 'chahiyein', 'bhai', 'bhaiya', 
+  'apka', 'aapka', 'apki', 'aapki', 'apke', 'aapke', 'accha', 'achha', 'achi', 'achhi', 'ache', 'achhe', 
+  'pyara', 'pyari', 'zabardast', 'theek', 'thik', 'kya', 'kia', 'kyun', 'kyu', 'kab', 'kahan', 'kidhar', 
+  'kitna', 'kitni', 'kitne', 'sath', 'saath', 'wala', 'wali', 'wale', 'hum', 'tum', 'aap', 'woh', 'yeh', 
+  'ye', 'raha', 'rahi', 'rahe', 'baat', 'waqt', 'shandar', 'shandaar', 'behtareen', 'lazeez', 'mausam', 
+  'safari', 'jagah', 'jageh', 'gari', 'gaari', 'hotel', 'subah', 'shaam', 'raat', 'din', 'pata', 'batao', 
+  'bataen', 'bataiye', 'dekho', 'dekhein', 'kren', 'krna', 'kr', 'krte', 'krty', 'btao', 'sb', 'sab', 
+  'koi', 'kisi', 'kesi', 'lag', 'laga', 'rahe', 'pe', 'par', 'ko', 'se', 'ki', 'ka', 'ke', 
+  'tha', 'thi', 'the', 'sakte', 'sakti', 'sakta', 'banao', 'bana', 'bani', 'diya', 'diye', 'dekh'
 ];
 
 // Fast detection of Roman Urdu / Urdu script vs Standard English
 export const detectMessageLanguage = (text) => {
   if (!text) return 'en';
-  const clean = text.toLowerCase();
+  const clean = text.toLowerCase().trim();
   
-  // Check for Arabic/Urdu unicode characters
+  // 1. Check for Arabic/Urdu unicode characters
   if (/[\u0600-\u06FF]/.test(clean)) return 'ur';
 
-  // Check Roman Urdu token overlap
-  const words = clean.split(/\s+/);
-  let matchCount = 0;
+  // 2. Check Roman Urdu token overlap
+  const words = clean.split(/[\s,?.!/\\;:"'()\[\]{}#@&*+_-]+/);
   for (const w of words) {
     const stripped = w.replace(/[^a-z]/g, '');
+    if (!stripped) continue;
     if (ROMAN_URDU_KEYWORDS.includes(stripped)) {
-      matchCount++;
-      if (matchCount >= 1) return 'ur';
+      return 'ur';
     }
+  }
+
+  // 3. Check for typical Roman Urdu suffix/grammatical patterns
+  if (/\b\w+(?:unga|ungi|ainge|enge|aonga|aongi|kren|krte|krty|wala|wali|wale|chahiye)\b/i.test(clean)) {
+    return 'ur';
   }
 
   return 'en';
@@ -186,12 +194,12 @@ export const translateMessageContent = async (text, userPreferredLang = 'en') =>
   const targetLang = (userPreferredLang || 'en').toLowerCase().trim();
   const detectedLang = detectMessageLanguage(trimmed);
 
-  // If text is already in target English and detected as English, return instantly (0 ms)
+  // If text is detected as pure standard English and target is English, return immediately
   if (targetLang === 'en' && detectedLang === 'en') {
     return trimmed;
   }
-  // If target is Urdu and detected as pure Urdu without English tokens
-  if ((targetLang === 'ur' || targetLang === 'pk') && detectedLang === 'ur' && !/[a-zA-Z]{5,}/.test(trimmed)) {
+  // If target is Urdu and detected as pure Urdu script without English tokens
+  if ((targetLang === 'ur' || targetLang === 'pk') && detectedLang === 'ur' && !/[a-zA-Z]{4,}/.test(trimmed)) {
     return trimmed;
   }
 
@@ -209,7 +217,7 @@ export const translateMessageContent = async (text, userPreferredLang = 'en') =>
     return diskCache[cacheKey];
   }
 
-  // 3. Fast Phrase Substitution Dictionary (0 ms) for Urdu/English fast path
+  // 3. Fast Phrase Substitution Dictionary (0 ms) for Urdu <-> English fast path
   let quickTranslation = trimmed;
   let phraseMatched = false;
   if (targetLang === 'ur' || targetLang === 'pk') {
@@ -228,7 +236,7 @@ export const translateMessageContent = async (text, userPreferredLang = 'en') =>
     });
   }
 
-  if (phraseMatched) {
+  if (phraseMatched && (targetLang !== 'en' || detectMessageLanguage(quickTranslation) === 'en')) {
     const cleanedPhrase = cleanTranslationOutput(quickTranslation, trimmed);
     memoryCache.set(cacheKey, cleanedPhrase);
     saveToStorageCache(cacheKey, cleanedPhrase);
@@ -249,12 +257,12 @@ export const translateMessageContent = async (text, userPreferredLang = 'en') =>
           targetLang,
           sourceLang: detectedLang
         },
-        { timeout: 4000 }
+        { timeout: 4500 }
       );
 
       if (res.data?.data?.translatedText) {
         const finalResult = cleanTranslationOutput(res.data.data.translatedText, quickTranslation);
-        if (finalResult && finalResult !== trimmed) {
+        if (finalResult && finalResult.trim().toLowerCase() !== trimmed.toLowerCase()) {
           memoryCache.set(cacheKey, finalResult);
           saveToStorageCache(cacheKey, finalResult);
           return finalResult;
