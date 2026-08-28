@@ -13,7 +13,8 @@ import {
   DollarSign,
   Compass,
   Images,
-  Eye
+  Eye,
+  Wand2
 } from 'lucide-react';
 import { fetchGalleryItems } from '../services/galleryService';
 import { useAuth } from '../context/AuthContext';
@@ -245,9 +246,40 @@ export default function Gallery() {
                       </span>
                     </div>
 
-                    <div className="text-orange-400 font-bold text-xs flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                      <span>Explore Spot</span>
-                      <ArrowRight className="size-3.5" />
+                    <div className="flex items-center gap-2">
+                      {/* Plan AI Trip Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const dest = item.city
+                            ? `${item.city}, ${item.country}`
+                            : item.country || item.title;
+                          navigate('/create-trip', {
+                            state: {
+                              fromGallery: true,
+                              destination: dest,
+                              galleryTitle: item.title,
+                              galleryDescription: item.description,
+                              galleryCategory: item.category,
+                              galleryCountry: item.country,
+                              galleryCity: item.city,
+                              galleryImageUrl: item.imageUrl
+                            }
+                          });
+                        }}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-500/10 hover:bg-orange-500/25 border border-orange-500/40 hover:border-orange-500/70 text-orange-400 font-bold text-[11px] transition-all duration-200 cursor-pointer"
+                      >
+                        <Wand2 className="size-3" />
+                        <span>AI Trip</span>
+                      </button>
+
+                      <div
+                        className="text-orange-400 font-bold text-xs flex items-center gap-1 group-hover:translate-x-1 transition-transform"
+                      >
+                        <span>Explore</span>
+                        <ArrowRight className="size-3.5" />
+                      </div>
                     </div>
                   </div>
                 </div>

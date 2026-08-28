@@ -74,8 +74,37 @@ const CreateTrip = () => {
   };
 
   useEffect(() => {
-    if (location.state?.destination) {
-      setDestination(location.state.destination);
+    const st = location.state;
+    if (!st) return;
+
+    if (st.destination) {
+      setDestination(st.destination);
+    }
+
+    // If navigated from Gallery catalog, auto-fill everything
+    if (st.fromGallery) {
+      const cat = (st.galleryCategory || '').toLowerCase();
+      const title = st.galleryTitle || '';
+      const desc = st.galleryDescription || '';
+
+      // Build a natural language prompt from the catalog info
+      const autoPrompt = `Plan a trip to ${st.destination || title}${desc ? `. Highlights: ${desc.slice(0, 120)}` : ''}.${cat ? ` Category: ${cat}.` : ''}`;
+      setNaturalPrompt(autoPrompt);
+
+      // Set interests based on category
+      if (cat.includes('adventure') || cat.includes('hiking') || cat.includes('outdoor')) {
+        setInterests('Adventure, Hiking, Outdoor Activities');
+      } else if (cat.includes('culture') || cat.includes('heritage') || cat.includes('museum')) {
+        setInterests('Culture, Heritage, Museums, Local Food');
+      } else if (cat.includes('beach') || cat.includes('resort') || cat.includes('island')) {
+        setInterests('Beach, Water Sports, Relaxation, Seafood');
+      } else if (cat.includes('city') || cat.includes('urban') || cat.includes('shopping')) {
+        setInterests('City Exploration, Shopping, Local Cuisine, Nightlife');
+      } else if (cat.includes('wildlife') || cat.includes('safari') || cat.includes('nature')) {
+        setInterests('Wildlife Safari, Nature, Photography');
+      } else {
+        setInterests('Sightseeing, Culture, Food, Local Experiences');
+      }
     }
   }, [location.state]);
 
@@ -194,6 +223,45 @@ const CreateTrip = () => {
             Describe your trip naturally or refine preferences below to generate a tailored day-by-day plan.
           </p>
         </div>
+
+        {/* Gallery Catalog Banner - shown when launched from Gallery */}
+        {location.state?.fromGallery && (
+          <div className="relative rounded-2xl overflow-hidden border border-orange-500/40 shadow-lg shadow-orange-500/10">
+            {location.state?.galleryImageUrl && (
+              <div
+                className="absolute inset-0 bg-cover bg-center opacity-20"
+                style={{ backgroundImage: `url(${location.state.galleryImageUrl})` }}
+              />
+            )}
+            <div className="relative flex items-center gap-4 p-4 bg-gradient-to-r from-orange-500/10 to-transparent">
+              {location.state?.galleryImageUrl && (
+                <img
+                  src={location.state.galleryImageUrl}
+                  alt={location.state.galleryTitle}
+                  className="size-14 rounded-xl object-cover border border-orange-500/40 shrink-0 shadow-md"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <Wand2 className="size-3.5 text-orange-400 shrink-0" />
+                  <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">Planning from Gallery Catalog</span>
+                </div>
+                <p className="text-sm font-bold text-foreground truncate">{location.state.galleryTitle}</p>
+                {location.state.galleryDescription && (
+                  <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{location.state.galleryDescription}</p>
+                )}
+              </div>
+              <div className="shrink-0 flex flex-col items-end gap-1">
+                {location.state.galleryCategory && (
+                  <span className="px-2 py-0.5 rounded-md bg-orange-500/20 border border-orange-500/30 text-orange-400 text-[10px] font-bold">
+                    {location.state.galleryCategory}
+                  </span>
+                )}
+                <span className="text-[10px] text-muted-foreground">AI fields auto-filled ✓</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleGenerate} className="liquid-glass-card rounded-3xl p-5 sm:p-8 border border-border/80 space-y-6 shadow-2xl">
           <div className="space-y-3">
