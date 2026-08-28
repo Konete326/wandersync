@@ -2224,7 +2224,7 @@ export default function Community() {
                                 <h4 className="text-xs font-bold text-white line-clamp-1">{msg.sharedTrip.title}</h4>
                                 <div className="flex items-center justify-between pt-1">
                                   <button
-                                    onClick={() => navigate(`/itinerary/${msg.sharedTrip._id}`)}
+                                    onClick={() => navigate(`/trips/${msg.sharedTrip._id}`)}
                                     className="px-2.5 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold transition-colors cursor-pointer"
                                   >
                                     View Details
@@ -2568,7 +2568,7 @@ export default function Community() {
                         </button>
 
                         <button
-                          onClick={() => navigate(`/itinerary/${trip._id}`)}
+                          onClick={() => navigate(`/trips/${trip._id}`)}
                           className="px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-foreground text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
                         >
                           <span>View</span>

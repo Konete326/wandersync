@@ -147,6 +147,22 @@ function AppLayout() {
             }
           />
           <Route
+            path="/itinerary/:id"
+            element={
+              <ProtectedRoute>
+                <ItineraryDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/itineraries/:id"
+            element={
+              <ProtectedRoute>
+                <ItineraryDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/my-trips"
             element={
               <ProtectedRoute>
