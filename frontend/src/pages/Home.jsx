@@ -32,8 +32,6 @@ const stats = [
 ];
 
 const navLinks = [
-  { label: 'How It Works', path: '/how-it-works' },
-  { label: 'Features', path: '/features' },
   { label: 'Gallery', path: '/gallery' },
   { label: 'Pricing', path: '/pricing' },
   { label: 'Community', path: '/community' }
