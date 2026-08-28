@@ -21,7 +21,6 @@ import {
   Search,
   Check,
   Share2,
-  Clock,
   Lock,
   Home as HomeIcon,
   ShieldAlert,
@@ -55,7 +54,7 @@ import { getPublicCommunityTrips, getMyTrips } from '@/services/tripService';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/context/ModalContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { translateMessageContent, detectMessageLanguage } from '@/utils/chatTranslator';
+import { translateMessageContent, detectMessageLanguage, cleanTranslationOutput } from '@/utils/chatTranslator';
 import { compressImage } from '@/utils/imageCompressor';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
@@ -226,13 +225,26 @@ export default function Community() {
   const [previewModalImg, setPreviewModalImg] = useState(null);
 
   // --- IN-CHAT TRANSLATION STATE (Roman Urdu <-> English) ---
+  // Default to true and target Roman Urdu if profile language is Urdu/Hindi or default
   const [autoTranslateEnabled, setAutoTranslateEnabled] = useState(true);
+  const [targetTranslationLang, setTargetTranslationLang] = useState(() => {
+    const pref = user?.preferences?.language || currentLang;
+    if (pref === 'en') return 'ur'; // if user wants translation, translate English into Roman Urdu
+    return pref || 'ur';
+  });
+
   const [translatedMap, setTranslatedMap] = useState({});
   const [translationLoadingMap, setTranslationLoadingMap] = useState({});
   const [viewOriginalMap, setViewOriginalMap] = useState({});
 
-  const userPreferredLang = user?.preferences?.language || currentLang || 'en';
-  const isUrduHindiUser = userPreferredLang === 'ur' || userPreferredLang === 'hi' || userPreferredLang === 'pk';
+  // Sync preference if user object loads
+  useEffect(() => {
+    if (user?.preferences?.language) {
+      setTargetTranslationLang(user.preferences.language);
+    }
+  }, [user?.preferences?.language]);
+
+  const isUrduHindiTarget = targetTranslationLang === 'ur' || targetTranslationLang === 'hi' || targetTranslationLang === 'pk';
 
   // --- TRIP & DESTINATION CIRCLES ---
   const [selectedTripCircle, setSelectedTripCircle] = useState(null);
@@ -303,13 +315,13 @@ export default function Community() {
   const messagesEndRef = useRef(null);
   const chatMessagesEndRef = useRef(null);
 
-  // Translation handler for messages
+  // Translation handler for messages across ALL channels
   const handleTranslateSingleMessage = async (msgId, text) => {
     if (!text || translatedMap[msgId] || translationLoadingMap[msgId]) return;
     setTranslationLoadingMap((prev) => ({ ...prev, [msgId]: true }));
     try {
-      const translated = await translateMessageContent(text, userPreferredLang);
-      setTranslatedMap((prev) => ({ ...prev, [msgId]: translated }));
+      const translated = await translateMessageContent(text, targetTranslationLang);
+      setTranslatedMap((prev) => ({ ...prev, [msgId]: cleanTranslationOutput(translated, text) }));
     } catch {
       // Keep original text on failure
     } finally {
@@ -638,15 +650,24 @@ export default function Community() {
     }
   }, [selectedTripCircle?.id]);
 
-  // Auto-translate messages when auto-translate is ON
+  // Auto-translate messages for Public Lounges AND Destination Circles AND Friends Chat
   useEffect(() => {
-    if (!autoTranslateEnabled || !tripCircleMessages.length) return;
+    if (!autoTranslateEnabled) return;
+
+    // Translate Public Lounge messages
+    messages.forEach((msg) => {
+      if (msg._id && msg.text && !translatedMap[msg._id] && !translationLoadingMap[msg._id]) {
+        handleTranslateSingleMessage(msg._id, msg.text);
+      }
+    });
+
+    // Translate Destination Circles messages
     tripCircleMessages.forEach((msg) => {
       if (msg._id && msg.text && !translatedMap[msg._id] && !translationLoadingMap[msg._id]) {
         handleTranslateSingleMessage(msg._id, msg.text);
       }
     });
-  }, [tripCircleMessages, autoTranslateEnabled, userPreferredLang]);
+  }, [messages, tripCircleMessages, autoTranslateEnabled, targetTranslationLang]);
 
   // Eligibility Verification for the selected circle
   const circleEligibility = useMemo(() => {
@@ -1149,10 +1170,12 @@ export default function Community() {
     return c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || c.country.toLowerCase().includes(q);
   });
 
+  const targetLangLabel = isUrduHindiTarget ? 'Roman Urdu' : 'English';
+
   return (
     <div className="w-full min-h-screen bg-background text-foreground py-6 px-3 sm:px-6 font-sans select-none">
       <div className="max-w-[1440px] mx-auto space-y-4">
-        {/* Header bar */}
+        {/* Top Header bar with Global Translation Switcher */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-4 rounded-2xl bg-[#121215] border border-border/80 shadow-md">
           <div>
             <div className="flex items-center gap-2">
@@ -1165,103 +1188,128 @@ export default function Community() {
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Discuss with local residents, chat 1-on-1, create travel friend groups & auto-translate messages seamlessly.
+              Chat in public lounges, destination circles, & friend groups with smart English ⇄ Roman Urdu auto-translation.
             </p>
           </div>
 
-          {/* Navigation Tab buttons */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#18181b] border border-border/80 self-stretch md:self-auto overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('chat')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 ${
-                activeTab === 'chat'
-                  ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 shadow-xs'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
-              }`}
-            >
-              <Globe className="size-3.5" />
-              <span>Public Lounges</span>
-            </button>
+          <div className="flex items-center gap-2 flex-wrap self-stretch md:self-auto">
+            {/* Global Auto-Translation Controller */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#18181b] border border-border/80 text-xs shadow-xs">
+              <Languages className="size-4 text-cyan-400" />
+              <button
+                type="button"
+                onClick={() => setTargetTranslationLang((prev) => (prev === 'ur' ? 'en' : 'ur'))}
+                className="font-bold text-cyan-400 hover:text-cyan-300 text-xs underline cursor-pointer"
+                title="Click to toggle target translation language"
+              >
+                {targetLangLabel}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAutoTranslateEnabled((prev) => !prev)}
+                className={`px-2 py-0.5 rounded-md font-bold text-[10px] transition-all cursor-pointer ${
+                  autoTranslateEnabled
+                    ? 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 shadow-xs'
+                    : 'bg-secondary text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {autoTranslateEnabled ? 'Auto-Translate: ON' : 'Auto-Translate: OFF'}
+              </button>
+            </div>
 
-            {/* TAB 2: TRIP & DESTINATION CIRCLES */}
-            <button
-              onClick={() => setActiveTab('trip_circles')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 relative ${
-                activeTab === 'trip_circles'
-                  ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-400 shadow-xs'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
-              }`}
-            >
-              <MapPin className="size-3.5 text-emerald-400" />
-              <span>Destination & Trip Circles</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/30">
-                Verified
-              </span>
-            </button>
+            {/* Navigation Tab buttons */}
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#18181b] border border-border/80 overflow-x-auto">
+              <button
+                onClick={() => setActiveTab('chat')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 ${
+                  activeTab === 'chat'
+                    ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 shadow-xs'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                }`}
+              >
+                <Globe className="size-3.5" />
+                <span>Public Lounges</span>
+              </button>
 
-            <button
-              onClick={() => {
-                if (!user) {
-                  showToast('Please login to access Friend Chat & Groups', 'warning');
-                  navigate('/login');
-                  return;
-                }
-                setActiveTab('friends_chat');
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 relative ${
-                activeTab === 'friends_chat'
-                  ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 shadow-xs'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
-              }`}
-            >
-              <MessageSquare className="size-3.5" />
-              <span>Friends & Groups</span>
-              {totalUnreadCount > 0 && (
-                <span className="size-4 rounded-full bg-orange-500 text-white text-[9px] font-bold flex items-center justify-center">
-                  {totalUnreadCount}
+              <button
+                onClick={() => setActiveTab('trip_circles')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 relative ${
+                  activeTab === 'trip_circles'
+                    ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-400 shadow-xs'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                }`}
+              >
+                <MapPin className="size-3.5 text-emerald-400" />
+                <span>Destination Circles</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/30">
+                  Verified
                 </span>
-              )}
-            </button>
+              </button>
 
-            <button
-              onClick={() => {
-                if (!user) {
-                  showToast('Please login to find and add friends', 'warning');
-                  navigate('/login');
-                  return;
-                }
-                setActiveTab('find_friends');
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 relative ${
-                activeTab === 'find_friends'
-                  ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 shadow-xs'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
-              }`}
-            >
-              <UserPlus className="size-3.5" />
-              <span>Find Friends</span>
-              {pendingRequestsCount > 0 && (
-                <span className="size-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
-                  {pendingRequestsCount}
-                </span>
-              )}
-            </button>
+              <button
+                onClick={() => {
+                  if (!user) {
+                    showToast('Please login to access Friend Chat & Groups', 'warning');
+                    navigate('/login');
+                    return;
+                  }
+                  setActiveTab('friends_chat');
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 relative ${
+                  activeTab === 'friends_chat'
+                    ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 shadow-xs'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                }`}
+              >
+                <MessageSquare className="size-3.5" />
+                <span>Friends & Groups</span>
+                {totalUnreadCount > 0 && (
+                  <span className="size-4 rounded-full bg-orange-500 text-white text-[9px] font-bold flex items-center justify-center">
+                    {totalUnreadCount}
+                  </span>
+                )}
+              </button>
 
-            <button
-              onClick={() => setActiveTab('itineraries')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 ${
-                activeTab === 'itineraries'
-                  ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 shadow-xs'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
-              }`}
-            >
-              <Compass className="size-3.5" />
-              <span>Public Trips</span>
-            </button>
+              <button
+                onClick={() => {
+                  if (!user) {
+                    showToast('Please login to find and add friends', 'warning');
+                    navigate('/login');
+                    return;
+                  }
+                  setActiveTab('find_friends');
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 relative ${
+                  activeTab === 'find_friends'
+                    ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 shadow-xs'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                }`}
+              >
+                <UserPlus className="size-3.5" />
+                <span>Find Friends</span>
+                {pendingRequestsCount > 0 && (
+                  <span className="size-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
+                    {pendingRequestsCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => setActiveTab('itineraries')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 ${
+                  activeTab === 'itineraries'
+                    ? 'border-orange-500/60 bg-orange-500/10 text-orange-400 shadow-xs'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                }`}
+              >
+                <Compass className="size-3.5" />
+                <span>Public Trips</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* --- TAB 1: GROUP CHAT LOUNGES --- */}
+        {/* --- TAB 1: GROUP CHAT LOUNGES (with In-Chat Translation) --- */}
         {activeTab === 'chat' && (
           <div className="rounded-2xl bg-[#121215] border border-border/80 overflow-hidden shadow-lg h-[calc(100vh-210px)] min-h-[560px] flex flex-col md:flex-row">
             <div
@@ -1344,6 +1392,15 @@ export default function Community() {
                     const isAuthor = user && (msg.user?._id === user._id || msg.user === user._id);
                     const isLiked = user && msg.likes?.includes(user._id);
 
+                    const isOriginalView = viewOriginalMap[msg._id];
+                    const translatedText = translatedMap[msg._id];
+                    const isTranslating = translationLoadingMap[msg._id];
+                    const hasTranslation = Boolean(translatedText && translatedText.trim() !== msg.text.trim());
+
+                    const displayedText = (autoTranslateEnabled && hasTranslation && !isOriginalView)
+                      ? translatedText
+                      : msg.text;
+
                     return (
                       <div key={msg._id} className="flex items-start gap-3 group">
                         <div
@@ -1381,8 +1438,51 @@ export default function Community() {
                             </span>
                           </div>
 
-                          <div className="p-3 rounded-2xl bg-[#18181c] border border-border/80 inline-block max-w-2xl text-xs text-foreground leading-relaxed shadow-xs">
-                            {renderFormattedText(msg.text)}
+                          <div className="p-3 rounded-2xl bg-[#18181c] border border-border/80 inline-block max-w-2xl text-xs text-foreground leading-relaxed shadow-xs space-y-1.5">
+                            {isTranslating ? (
+                              <div className="flex items-center gap-1.5 text-cyan-400 italic text-[11px] py-1">
+                                <Languages className="size-3.5 animate-spin" />
+                                <span>Translating into {targetLangLabel}...</span>
+                              </div>
+                            ) : (
+                              <div>{renderFormattedText(displayedText)}</div>
+                            )}
+
+                            {/* Translation Switcher / Badge */}
+                            {hasTranslation && (
+                              <div className="pt-1.5 border-t border-border/50 flex items-center justify-between gap-3 text-[10px]">
+                                <span className="text-muted-foreground flex items-center gap-1">
+                                  <Languages className="size-3 text-cyan-400" />
+                                  <span>
+                                    {isOriginalView
+                                      ? 'Original Text'
+                                      : `Translated into ${targetLangLabel}`}
+                                  </span>
+                                </span>
+
+                                <button
+                                  type="button"
+                                  onClick={() => toggleMessageTranslationView(msg._id, msg.text)}
+                                  className="px-2 py-0.5 rounded-md bg-secondary hover:bg-secondary/80 text-cyan-400 hover:text-cyan-300 font-bold border border-cyan-500/30 cursor-pointer transition-colors"
+                                >
+                                  {isOriginalView ? '⚡ Show Translated' : '🔄 Show Original'}
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Manual Translate Button */}
+                            {!hasTranslation && !isTranslating && (
+                              <div className="pt-0.5 flex items-center justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleMessageTranslationView(msg._id, msg.text)}
+                                  className="text-[10px] text-muted-foreground hover:text-cyan-400 flex items-center gap-1 cursor-pointer transition-colors"
+                                >
+                                  <Languages className="size-3" />
+                                  <span>Translate into {targetLangLabel}</span>
+                                </button>
+                              </div>
+                            )}
 
                             {msg.images && msg.images.length > 0 && (
                               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
@@ -1566,7 +1666,6 @@ export default function Community() {
 
             {/* Main Destination Discussion Room */}
             <div className={`flex-1 flex flex-col bg-[#121215] min-w-0 ${mobileShowChat ? 'flex' : 'hidden md:flex'}`}>
-              {/* Room Header with Auto-Translate Switcher */}
               <div className="p-3.5 border-b border-border/80 flex items-center justify-between bg-[#141418] flex-wrap gap-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <button
@@ -1612,26 +1711,6 @@ export default function Community() {
                     </p>
                   </div>
                 </div>
-
-                {/* Live Auto-Translation Toggle Bar */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#18181b] border border-border/80 text-[11px] shadow-xs">
-                  <Languages className="size-3.5 text-cyan-400" />
-                  <span className="text-muted-foreground hidden sm:inline">Auto-Translate:</span>
-                  <span className="font-bold text-cyan-300">
-                    {isUrduHindiUser ? 'Roman Urdu' : 'English'}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setAutoTranslateEnabled((prev) => !prev)}
-                    className={`px-2 py-0.5 rounded-md font-bold text-[10px] transition-all cursor-pointer ${
-                      autoTranslateEnabled
-                        ? 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 shadow-xs'
-                        : 'bg-secondary text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {autoTranslateEnabled ? 'ON' : 'OFF'}
-                  </button>
-                </div>
               </div>
 
               {/* Message Feed with Dual Real/Translated View */}
@@ -1660,13 +1739,9 @@ export default function Community() {
                     const isTranslating = translationLoadingMap[msg._id];
                     const hasTranslation = Boolean(translatedText && translatedText.trim() !== msg.text.trim());
 
-                    // Determine displayed text
                     const displayedText = (autoTranslateEnabled && hasTranslation && !isOriginalView)
                       ? translatedText
                       : msg.text;
-
-                    const detectedLang = detectMessageLanguage(msg.text);
-                    const targetLangLabel = isUrduHindiUser ? 'Roman Urdu' : 'English';
 
                     return (
                       <div key={msg._id} className="flex items-start gap-3 group">
@@ -1730,7 +1805,7 @@ export default function Community() {
                             {isTranslating ? (
                               <div className="flex items-center gap-1.5 text-cyan-400 italic text-[11px] py-1">
                                 <Languages className="size-3.5 animate-spin" />
-                                <span>Translating message into {targetLangLabel}...</span>
+                                <span>Translating into {targetLangLabel}...</span>
                               </div>
                             ) : (
                               <div>{renderFormattedText(displayedText)}</div>
@@ -1758,7 +1833,7 @@ export default function Community() {
                               </div>
                             )}
 
-                            {/* Manual Translate Button if not auto-translated yet */}
+                            {/* Manual Translate Button */}
                             {!hasTranslation && !isTranslating && (
                               <div className="pt-1 flex items-center justify-end">
                                 <button
