@@ -74,21 +74,41 @@ const CreateTrip = () => {
   };
 
   useEffect(() => {
-    const st = location.state;
-    if (!st) return;
+    const st = location.state || {};
+    const searchParams = new URLSearchParams(location.search);
+    
+    const queryDest = searchParams.get('destination');
+    const queryDays = searchParams.get('days');
+    const queryBudget = searchParams.get('budget');
+    const queryTravelers = searchParams.get('travelers');
 
-    if (st.destination) {
-      setDestination(st.destination);
+    const dest = st.destination || queryDest || '';
+    const title = st.galleryTitle || dest || '';
+    const desc = st.galleryDescription || '';
+    const cat = (st.galleryCategory || '').toLowerCase();
+    const isFromGallery = Boolean(st.fromGallery || queryDest || dest);
+
+    if (dest) {
+      setDestination(dest);
     }
 
-    // If navigated from Gallery catalog, auto-fill all form fields tailored to this user
-    if (st.fromGallery) {
-      const cat = (st.galleryCategory || '').toLowerCase();
-      const title = st.galleryTitle || '';
-      const desc = st.galleryDescription || '';
-      const dest = st.destination || title;
+    // If navigated from Gallery catalog or destination explorer, auto-fill all form fields tailored to this user
+    if (isFromGallery && (dest || title)) {
+      // 1. Duration (auto-detect days from tour title e.g. "Tokyo Japan 7-Day Guided Discovery Tour" -> 7 days)
+      let targetDays = 5;
+      if (st.durationDays) {
+        targetDays = Number(st.durationDays);
+      } else if (queryDays) {
+        targetDays = Number(queryDays);
+      } else {
+        const matchDays = title.match(/(\d+)[-\s]*days?/i) || desc.match(/(\d+)[-\s]*days?/i);
+        if (matchDays && matchDays[1]) {
+          targetDays = parseInt(matchDays[1], 10);
+        }
+      }
+      setDurationDays(Math.min(Math.max(targetDays, 1), 14));
 
-      // 1. Sync User Travel Style & Budget Level from user preferences
+      // 2. Sync User Travel Style & Budget Level from user preferences
       const userStyle = (user?.preferences?.travelStyle || 'moderate').toLowerCase();
       setTravelStyle(userStyle);
 
@@ -100,15 +120,22 @@ const CreateTrip = () => {
         setBudgetLevel('Moderate');
       }
 
-      // 2. Set Start Date to tomorrow by default
+      // 3. Set Companions based on travelersCount
+      const numTravelers = st.travelersCount || Number(queryTravelers) || 1;
+      if (numTravelers === 2) {
+        setCompanions('Couple');
+      } else if (numTravelers > 2) {
+        setCompanions('Friends');
+      } else {
+        setCompanions('Solo');
+      }
+
+      // 4. Set Start Date to tomorrow by default
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setStartDate(tomorrow.toISOString().split('T')[0]);
 
-      // 3. Set Duration
-      setDurationDays(5);
-
-      // 4. Set Interests tailored to catalog category
+      // 5. Set Interests tailored to catalog category
       if (cat.includes('adventure') || cat.includes('hiking') || cat.includes('mountain') || cat.includes('outdoor')) {
         setInterests('Adventure, Hiking, Mountain Trekking, Photography');
       } else if (cat.includes('culture') || cat.includes('heritage') || cat.includes('historic') || cat.includes('museum')) {
@@ -123,13 +150,13 @@ const CreateTrip = () => {
         setInterests('Sightseeing, Cultural Heritage, Local Food, Hidden Gems');
       }
 
-      // 5. Build personalized natural language prompt
+      // 6. Build personalized natural language prompt
       const userHome = user?.preferences?.homeCity || user?.preferences?.homeLocation || user?.preferences?.homeCountry || '';
-      const originSnippet = userHome ? ` starting from ${userHome}` : '';
-      const autoPrompt = `Plan a 5-day ${userStyle} travel experience to ${dest}${originSnippet}. Must visit: ${title}.${desc ? ` Highlights: ${desc.slice(0, 150)}.` : ''} Focus on authentic local experiences, sightseeing, and great food.`;
+      const originSnippet = userHome ? ` traveling from ${userHome}` : '';
+      const autoPrompt = `Plan a ${targetDays}-day ${userStyle} travel experience to ${dest || title}${originSnippet}. Must visit: ${title}.${desc ? ` Highlights: ${desc.slice(0, 150)}.` : ''} Focus on authentic local experiences, sightseeing, and great food.`;
       setNaturalPrompt(autoPrompt);
     }
-  }, [location.state, user]);
+  }, [location.state, location.search, user]);
 
   useEffect(() => {
     if (cooldown > 0) {

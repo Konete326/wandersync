@@ -224,9 +224,23 @@ export default function DestinationExplorer() {
   };
 
   const handlePlanWithCustomConfig = () => {
-    const destParam = encodeURIComponent(`${selectedCity || destination.city || destination.title}, ${destination.country}`);
+    const dest = `${selectedCity || destination.city || destination.title}, ${destination.country}`;
     const budgetParam = calculatedExpenses.grandTotal;
-    navigate(`/create?destination=${destParam}&days=${tripDays}&budget=${budgetParam}&travelers=${travelersCount}`);
+    navigate('/create', {
+      state: {
+        fromGallery: true,
+        destination: dest,
+        galleryTitle: destination.title,
+        galleryDescription: destination.description,
+        galleryCategory: destination.category,
+        galleryCountry: destination.country,
+        galleryCity: selectedCity || destination.city,
+        galleryImageUrl: destination.imageUrl,
+        durationDays: tripDays || 7,
+        travelersCount,
+        calculatedBudget: budgetParam
+      }
+    });
   };
 
   if (loading || !destination) {
