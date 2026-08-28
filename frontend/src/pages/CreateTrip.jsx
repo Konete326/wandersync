@@ -81,32 +81,55 @@ const CreateTrip = () => {
       setDestination(st.destination);
     }
 
-    // If navigated from Gallery catalog, auto-fill everything
+    // If navigated from Gallery catalog, auto-fill all form fields tailored to this user
     if (st.fromGallery) {
       const cat = (st.galleryCategory || '').toLowerCase();
       const title = st.galleryTitle || '';
       const desc = st.galleryDescription || '';
+      const dest = st.destination || title;
 
-      // Build a natural language prompt from the catalog info
-      const autoPrompt = `Plan a trip to ${st.destination || title}${desc ? `. Highlights: ${desc.slice(0, 120)}` : ''}.${cat ? ` Category: ${cat}.` : ''}`;
-      setNaturalPrompt(autoPrompt);
+      // 1. Sync User Travel Style & Budget Level from user preferences
+      const userStyle = (user?.preferences?.travelStyle || 'moderate').toLowerCase();
+      setTravelStyle(userStyle);
 
-      // Set interests based on category
-      if (cat.includes('adventure') || cat.includes('hiking') || cat.includes('outdoor')) {
-        setInterests('Adventure, Hiking, Outdoor Activities');
-      } else if (cat.includes('culture') || cat.includes('heritage') || cat.includes('museum')) {
-        setInterests('Culture, Heritage, Museums, Local Food');
-      } else if (cat.includes('beach') || cat.includes('resort') || cat.includes('island')) {
-        setInterests('Beach, Water Sports, Relaxation, Seafood');
-      } else if (cat.includes('city') || cat.includes('urban') || cat.includes('shopping')) {
-        setInterests('City Exploration, Shopping, Local Cuisine, Nightlife');
-      } else if (cat.includes('wildlife') || cat.includes('safari') || cat.includes('nature')) {
-        setInterests('Wildlife Safari, Nature, Photography');
+      if (userStyle === 'budget' || userStyle === 'backpacker') {
+        setBudgetLevel('Budget');
+      } else if (userStyle === 'luxury') {
+        setBudgetLevel('Luxury');
       } else {
-        setInterests('Sightseeing, Culture, Food, Local Experiences');
+        setBudgetLevel('Moderate');
       }
+
+      // 2. Set Start Date to tomorrow by default
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setStartDate(tomorrow.toISOString().split('T')[0]);
+
+      // 3. Set Duration
+      setDurationDays(5);
+
+      // 4. Set Interests tailored to catalog category
+      if (cat.includes('adventure') || cat.includes('hiking') || cat.includes('mountain') || cat.includes('outdoor')) {
+        setInterests('Adventure, Hiking, Mountain Trekking, Photography');
+      } else if (cat.includes('culture') || cat.includes('heritage') || cat.includes('historic') || cat.includes('museum')) {
+        setInterests('Culture, Heritage, Historical Landmarks, Traditional Cuisine');
+      } else if (cat.includes('beach') || cat.includes('coastal') || cat.includes('island') || cat.includes('resort')) {
+        setInterests('Beach, Island Hopping, Water Sports, Seafood & Relaxation');
+      } else if (cat.includes('city') || cat.includes('urban') || cat.includes('shopping')) {
+        setInterests('City Exploration, Shopping, Architecture, Nightlife & Cafes');
+      } else if (cat.includes('wildlife') || cat.includes('safari') || cat.includes('nature') || cat.includes('national park')) {
+        setInterests('Wildlife Safari, Nature Walks, Eco-Tourism, Photography');
+      } else {
+        setInterests('Sightseeing, Cultural Heritage, Local Food, Hidden Gems');
+      }
+
+      // 5. Build personalized natural language prompt
+      const userHome = user?.preferences?.homeCity || user?.preferences?.homeLocation || user?.preferences?.homeCountry || '';
+      const originSnippet = userHome ? ` starting from ${userHome}` : '';
+      const autoPrompt = `Plan a 5-day ${userStyle} travel experience to ${dest}${originSnippet}. Must visit: ${title}.${desc ? ` Highlights: ${desc.slice(0, 150)}.` : ''} Focus on authentic local experiences, sightseeing, and great food.`;
+      setNaturalPrompt(autoPrompt);
     }
-  }, [location.state]);
+  }, [location.state, user]);
 
   useEffect(() => {
     if (cooldown > 0) {
