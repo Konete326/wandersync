@@ -238,16 +238,18 @@ const LanguageContext = createContext();
 export const LanguageProvider = ({ children }) => {
   const { user } = useAuth();
   const [currentLang, setCurrentLang] = useState(() => {
-    return user?.preferences?.language || localStorage.getItem('wandersync_lang') || 'en';
+    return localStorage.getItem('wandersync_lang') || user?.preferences?.language || 'en';
   });
 
   useEffect(() => {
-    if (user?.preferences?.language && user.preferences.language !== currentLang) {
+    if (user?.preferences?.language) {
       setCurrentLang(user.preferences.language);
+      localStorage.setItem('wandersync_lang', user.preferences.language);
     }
-  }, [user?.preferences?.language]);
+  }, [user?._id, user?.preferences?.language]);
 
   const changeLanguage = (langCode) => {
+    if (!langCode) return;
     setCurrentLang(langCode);
     localStorage.setItem('wandersync_lang', langCode);
   };

@@ -1,5 +1,8 @@
+import axios from 'axios';
 import { getGeminiModel, AVAILABLE_MODELS, isGeminiConfigured } from '../config/gemini.js';
 import { buildItineraryPrompt, buildChatRefinePrompt } from '../utils/promptTemplates.js';
+
+const serverTranslationCache = new Map();
 
 const cleanJsonResponse = (text) => {
   let cleaned = text.trim();
@@ -269,32 +272,97 @@ const sanitizeTranslationOutput = (raw, fallback = '') => {
   return cleaned || fallback || '';
 };
 
-export const translateChatMessage = async (text, targetLang = 'ur', sourceLang = 'auto') => {
-  try {
-    let instruction = '';
-    if (targetLang === 'ur' || targetLang === 'pk' || targetLang === 'urdu') {
-      instruction = 'Translate this message into natural, conversational Roman Urdu (conversational Urdu written using English letters, e.g. "Mera naam Maaz hai"). Output ONLY the plain translated sentence as raw text. DO NOT output JSON, DO NOT output markdown, DO NOT output quotes.';
-    } else if (targetLang === 'hi' || targetLang === 'in' || targetLang === 'hindi') {
-      instruction = 'Translate this message into natural Roman Hindi (Hindi written using English letters, e.g. "Mera naam Maaz hai"). Output ONLY the plain translated sentence as raw text. DO NOT output JSON, DO NOT output markdown, DO NOT output quotes.';
-    } else if (targetLang === 'en' || targetLang === 'english') {
-      instruction = 'Translate this message (which may be in Roman Urdu, Roman Hindi, or Urdu script) into clear, natural English. Output ONLY the plain translated sentence as raw text. DO NOT output JSON, DO NOT output markdown, DO NOT output quotes.';
-    } else {
-      instruction = `Translate this message into ${targetLang}. Output ONLY the plain translated sentence as raw text without quotes or JSON.`;
-    }
+const LANGUAGE_DESCRIPTIONS = {
+  en: 'clear natural English',
+  ur: 'natural conversational Roman Urdu (or Urdu)',
+  ar: 'natural modern standard Arabic (العربية)',
+  hi: 'natural conversational Roman Hindi (or Hindi)',
+  es: 'natural Spanish (Español)',
+  fr: 'natural French (Français)',
+  de: 'natural German (Deutsch)',
+  tr: 'natural Turkish (Türkçe)',
+  ja: 'natural Japanese (日本語)',
+  zh: 'natural simplified Chinese (中文)'
+};
 
-    const prompt = `You are a real-time chat translator.
+export const translateChatMessage = async (text, targetLang = 'ur', sourceLang = 'auto') => {
+  if (!text || !text.trim()) return text;
+  const cleanInput = text.trim();
+  const normalizedTarget = (targetLang || 'ur').toLowerCase().trim();
+  const cacheKey = `${normalizedTarget}_${cleanInput}`;
+
+  // 1. Instant Cache Hit
+  if (serverTranslationCache.has(cacheKey)) {
+    return serverTranslationCache.get(cacheKey);
+  }
+
+  const isTargetEnglish = normalizedTarget === 'en' || normalizedTarget === 'english';
+  const isTargetUrdu = normalizedTarget === 'ur' || normalizedTarget === 'pk' || normalizedTarget === 'urdu';
+  const isTargetHindi = normalizedTarget === 'hi' || normalizedTarget === 'in' || normalizedTarget === 'hindi';
+
+  // Strategy A: Ultra-Fast Gemini Flash with Plain Text & Low Latency
+  if (isGeminiConfigured()) {
+    try {
+      let instruction = '';
+      if (isTargetUrdu) {
+        instruction = 'Translate into natural conversational Roman Urdu (conversational Urdu written in English alphabet, e.g. "Aap kaise hain"). Output ONLY the single translated sentence as raw plain text without JSON, markdown, or quotation marks.';
+      } else if (isTargetHindi) {
+        instruction = 'Translate into natural Roman Hindi written in English alphabet. Output ONLY the single translated sentence as raw plain text without JSON, markdown, or quotation marks.';
+      } else if (isTargetEnglish) {
+        instruction = 'Translate this message into clear, natural English. Output ONLY the single translated sentence as raw plain text without JSON, markdown, or quotation marks.';
+      } else {
+        const langDesc = LANGUAGE_DESCRIPTIONS[normalizedTarget] || normalizedTarget;
+        instruction = `Translate this message into ${langDesc}. Output ONLY the single translated sentence as raw plain text without JSON, markdown, or quotation marks.`;
+      }
+
+      const prompt = `You are an ultra-fast real-time chat translator.
 ${instruction}
 
 Text to translate:
-${text}
+${cleanInput}
 
 Translation:`;
 
-    const model = getGeminiModel();
-    const result = await model.generateContent(prompt);
-    const rawTranslation = result?.response?.text()?.trim() || text;
-    return sanitizeTranslationOutput(rawTranslation, text);
-  } catch {
-    return text;
+      // Use flash-lite or flash without JSON schema constraint for max speed
+      const model = getGeminiModel('gemini-2.5-flash-lite', false) || getGeminiModel('gemini-3.6-flash', false);
+      if (model) {
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2400));
+        const genPromise = model.generateContent(prompt);
+        const result = await Promise.race([genPromise, timeoutPromise]);
+        const rawTranslation = result?.response?.text()?.trim();
+        if (rawTranslation) {
+          const cleaned = sanitizeTranslationOutput(rawTranslation, cleanInput);
+          if (cleaned && cleaned.length > 0) {
+            if (serverTranslationCache.size > 2000) serverTranslationCache.clear();
+            serverTranslationCache.set(cacheKey, cleaned);
+            return cleaned;
+          }
+        }
+      }
+    } catch {
+      // Fallback to rapid auxiliary engine
+    }
   }
+
+  // Strategy B: Instant Direct Translation Fallback (~80-120ms response)
+  try {
+    const googleTarget = normalizedTarget === 'pk' ? 'ur' : normalizedTarget === 'in' ? 'hi' : (normalizedTarget || 'ur');
+    const gtUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${googleTarget}&dt=t&q=${encodeURIComponent(cleanInput)}`;
+    const response = await axios.get(gtUrl, { timeout: 1500 });
+    if (response.data && response.data[0]) {
+      const translatedParts = response.data[0].map((item) => item[0]).filter(Boolean).join('');
+      if (translatedParts) {
+        const cleaned = sanitizeTranslationOutput(translatedParts, cleanInput);
+        if (cleaned) {
+          if (serverTranslationCache.size > 2000) serverTranslationCache.clear();
+          serverTranslationCache.set(cacheKey, cleaned);
+          return cleaned;
+        }
+      }
+    }
+  } catch {
+    // Ignored
+  }
+
+  return cleanInput;
 };

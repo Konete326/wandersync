@@ -59,8 +59,20 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const handleSetUser = (userData) => {
+    setUser((prev) => {
+      const nextUser = typeof userData === 'function' ? userData(prev) : userData;
+      if (nextUser) {
+        localStorage.setItem('wandersync_user', JSON.stringify(nextUser));
+      } else {
+        localStorage.removeItem('wandersync_user');
+      }
+      return nextUser;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, setUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, setUser: handleSetUser }}>
       {children}
     </AuthContext.Provider>
   );

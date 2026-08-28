@@ -53,7 +53,7 @@ import {
 import { getPublicCommunityTrips, getMyTrips } from '@/services/tripService';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/context/ModalContext';
-import { useLanguage } from '@/context/LanguageContext';
+import { useLanguage, SUPPORTED_LANGUAGES } from '@/context/LanguageContext';
 import { translateMessageContent, detectMessageLanguage, cleanTranslationOutput } from '@/utils/chatTranslator';
 import { compressImage } from '@/utils/imageCompressor';
 import Loader from '@/components/common/Loader';
@@ -224,27 +224,35 @@ export default function Community() {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [previewModalImg, setPreviewModalImg] = useState(null);
 
-  // --- IN-CHAT TRANSLATION STATE (Roman Urdu <-> English) ---
-  // Default to true and target Roman Urdu if profile language is Urdu/Hindi or default
+  // --- IN-CHAT TRANSLATION STATE (Multi-Language Auto-Translation) ---
   const [autoTranslateEnabled, setAutoTranslateEnabled] = useState(true);
   const [targetTranslationLang, setTargetTranslationLang] = useState(() => {
-    const pref = user?.preferences?.language || currentLang;
-    if (pref === 'en') return 'ur'; // if user wants translation, translate English into Roman Urdu
-    return pref || 'ur';
+    return user?.preferences?.language || currentLang || 'ur';
   });
 
   const [translatedMap, setTranslatedMap] = useState({});
   const [translationLoadingMap, setTranslationLoadingMap] = useState({});
   const [viewOriginalMap, setViewOriginalMap] = useState({});
 
-  // Sync preference if user object loads
+  // Sync preference if user object or context language loads
   useEffect(() => {
     if (user?.preferences?.language) {
       setTargetTranslationLang(user.preferences.language);
+    } else if (currentLang) {
+      setTargetTranslationLang(currentLang);
     }
-  }, [user?.preferences?.language]);
+  }, [user?.preferences?.language, currentLang]);
 
-  const isUrduHindiTarget = targetTranslationLang === 'ur' || targetTranslationLang === 'hi' || targetTranslationLang === 'pk';
+  const currentTargetLangObj = useMemo(() => {
+    return SUPPORTED_LANGUAGES.find((l) => l.code === targetTranslationLang) || {
+      code: targetTranslationLang || 'ur',
+      name: targetTranslationLang?.toUpperCase() || 'Urdu',
+      nativeName: targetTranslationLang?.toUpperCase() || 'Urdu',
+      flag: '🌐'
+    };
+  }, [targetTranslationLang]);
+
+  const targetLangLabel = currentTargetLangObj.name || targetTranslationLang.toUpperCase();
 
   // --- TRIP & DESTINATION CIRCLES ---
   const [selectedTripCircle, setSelectedTripCircle] = useState(null);
@@ -316,21 +324,24 @@ export default function Community() {
   const chatMessagesEndRef = useRef(null);
 
   // Translation handler for messages across ALL channels
-  const handleTranslateSingleMessage = async (msgId, text) => {
-    if (!text || translatedMap[msgId] || translationLoadingMap[msgId]) return;
-    setTranslationLoadingMap((prev) => ({ ...prev, [msgId]: true }));
+  const handleTranslateSingleMessage = async (msgId, text, forceTargetLang) => {
+    const target = forceTargetLang || targetTranslationLang;
+    const cacheKey = `${target}_${msgId}`;
+    if (!text || translatedMap[cacheKey] || translationLoadingMap[cacheKey]) return;
+    setTranslationLoadingMap((prev) => ({ ...prev, [cacheKey]: true }));
     try {
-      const translated = await translateMessageContent(text, targetTranslationLang);
-      setTranslatedMap((prev) => ({ ...prev, [msgId]: cleanTranslationOutput(translated, text) }));
+      const translated = await translateMessageContent(text, target);
+      setTranslatedMap((prev) => ({ ...prev, [cacheKey]: cleanTranslationOutput(translated, text) }));
     } catch {
       // Keep original text on failure
     } finally {
-      setTranslationLoadingMap((prev) => ({ ...prev, [msgId]: false }));
+      setTranslationLoadingMap((prev) => ({ ...prev, [cacheKey]: false }));
     }
   };
 
   const toggleMessageTranslationView = (msgId, text) => {
-    if (!translatedMap[msgId]) {
+    const cacheKey = `${targetTranslationLang}_${msgId}`;
+    if (!translatedMap[cacheKey]) {
       handleTranslateSingleMessage(msgId, text);
     }
     setViewOriginalMap((prev) => ({ ...prev, [msgId]: !prev[msgId] }));
@@ -656,15 +667,17 @@ export default function Community() {
 
     // Translate Public Lounge messages
     messages.forEach((msg) => {
-      if (msg._id && msg.text && !translatedMap[msg._id] && !translationLoadingMap[msg._id]) {
-        handleTranslateSingleMessage(msg._id, msg.text);
+      const key = `${targetTranslationLang}_${msg._id}`;
+      if (msg._id && msg.text && !translatedMap[key] && !translationLoadingMap[key]) {
+        handleTranslateSingleMessage(msg._id, msg.text, targetTranslationLang);
       }
     });
 
     // Translate Destination Circles messages
     tripCircleMessages.forEach((msg) => {
-      if (msg._id && msg.text && !translatedMap[msg._id] && !translationLoadingMap[msg._id]) {
-        handleTranslateSingleMessage(msg._id, msg.text);
+      const key = `${targetTranslationLang}_${msg._id}`;
+      if (msg._id && msg.text && !translatedMap[key] && !translationLoadingMap[key]) {
+        handleTranslateSingleMessage(msg._id, msg.text, targetTranslationLang);
       }
     });
   }, [messages, tripCircleMessages, autoTranslateEnabled, targetTranslationLang]);
@@ -1170,8 +1183,6 @@ export default function Community() {
     return c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || c.country.toLowerCase().includes(q);
   });
 
-  const targetLangLabel = isUrduHindiTarget ? 'Roman Urdu' : 'English';
-
   return (
     <div className="w-full min-h-screen bg-background text-foreground py-6 px-3 sm:px-6 font-sans select-none">
       <div className="max-w-[1440px] mx-auto space-y-4">
@@ -1196,14 +1207,18 @@ export default function Community() {
             {/* Global Auto-Translation Controller */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#18181b] border border-border/80 text-xs shadow-xs">
               <Languages className="size-4 text-cyan-400" />
-              <button
-                type="button"
-                onClick={() => setTargetTranslationLang((prev) => (prev === 'ur' ? 'en' : 'ur'))}
-                className="font-bold text-cyan-400 hover:text-cyan-300 text-xs underline cursor-pointer"
-                title="Click to toggle target translation language"
+              <select
+                value={targetTranslationLang}
+                onChange={(e) => setTargetTranslationLang(e.target.value)}
+                className="bg-transparent text-cyan-400 font-bold text-xs focus:outline-none cursor-pointer"
+                title="Select auto-translation target language"
               >
-                {targetLangLabel}
-              </button>
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code} className="bg-[#18181b] text-foreground">
+                    {lang.flag} {lang.nativeName} ({lang.name})
+                  </option>
+                ))}
+              </select>
               <button
                 type="button"
                 onClick={() => setAutoTranslateEnabled((prev) => !prev)}
@@ -1392,10 +1407,11 @@ export default function Community() {
                     const isAuthor = user && (msg.user?._id === user._id || msg.user === user._id);
                     const isLiked = user && msg.likes?.includes(user._id);
 
+                    const msgKey = `${targetTranslationLang}_${msg._id}`;
                     const isOriginalView = viewOriginalMap[msg._id];
-                    const translatedText = translatedMap[msg._id];
-                    const isTranslating = translationLoadingMap[msg._id];
-                    const hasTranslation = Boolean(translatedText && translatedText.trim() !== msg.text.trim());
+                    const translatedText = translatedMap[msgKey];
+                    const isTranslating = translationLoadingMap[msgKey];
+                    const hasTranslation = Boolean(translatedText && translatedText.trim().toLowerCase() !== msg.text.trim().toLowerCase());
 
                     const displayedText = (autoTranslateEnabled && hasTranslation && !isOriginalView)
                       ? translatedText
@@ -1439,13 +1455,12 @@ export default function Community() {
                           </div>
 
                           <div className="p-3 rounded-2xl bg-[#18181c] border border-border/80 inline-block max-w-2xl text-xs text-foreground leading-relaxed shadow-xs space-y-1.5">
-                            {isTranslating ? (
-                              <div className="flex items-center gap-1.5 text-cyan-400 italic text-[11px] py-1">
-                                <Languages className="size-3.5 animate-spin" />
+                            <div>{renderFormattedText(displayedText)}</div>
+                            {isTranslating && !hasTranslation && (
+                              <div className="flex items-center gap-1 text-cyan-400/80 italic text-[10px] py-0.5 animate-pulse">
+                                <Languages className="size-3 animate-spin" />
                                 <span>Translating into {targetLangLabel}...</span>
                               </div>
-                            ) : (
-                              <div>{renderFormattedText(displayedText)}</div>
                             )}
 
                             {/* Translation Switcher / Badge */}
@@ -1711,6 +1726,23 @@ export default function Community() {
                     </p>
                   </div>
                 </div>
+
+                {/* In-Circle User Translation Language Switcher */}
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#18181b] border border-border/80 text-xs shadow-xs">
+                  <Languages className="size-3.5 text-emerald-400" />
+                  <span className="text-[11px] text-muted-foreground hidden sm:inline">My Circle Language:</span>
+                  <select
+                    value={targetTranslationLang}
+                    onChange={(e) => setTargetTranslationLang(e.target.value)}
+                    className="bg-transparent text-emerald-400 font-bold text-xs focus:outline-none cursor-pointer"
+                  >
+                    {SUPPORTED_LANGUAGES.map((lang) => (
+                      <option key={lang.code} value={lang.code} className="bg-[#18181b] text-foreground">
+                        {lang.flag} {lang.nativeName} ({lang.name})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Message Feed with Dual Real/Translated View */}
@@ -1734,10 +1766,11 @@ export default function Community() {
                     const isAuthor = user && (msg.user?._id === user._id || msg.user === user._id);
                     const isLiked = user && msg.likes?.includes(user._id);
 
+                    const msgKey = `${targetTranslationLang}_${msg._id}`;
                     const isOriginalView = viewOriginalMap[msg._id];
-                    const translatedText = translatedMap[msg._id];
-                    const isTranslating = translationLoadingMap[msg._id];
-                    const hasTranslation = Boolean(translatedText && translatedText.trim() !== msg.text.trim());
+                    const translatedText = translatedMap[msgKey];
+                    const isTranslating = translationLoadingMap[msgKey];
+                    const hasTranslation = Boolean(translatedText && translatedText.trim().toLowerCase() !== msg.text.trim().toLowerCase());
 
                     const displayedText = (autoTranslateEnabled && hasTranslation && !isOriginalView)
                       ? translatedText
@@ -1802,13 +1835,12 @@ export default function Community() {
                           </div>
 
                           <div className="p-3.5 rounded-2xl bg-[#18181c] border border-border/80 inline-block max-w-2xl text-xs text-foreground leading-relaxed shadow-xs space-y-2">
-                            {isTranslating ? (
-                              <div className="flex items-center gap-1.5 text-cyan-400 italic text-[11px] py-1">
-                                <Languages className="size-3.5 animate-spin" />
+                            <div>{renderFormattedText(displayedText)}</div>
+                            {isTranslating && !hasTranslation && (
+                              <div className="flex items-center gap-1 text-cyan-400/80 italic text-[10px] py-0.5 animate-pulse">
+                                <Languages className="size-3 animate-spin" />
                                 <span>Translating into {targetLangLabel}...</span>
                               </div>
-                            ) : (
-                              <div>{renderFormattedText(displayedText)}</div>
                             )}
 
                             {/* Translation Switcher / Badge */}

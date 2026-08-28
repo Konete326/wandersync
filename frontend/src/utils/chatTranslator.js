@@ -1,57 +1,118 @@
 import api from '../services/api';
 
-const translationCache = new Map();
+// In-memory cache for ultra-fast instant lookups
+const memoryCache = new Map();
+const inFlightRequests = new Map();
 
-// High frequency common conversational & travel phrases dictionary for instant fallback
+// LocalStorage Persistent Cache Helper
+const STORAGE_KEY = 'wandersync_chat_translations_v2';
+const loadStorageCache = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+};
+
+const saveToStorageCache = (key, value) => {
+  try {
+    const current = loadStorageCache();
+    current[key] = value;
+    // Keep cache under reasonable size (max 500 entries)
+    const keys = Object.keys(current);
+    if (keys.length > 500) {
+      delete current[keys[0]];
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+  } catch {
+    // Ignore storage quota errors
+  }
+};
+
+// High-frequency travel & conversational phrases dictionary for 0ms instant translation
 const PHRASE_MAP = {
   // English to Roman Urdu
   en_to_ur: [
-    { en: /hello|hi|hey/gi, ur: 'Assalam o Alaikum / Hello' },
-    { en: /how are you/gi, ur: 'Aap kaise hain' },
-    { en: /what is the best time to visit/gi, ur: 'Yahan ghoomne ka sabse behtareen waqt konsa hai' },
-    { en: /what are the best places to visit/gi, ur: 'Yahan ghoomne ke liye behtareen jaghein konsi hain' },
-    { en: /can anyone recommend good hotels/gi, ur: 'Kya koi ache hotels recommend kar sakta hai' },
-    { en: /is this place safe for tourists/gi, ur: 'Kya yeh jagah tourists ke liye safe aur mehfooz hai' },
-    { en: /food is amazing/gi, ur: 'Khana bohat zabardast hai' },
-    { en: /definitely visit/gi, ur: 'Zaroor visit karein' },
-    { en: /weather is beautiful/gi, ur: 'Mausam bohat pyara aur shandaar hai' },
-    { en: /how much does it cost/gi, ur: 'Is ka kitna kharcha / cost hoga' },
-    { en: /have a safe journey/gi, ur: 'Aapka safar asaan aur kamyab ho' },
-    { en: /thank you very much/gi, ur: 'Aapka bohat bohat shukriya' },
-    { en: /thanks/gi, ur: 'Shukriya' },
-    { en: /great itinerary/gi, ur: 'Bohat shandaar travel itinerary hai' },
-    { en: /see you there/gi, ur: 'Wahan mulaqat hoti hai' },
-    { en: /welcome to/gi, ur: 'Khush Amdeed' },
-    { en: /i am planning a trip/gi, ur: 'Main trip plan kar raha hoon' },
-    { en: /any local tips/gi, ur: 'Koi local advice ya tips hain' }
+    { en: /\b(hello|hi|hey)\b/gi, ur: 'Assalam o Alaikum / Hello' },
+    { en: /\bhow are you\b/gi, ur: 'Aap kaise hain' },
+    { en: /\bwhat is the best time to visit\b/gi, ur: 'Yahan ghoomne ka sabse behtareen waqt konsa hai' },
+    { en: /\bwhat are the best places to visit\b/gi, ur: 'Yahan ghoomne ke liye behtareen jaghein konsi hain' },
+    { en: /\bcan anyone recommend good hotels\b/gi, ur: 'Kya koi ache hotels recommend kar sakta hai' },
+    { en: /\bis this place safe for tourists\b/gi, ur: 'Kya yeh jagah tourists ke liye safe aur mehfooz hai' },
+    { en: /\bfood is amazing\b/gi, ur: 'Khana bohat zabardast hai' },
+    { en: /\bdefinitely visit\b/gi, ur: 'Zaroor visit karein' },
+    { en: /\bweather is beautiful\b/gi, ur: 'Mausam bohat pyara aur shandaar hai' },
+    { en: /\bhow much does it cost\b/gi, ur: 'Is ka kitna kharcha / cost hoga' },
+    { en: /\bhave a safe journey\b/gi, ur: 'Aapka safar asaan aur kamyab ho' },
+    { en: /\bthank you very much\b/gi, ur: 'Aapka bohat bohat shukriya' },
+    { en: /\bthank you|thanks\b/gi, ur: 'Shukriya' },
+    { en: /\bgreat itinerary\b/gi, ur: 'Bohat shandaar travel itinerary hai' },
+    { en: /\bsee you there\b/gi, ur: 'Wahan mulaqat hoti hai' },
+    { en: /\bwelcome to\b/gi, ur: 'Khush Amdeed' },
+    { en: /\bi am planning a trip\b/gi, ur: 'Main trip plan kar raha hoon' },
+    { en: /\bany local tips\b/gi, ur: 'Koi local advice ya tips hain' },
+    { en: /\bgood morning\b/gi, ur: 'Subah bakhair' },
+    { en: /\bgood night\b/gi, ur: 'Shab bakhair' },
+    { en: /\bwhere to stay\b/gi, ur: 'Kahan thehra jaye' },
+    { en: /\bvery beautiful\b/gi, ur: 'Bohat khubsurat' }
   ],
 
   // Roman Urdu to English
   ur_to_en: [
-    { ur: /bohat achi jagah hai|bohat pyari jagah hai/gi, en: 'It is a wonderful and beautiful place' },
-    { ur: /zaroor visit karein|zaroor jayein/gi, en: 'Definitely visit this place' },
-    { ur: /khana bohat zabardast hai|khana lazeez hai/gi, en: 'The food is absolutely amazing and delicious' },
-    { ur: /shaam ke waqt/gi, en: 'in the evening' },
-    { ur: /subah ke waqt/gi, en: 'in the morning' },
-    { ur: /mausam kaisa hai/gi, en: 'How is the weather there?' },
-    { ur: /mausam bohat acha hai/gi, en: 'The weather is very pleasant' },
-    { ur: /kisi ko achi hotel pata hai/gi, en: 'Does anyone know good hotels around here?' },
-    { ur: /shukriya/gi, en: 'Thank you' },
-    { ur: /bohat shukriya/gi, en: 'Thank you very much' },
-    { ur: /aap kaise hain/gi, en: 'How are you?' },
-    { ur: /khush amdeed/gi, en: 'Welcome' },
-    { ur: /main yahan rehta hoon/gi, en: 'I am a local resident here' },
-    { ur: /meri trip bani hoi hai/gi, en: 'I have a trip planned for this destination' }
+    { ur: /\b(bohat achi jagah hai|bohat pyari jagah hai|bohat achha hai)\b/gi, en: 'It is a wonderful and beautiful place' },
+    { ur: /\b(zaroor visit karein|zaroor jayein|zarur jao)\b/gi, en: 'Definitely visit this place' },
+    { ur: /\b(khana bohat zabardast hai|khana lazeez hai|khana bohot acha hai)\b/gi, en: 'The food is absolutely amazing and delicious' },
+    { ur: /\bshaam ke waqt\b/gi, en: 'in the evening' },
+    { ur: /\bsubah ke waqt\b/gi, en: 'in the morning' },
+    { ur: /\bmausam kaisa hai\b/gi, en: 'How is the weather there?' },
+    { ur: /\bmausam bohat acha hai\b/gi, en: 'The weather is very pleasant and pleasant' },
+    { ur: /\b(kisi ko achi hotel pata hai|koi acha hotel batao)\b/gi, en: 'Does anyone know good hotels around here?' },
+    { ur: /\bbohat shukriya\b/gi, en: 'Thank you very much' },
+    { ur: /\bshukriya\b/gi, en: 'Thank you' },
+    { ur: /\baap kaise hain|kese ho\b/gi, en: 'How are you?' },
+    { ur: /\bkhush amdeed\b/gi, en: 'Welcome' },
+    { ur: /\bmain yahan rehta hoon\b/gi, en: 'I am a local resident here' },
+    { ur: /\bmeri trip bani hoi hai\b/gi, en: 'I have a trip planned for this destination' },
+    { ur: /\bkya haal hai\b/gi, en: 'How are things going?' },
+    { ur: /\btheek hai|thik hai\b/gi, en: 'All good / Okay' },
+    { ur: /\bkitna kharcha hoga\b/gi, en: 'How much will it cost?' },
+    { ur: /\bkab jana chahiye\b/gi, en: 'When is the best time to visit?' }
   ]
 };
 
-// Check if a text appears to be in Roman Urdu / Hindi vs Standard English
+const ROMAN_URDU_KEYWORDS = [
+  'karein', 'kare', 'karna', 'karta', 'karti', 'karte', 'hain', 'hai', 'hon', 'hoon', 'mein', 'me', 
+  'bohat', 'bahut', 'bohot', 'shukriya', 'zaroor', 'zarur', 'kese', 'kaise', 'kaisi', 'kaisa', 
+  'yahan', 'wahan', 'bhi', 'kuch', 'hoga', 'hogi', 'hoge', 'mera', 'meri', 'mere', 'khana', 
+  'gaye', 'gayi', 'gaya', 'jana', 'jane', 'chahiye', 'bhai', 'apka', 'aapka', 'apki', 'aapki', 
+  'accha', 'achha', 'achi', 'achhi', 'pyara', 'pyari', 'zabardast', 'theek', 'thik', 'kya', 
+  'kyun', 'kab', 'kahan', 'kitna', 'kitni', 'kitne', 'sath', 'saath', 'wala', 'wali', 'wale', 
+  'hum', 'tum', 'aap', 'woh', 'yeh', 'raha', 'rahi', 'rahe', 'baat', 'waqt', 'shandar', 
+  'shandaar', 'behtareen', 'lazeez', 'mausam', 'safari', 'jagah', 'jageh', 'gari', 'gaari'
+];
+
+// Fast detection of Roman Urdu / Urdu script vs Standard English
 export const detectMessageLanguage = (text) => {
   if (!text) return 'en';
   const clean = text.toLowerCase();
-  const romanUrduKeywords = ['karein', 'kare', 'hain', 'hai', 'mein', 'bohat', 'shukriya', 'zaroor', 'kese', 'kaise', 'yahan', 'wahan', 'bhi', 'kuch', 'hoga', 'mera', 'meri', 'khana', 'gaye', 'jana', 'chahiye', 'bhai', 'apka', 'aapka', 'accha', 'achha', 'pyara', 'zabardast'];
-  const matches = romanUrduKeywords.filter((kw) => clean.includes(kw));
-  return matches.length >= 1 ? 'ur' : 'en';
+  
+  // Check for Arabic/Urdu unicode characters
+  if (/[\u0600-\u06FF]/.test(clean)) return 'ur';
+
+  // Check Roman Urdu token overlap
+  const words = clean.split(/\s+/);
+  let matchCount = 0;
+  for (const w of words) {
+    const stripped = w.replace(/[^a-z]/g, '');
+    if (ROMAN_URDU_KEYWORDS.includes(stripped)) {
+      matchCount++;
+      if (matchCount >= 1) return 'ur';
+    }
+  }
+
+  return 'en';
 };
 
 export const cleanTranslationOutput = (raw, fallback = '') => {
@@ -87,56 +148,131 @@ export const cleanTranslationOutput = (raw, fallback = '') => {
   return cleaned || fallback || '';
 };
 
-// Translate function calling backend AI with fallback
+// Queue system for concurrency control (max 3 parallel network calls)
+class AsyncQueue {
+  constructor(concurrency = 3) {
+    this.concurrency = concurrency;
+    this.running = 0;
+    this.queue = [];
+  }
+
+  push(task) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ task, resolve, reject });
+      this.process();
+    });
+  }
+
+  process() {
+    if (this.running >= this.concurrency || this.queue.length === 0) return;
+    const { task, resolve, reject } = this.queue.shift();
+    this.running++;
+    task()
+      .then(resolve)
+      .catch(reject)
+      .finally(() => {
+        this.running--;
+        this.process();
+      });
+  }
+}
+
+const translationQueue = new AsyncQueue(3);
+
+// Translate function calling backend AI with instant caching & fallback
 export const translateMessageContent = async (text, userPreferredLang = 'en') => {
   if (!text || !text.trim()) return text;
   const trimmed = text.trim();
+  const targetLang = (userPreferredLang || 'en').toLowerCase().trim();
   const detectedLang = detectMessageLanguage(trimmed);
 
-  // If user wants Urdu/Hindi and message is in English -> translate to Roman Urdu
-  // If user wants English and message is in Roman Urdu/Urdu -> translate to English
-  const targetLang = (userPreferredLang === 'ur' || userPreferredLang === 'hi' || userPreferredLang === 'pk') ? 'ur' : 'en';
-
-  // If target matches source language, return original
-  if (targetLang === detectedLang && userPreferredLang === 'en' && detectedLang === 'en') {
+  // If text is already in target English and detected as English, return instantly (0 ms)
+  if (targetLang === 'en' && detectedLang === 'en') {
+    return trimmed;
+  }
+  // If target is Urdu and detected as pure Urdu without English tokens
+  if ((targetLang === 'ur' || targetLang === 'pk') && detectedLang === 'ur' && !/[a-zA-Z]{5,}/.test(trimmed)) {
     return trimmed;
   }
 
   const cacheKey = `${targetLang}_${trimmed}`;
-  if (translationCache.has(cacheKey)) {
-    return translationCache.get(cacheKey);
+
+  // 1. Instant Memory Cache (0 ms)
+  if (memoryCache.has(cacheKey)) {
+    return memoryCache.get(cacheKey);
   }
 
-  // Fast phrase substitution fallback
+  // 2. Instant LocalStorage Cache (0 ms)
+  const diskCache = loadStorageCache();
+  if (diskCache[cacheKey]) {
+    memoryCache.set(cacheKey, diskCache[cacheKey]);
+    return diskCache[cacheKey];
+  }
+
+  // 3. Fast Phrase Substitution Dictionary (0 ms) for Urdu/English fast path
   let quickTranslation = trimmed;
-  if (targetLang === 'ur') {
+  let phraseMatched = false;
+  if (targetLang === 'ur' || targetLang === 'pk') {
     PHRASE_MAP.en_to_ur.forEach(({ en, ur }) => {
-      quickTranslation = quickTranslation.replace(en, ur);
+      if (en.test(quickTranslation)) {
+        quickTranslation = quickTranslation.replace(en, ur);
+        phraseMatched = true;
+      }
     });
-  } else {
+  } else if (targetLang === 'en') {
     PHRASE_MAP.ur_to_en.forEach(({ ur, en }) => {
-      quickTranslation = quickTranslation.replace(ur, en);
+      if (ur.test(quickTranslation)) {
+        quickTranslation = quickTranslation.replace(ur, en);
+        phraseMatched = true;
+      }
     });
   }
-  quickTranslation = cleanTranslationOutput(quickTranslation, trimmed);
 
-  // Try API for high-fidelity contextual translation
-  try {
-    const res = await api.post('/ai/translate-message', {
-      text: trimmed,
-      targetLang,
-      sourceLang: detectedLang
-    });
+  if (phraseMatched) {
+    const cleanedPhrase = cleanTranslationOutput(quickTranslation, trimmed);
+    memoryCache.set(cacheKey, cleanedPhrase);
+    saveToStorageCache(cacheKey, cleanedPhrase);
+    return cleanedPhrase;
+  }
 
-    if (res.data?.data?.translatedText) {
-      const finalResult = cleanTranslationOutput(res.data.data.translatedText, quickTranslation);
-      translationCache.set(cacheKey, finalResult);
-      return finalResult;
+  // 4. In-flight request deduplication
+  if (inFlightRequests.has(cacheKey)) {
+    return inFlightRequests.get(cacheKey);
+  }
+
+  const taskPromise = translationQueue.push(async () => {
+    try {
+      const res = await api.post(
+        '/ai/translate-message',
+        {
+          text: trimmed,
+          targetLang,
+          sourceLang: detectedLang
+        },
+        { timeout: 4000 }
+      );
+
+      if (res.data?.data?.translatedText) {
+        const finalResult = cleanTranslationOutput(res.data.data.translatedText, quickTranslation);
+        if (finalResult && finalResult !== trimmed) {
+          memoryCache.set(cacheKey, finalResult);
+          saveToStorageCache(cacheKey, finalResult);
+          return finalResult;
+        }
+      }
+    } catch {
+      // Return fast heuristic fallback on timeout or error
     }
-  } catch {
-    // Return quick translation if API fails
-  }
 
-  translationCache.set(cacheKey, quickTranslation);
-  return quickTranslation;
+    const fallbackResult = cleanTranslationOutput(quickTranslation, trimmed);
+    memoryCache.set(cacheKey, fallbackResult);
+    return fallbackResult;
+  });
+
+  inFlightRequests.set(cacheKey, taskPromise);
+  taskPromise.finally(() => {
+    inFlightRequests.delete(cacheKey);
+  });
+
+  return taskPromise;
 };

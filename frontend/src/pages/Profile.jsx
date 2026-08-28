@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Camera, Save, Check, MapPin, Languages } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
@@ -14,7 +14,7 @@ const Profile = () => {
   const [name, setName] = useState(user?.name || '');
   const [travelStyle, setTravelStyle] = useState(user?.preferences?.travelStyle || 'moderate');
   const [currency, setCurrency] = useState(user?.preferences?.currency || 'USD');
-  const [language, setSelectedLanguage] = useState(user?.preferences?.language || currentLang || 'en');
+  const [language, setSelectedLanguage] = useState(user?.preferences?.language || currentLang || 'ur');
   const [homeLocation, setHomeLocation] = useState(
     user?.preferences?.homeLocation || 
     (user?.preferences?.homeCity && user?.preferences?.homeCountry 
@@ -23,6 +23,25 @@ const Profile = () => {
   );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Sync state once when user object loads
+  useEffect(() => {
+    if (user && !isLoaded) {
+      setName(user.name || '');
+      setTravelStyle(user.preferences?.travelStyle || 'moderate');
+      setCurrency(user.preferences?.currency || 'USD');
+      setSelectedLanguage(user.preferences?.language || currentLang || 'ur');
+      setHomeLocation(
+        user.preferences?.homeLocation || 
+        (user.preferences?.homeCity && user.preferences?.homeCountry 
+          ? `${user.preferences.homeCity}, ${user.preferences.homeCountry}` 
+          : user.preferences?.homeCity || user.preferences?.homeCountry || '')
+      );
+      setIsLoaded(true);
+    }
+  }, [user, isLoaded, currentLang]);
 
   const isNameValid = !name || name.trim().length >= 2;
 
@@ -176,7 +195,11 @@ const Profile = () => {
               </label>
               <select
                 value={language}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedLanguage(val);
+                  setLanguage(val);
+                }}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50 cursor-pointer"
               >
                 {SUPPORTED_LANGUAGES.map((lang) => (
