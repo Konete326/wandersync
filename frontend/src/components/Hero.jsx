@@ -15,17 +15,7 @@ const QUICK_CHIPS = [
   { label: '🏝️ Bali Retreat 8 Days', prompt: '8 days in Bali for solo traveler. Surfing, waterfall hikes, yoga retreats, and hidden beach cafes.' },
 ];
 
-function NavButton({ label, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="bg-transparent border-none cursor-pointer font-sans text-[15px] font-semibold uppercase text-zinc-300 tracking-[0.04em] transition-colors hover:text-white"
-    >
-      {label}
-    </button>
-  );
-}
+
 
 export default function Hero() {
   const navigate = useNavigate();
@@ -147,44 +137,7 @@ export default function Hero() {
       />
 
       {/* Content wrapper (z-2) */}
-      <div className="relative z-[2] max-w-[1360px] mx-auto min-h-svh flex flex-col justify-between">
-        {/* Navigation bar (Dark Black Edition) */}
-        <nav className="flex items-center justify-between px-6 sm:px-16 pt-6 pb-4 relative">
-          {/* Left: wordmark */}
-          <span
-            onClick={() => navigate('/')}
-            className="font-display text-[36px] sm:text-[40px] text-white leading-none select-none cursor-pointer tracking-wider hover:opacity-90 transition-opacity"
-          >
-            wandor
-          </span>
-
-          {/* Center: group */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex gap-8 max-md:hidden">
-            <NavButton label="Discover" onClick={() => navigate('/gallery')} />
-            <NavButton label="Pricing" onClick={() => navigate('/pricing')} />
-            <NavButton label="Community" onClick={() => navigate('/community')} />
-            {user && <NavButton label="My Journeys" onClick={() => navigate('/my-trips')} />}
-          </div>
-
-          {/* Right: group */}
-          <div className="flex items-center gap-4 sm:gap-6">
-            <button
-              type="button"
-              onClick={() => navigate(user ? '/profile' : '/login')}
-              className="max-md:hidden bg-transparent border-none cursor-pointer font-sans text-[14px] font-semibold uppercase text-zinc-300 tracking-[0.04em] transition-colors hover:text-white"
-            >
-              {user ? 'My Profile' : 'Sign In'}
-            </button>
-
-            <button
-              type="button"
-              onClick={handlePlanMyTrip}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold border-none cursor-pointer font-sans text-[13px] sm:text-[14px] uppercase tracking-[0.04em] px-5 py-2.5 sm:py-3 rounded-full transition-all shadow-lg shadow-orange-500/25 active:scale-95"
-            >
-              Plan My Trip
-            </button>
-          </div>
-        </nav>
+      <div className="relative z-[2] max-w-[1360px] mx-auto min-h-[calc(100vh-3.5rem)] flex flex-col justify-center py-10">
 
         {/* Hero body */}
         <div className="flex flex-col items-center px-4 sm:px-6 pt-10 sm:pt-14 pb-16 text-center">

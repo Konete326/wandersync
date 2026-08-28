@@ -12,7 +12,6 @@ import AiChatWidget from './components/common/AiChatWidget';
 import { Agentation } from 'agentation';
 
 const Home = lazy(() => import('./pages/Home'));
-
 const Gallery = lazy(() => import('./pages/Gallery'));
 const DestinationExplorer = lazy(() => import('./pages/DestinationExplorer'));
 const Pricing = lazy(() => import('./pages/Pricing'));
@@ -30,7 +29,6 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 function AppLayout() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const isHomePage = location.pathname === '/';
 
   if (isAdminRoute) {
     return (
@@ -50,12 +48,19 @@ function AppLayout() {
     );
   }
 
-  const isCreatePage = location.pathname === '/create' || location.pathname === '/create-trip';
-
-  if (isCreatePage) {
-    return (
-      <>
+  return (
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
+      <Navbar />
+      <main className="flex-1">
         <Routes>
+          <Route
+            path="/"
+            element={
+              <ClientRoute>
+                <Home />
+              </ClientRoute>
+            }
+          />
           <Route
             path="/create"
             element={
@@ -72,36 +77,6 @@ function AppLayout() {
               </ClientRoute>
             }
           />
-        </Routes>
-        <AiChatWidget />
-      </>
-    );
-  }
-
-  if (isHomePage) {
-    return (
-      <>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ClientRoute>
-                <Home />
-              </ClientRoute>
-            }
-          />
-        </Routes>
-        <AiChatWidget />
-      </>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
-      <Navbar />
-      <main className="flex-1">
-        <Routes>
-
           <Route
             path="/gallery"
             element={
@@ -112,14 +87,6 @@ function AppLayout() {
           />
           <Route
             path="/gallery/:id"
-            element={
-              <ClientRoute>
-                <DestinationExplorer />
-              </ClientRoute>
-            }
-          />
-          <Route
-            path="/destination/:id"
             element={
               <ClientRoute>
                 <DestinationExplorer />
@@ -139,22 +106,6 @@ function AppLayout() {
             element={
               <ClientRoute>
                 <Community />
-              </ClientRoute>
-            }
-          />
-          <Route
-            path="/create"
-            element={
-              <ClientRoute>
-                <CreateTrip />
-              </ClientRoute>
-            }
-          />
-          <Route
-            path="/create-trip"
-            element={
-              <ClientRoute>
-                <CreateTrip />
               </ClientRoute>
             }
           />
@@ -234,20 +185,20 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <LanguageProvider>
-          <ModalProvider>
+        <ModalProvider>
+          <LanguageProvider>
             <Suspense
               fallback={
                 <div className="min-h-screen flex items-center justify-center bg-background">
-                  <Loader />
+                  <Loader text="Loading WanderSync..." />
                 </div>
               }
             >
+              <Agentation />
               <AppLayout />
             </Suspense>
-            <Agentation />
-          </ModalProvider>
-        </LanguageProvider>
+          </LanguageProvider>
+        </ModalProvider>
       </AuthProvider>
     </Router>
   );
