@@ -54,6 +54,39 @@ export const detectMessageLanguage = (text) => {
   return matches.length >= 1 ? 'ur' : 'en';
 };
 
+export const cleanTranslationOutput = (raw, fallback = '') => {
+  if (!raw || typeof raw !== 'string') return fallback || '';
+  let cleaned = raw.trim();
+
+  // Strip markdown code fences
+  cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+  // Parse JSON if returned as object/JSON string
+  if (cleaned.startsWith('{') && (cleaned.includes('translation') || cleaned.includes(':'))) {
+    try {
+      const parsed = JSON.parse(cleaned);
+      if (parsed.translation) cleaned = String(parsed.translation).trim();
+      else if (parsed.translatedText) cleaned = String(parsed.translatedText).trim();
+      else if (parsed.text) cleaned = String(parsed.text).trim();
+      else {
+        const firstVal = Object.values(parsed)[0];
+        if (firstVal && typeof firstVal === 'string') cleaned = firstVal.trim();
+      }
+    } catch {
+      const match = cleaned.match(/["']?(?:translation|translatedText|text)["']?\s*:\s*["']?([^"'}]+)/i);
+      if (match && match[1]) cleaned = match[1].trim();
+    }
+  }
+
+  // Strip all JSON artifacts, prefixes, brackets, quotes
+  cleaned = cleaned.replace(/^\{?\s*["']?(?:translation|translatedText|text)?["']?\s*:\s*["']?/i, '');
+  cleaned = cleaned.replace(/^(?:Translation|Translated Text|Urdu|English):\s*/i, '');
+  cleaned = cleaned.replace(/^["'`{\[\s\\]+/g, '');
+  cleaned = cleaned.replace(/["'`}\]\s\\]+$/g, '').trim();
+
+  return cleaned || fallback || '';
+};
+
 // Translate function calling backend AI with fallback
 export const translateMessageContent = async (text, userPreferredLang = 'en') => {
   if (!text || !text.trim()) return text;
@@ -85,6 +118,7 @@ export const translateMessageContent = async (text, userPreferredLang = 'en') =>
       quickTranslation = quickTranslation.replace(ur, en);
     });
   }
+  quickTranslation = cleanTranslationOutput(quickTranslation, trimmed);
 
   // Try API for high-fidelity contextual translation
   try {
@@ -95,7 +129,7 @@ export const translateMessageContent = async (text, userPreferredLang = 'en') =>
     });
 
     if (res.data?.data?.translatedText) {
-      const finalResult = res.data.data.translatedText;
+      const finalResult = cleanTranslationOutput(res.data.data.translatedText, quickTranslation);
       translationCache.set(cacheKey, finalResult);
       return finalResult;
     }

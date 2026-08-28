@@ -236,33 +236,64 @@ If the user is only chatting, set "generatedItinerary": null and provide your an
   }
 };
 
+const sanitizeTranslationOutput = (raw, fallback = '') => {
+  if (!raw || typeof raw !== 'string') return fallback || '';
+  let cleaned = raw.trim();
+
+  // Strip markdown code fences
+  cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+  // Parse JSON if returned as object/JSON string
+  if (cleaned.startsWith('{') && (cleaned.includes('translation') || cleaned.includes(':'))) {
+    try {
+      const parsed = JSON.parse(cleaned);
+      if (parsed.translation) cleaned = String(parsed.translation).trim();
+      else if (parsed.translatedText) cleaned = String(parsed.translatedText).trim();
+      else if (parsed.text) cleaned = String(parsed.text).trim();
+      else {
+        const firstVal = Object.values(parsed)[0];
+        if (firstVal && typeof firstVal === 'string') cleaned = firstVal.trim();
+      }
+    } catch {
+      const match = cleaned.match(/["']?(?:translation|translatedText|text)["']?\s*:\s*["']?([^"'}]+)/i);
+      if (match && match[1]) cleaned = match[1].trim();
+    }
+  }
+
+  // Strip all JSON artifacts, prefixes, brackets, quotes
+  cleaned = cleaned.replace(/^\{?\s*["']?(?:translation|translatedText|text)?["']?\s*:\s*["']?/i, '');
+  cleaned = cleaned.replace(/^(?:Translation|Translated Text|Urdu|English):\s*/i, '');
+  cleaned = cleaned.replace(/^["'`{\[\s\\]+/g, '');
+  cleaned = cleaned.replace(/["'`}\]\s\\]+$/g, '').trim();
+
+  return cleaned || fallback || '';
+};
+
 export const translateChatMessage = async (text, targetLang = 'ur', sourceLang = 'auto') => {
   try {
     let instruction = '';
     if (targetLang === 'ur' || targetLang === 'pk' || targetLang === 'urdu') {
-      instruction = 'Translate this message into natural, conversational Roman Urdu (conversational Urdu written in English alphabets, e.g. "Yeh bohat achi jagah hai, aapko shaam mein zaroor jana chahiye"). Output only the translated text without quotes or explanations.';
+      instruction = 'Translate this message into natural, conversational Roman Urdu (conversational Urdu written using English letters, e.g. "Mera naam Maaz hai"). Output ONLY the plain translated sentence as raw text. DO NOT output JSON, DO NOT output markdown, DO NOT output quotes.';
     } else if (targetLang === 'hi' || targetLang === 'in' || targetLang === 'hindi') {
-      instruction = 'Translate this message into natural Roman Hindi (Hindi written in English alphabets, e.g. "Yeh bahut achhi jagah hai, aapko shaam ko zaroor jana chahiye"). Output only the translated text without quotes or explanations.';
+      instruction = 'Translate this message into natural Roman Hindi (Hindi written using English letters, e.g. "Mera naam Maaz hai"). Output ONLY the plain translated sentence as raw text. DO NOT output JSON, DO NOT output markdown, DO NOT output quotes.';
     } else if (targetLang === 'en' || targetLang === 'english') {
-      instruction = 'Translate this message (which may be in Roman Urdu, Roman Hindi, Urdu script, or any other language) into fluent, natural English. Output only the translated text without quotes or explanations.';
-    } else if (targetLang === 'ar') {
-      instruction = 'Translate this message into clear, conversational Arabic. Output only the translated text without quotes or explanations.';
+      instruction = 'Translate this message (which may be in Roman Urdu, Roman Hindi, or Urdu script) into clear, natural English. Output ONLY the plain translated sentence as raw text. DO NOT output JSON, DO NOT output markdown, DO NOT output quotes.';
     } else {
-      instruction = `Translate this message into ${targetLang}. Output only the translated text without quotes or explanations.`;
+      instruction = `Translate this message into ${targetLang}. Output ONLY the plain translated sentence as raw text without quotes or JSON.`;
     }
 
-    const prompt = `You are a real-time travel community translator.
+    const prompt = `You are a real-time chat translator.
 ${instruction}
 
-Message to translate:
-"""${text}"""
+Text to translate:
+${text}
 
 Translation:`;
 
     const model = getGeminiModel();
     const result = await model.generateContent(prompt);
-    const translation = result?.response?.text()?.trim() || text;
-    return translation.replace(/^["']|["']$/g, '').trim();
+    const rawTranslation = result?.response?.text()?.trim() || text;
+    return sanitizeTranslationOutput(rawTranslation, text);
   } catch {
     return text;
   }
