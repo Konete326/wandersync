@@ -1,17 +1,26 @@
 import { useState } from 'react';
-import { Camera, Save, Shield, Check } from 'lucide-react';
+import { Camera, Save, Shield, Check, Globe, MapPin, Languages } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
+import { useLanguage, SUPPORTED_LANGUAGES } from '../context/LanguageContext';
 import { updateUserProfile } from '../services/authService';
 import { uploadImage } from '../services/mediaService';
 
 const Profile = () => {
   const { user, setUser } = useAuth();
   const { showToast, showModal } = useModal();
+  const { currentLang, setLanguage, t } = useLanguage();
 
   const [name, setName] = useState(user?.name || '');
   const [travelStyle, setTravelStyle] = useState(user?.preferences?.travelStyle || 'moderate');
   const [currency, setCurrency] = useState(user?.preferences?.currency || 'USD');
+  const [language, setSelectedLanguage] = useState(user?.preferences?.language || currentLang || 'en');
+  const [homeLocation, setHomeLocation] = useState(
+    user?.preferences?.homeLocation || 
+    (user?.preferences?.homeCity && user?.preferences?.homeCountry 
+      ? `${user.preferences.homeCity}, ${user.preferences.homeCountry}` 
+      : user?.preferences?.homeCity || user?.preferences?.homeCountry || '')
+  );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -27,7 +36,7 @@ const Profile = () => {
       const updated = await updateUserProfile({ avatar: { url: res.data.url, publicId: res.data.publicId } });
       setUser(updated.data);
       showToast('Avatar updated successfully!', 'success');
-    } catch (err) {
+    } catch {
       showModal({
         title: 'Upload Failed',
         message: 'Could not upload profile photo. Please try another image.',
@@ -51,10 +60,34 @@ const Profile = () => {
 
     setSaving(true);
     try {
-      const updated = await updateUserProfile({ name, travelStyle, currency });
+      // Split homeLocation into city and country if comma-separated
+      let homeCity = '';
+      let homeCountry = '';
+      if (homeLocation) {
+        const parts = homeLocation.split(',').map((p) => p.trim());
+        if (parts.length > 1) {
+          homeCity = parts[0];
+          homeCountry = parts.slice(1).join(', ');
+        } else {
+          homeCity = parts[0];
+          homeCountry = parts[0];
+        }
+      }
+
+      const updated = await updateUserProfile({
+        name,
+        travelStyle,
+        currency,
+        language,
+        homeLocation: homeLocation.trim(),
+        homeCity,
+        homeCountry
+      });
+
       setUser(updated.data);
-      showToast('Profile preferences saved!', 'success');
-    } catch (err) {
+      setLanguage(language);
+      showToast('Profile preferences saved successfully!', 'success');
+    } catch {
       showToast('Failed to update preferences', 'error');
     } finally {
       setSaving(false);
@@ -66,8 +99,12 @@ const Profile = () => {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12 space-y-8 font-sans">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-normal font-['Instrument_Serif'] text-foreground">Traveler Profile</h1>
-        <p className="text-xs text-muted-foreground mt-1">Manage your account credentials and travel preferences</p>
+        <h1 className="text-2xl sm:text-3xl font-normal font-['Instrument_Serif'] text-foreground">
+          {t('profileTitle')}
+        </h1>
+        <p className="text-xs text-muted-foreground mt-1">
+          {t('profileSubtitle')}
+        </p>
       </div>
 
       <div className="liquid-glass-card rounded-3xl p-6 sm:p-8 border border-border space-y-8">
@@ -85,16 +122,24 @@ const Profile = () => {
           </div>
 
           <div className="text-center sm:text-left space-y-1">
-            <h2 className="text-lg font-bold text-foreground font-heading">{user.name}</h2>
+            <div className="flex items-center gap-2 justify-center sm:justify-start">
+              <h2 className="text-lg font-bold text-foreground font-heading">{user.name}</h2>
+              {user.preferences?.homeLocation && (
+                <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-[10px] font-bold flex items-center gap-1">
+                  <MapPin className="size-2.5" />
+                  <span>{user.preferences.homeLocation}</span>
+                </span>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">{user.email}</p>
             {uploading && <p className="text-xs text-cyan-400 italic">Uploading new avatar...</p>}
           </div>
         </div>
 
-        <form onSubmit={handleSavePreferences} className="space-y-5">
+        <form onSubmit={handleSavePreferences} className="space-y-6">
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-medium text-muted-foreground">Display Name</label>
+              <label className="block text-xs font-medium text-muted-foreground">{t('displayName')}</label>
               {!isNameValid && name ? (
                 <span className="text-[10px] text-rose-400">Min 2 characters</span>
               ) : isNameValid && name ? (
@@ -122,13 +167,56 @@ const Profile = () => {
             </div>
           </div>
 
+          {/* Language & Resident Location Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            {/* Language Preference */}
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                <Languages className="size-3.5 text-orange-400" />
+                <span>{t('language')}</span>
+              </label>
+              <select
+                value={language}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/50 cursor-pointer"
+              >
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code} className="bg-card text-foreground">
+                    {lang.flag} {lang.nativeName} ({lang.name})
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-muted-foreground">
+                Select your preferred interface language (English, اردو, العربية, etc.)
+              </p>
+            </div>
+
+            {/* Resident Home Location (City & Country) */}
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                <MapPin className="size-3.5 text-emerald-400" />
+                <span>{t('homeLocation')}</span>
+              </label>
+              <input
+                type="text"
+                value={homeLocation}
+                onChange={(e) => setHomeLocation(e.target.value)}
+                placeholder={t('homeLocationPlaceholder')}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+              />
+              <p className="text-[10px] text-emerald-400/80">
+                ⭐ Grants verified <strong>Local Resident</strong> posting access in your city&apos;s community discussion rooms.
+              </p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="block text-xs font-medium text-muted-foreground">Default Travel Style</label>
+              <label className="block text-xs font-medium text-muted-foreground">{t('travelStyle')}</label>
               <select
                 value={travelStyle}
                 onChange={(e) => setTravelStyle(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50 cursor-pointer"
               >
                 <option value="budget" className="bg-card text-foreground">Budget Explorer</option>
                 <option value="moderate" className="bg-card text-foreground">Moderate / Balanced</option>
@@ -138,17 +226,20 @@ const Profile = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="block text-xs font-medium text-muted-foreground">Preferred Currency</label>
+              <label className="block text-xs font-medium text-muted-foreground">{t('currency')}</label>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cyan-500/50 cursor-pointer"
               >
                 <option value="USD" className="bg-card text-foreground">USD ($)</option>
                 <option value="EUR" className="bg-card text-foreground">EUR (€)</option>
                 <option value="GBP" className="bg-card text-foreground">GBP (£)</option>
                 <option value="JPY" className="bg-card text-foreground">JPY (¥)</option>
                 <option value="PKR" className="bg-card text-foreground">PKR (Rs)</option>
+                <option value="SAR" className="bg-card text-foreground">SAR (﷼)</option>
+                <option value="AED" className="bg-card text-foreground">AED (د.إ)</option>
+                <option value="INR" className="bg-card text-foreground">INR (₹)</option>
               </select>
             </div>
           </div>
@@ -159,7 +250,7 @@ const Profile = () => {
             className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
           >
             <Save className="size-3.5" />
-            <span>{saving ? 'Saving Changes...' : 'Save Preferences'}</span>
+            <span>{saving ? t('savingChanges') : t('savePreferences')}</span>
           </button>
         </form>
       </div>

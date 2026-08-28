@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ModalProvider } from './context/ModalContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Navbar from './components/common/Navbar';
 import Loader from './components/common/Loader';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -196,17 +197,19 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <ModalProvider>
-          <Suspense
-            fallback={
-              <div className="min-h-screen flex items-center justify-center bg-background">
-                <Loader />
-              </div>
-            }
-          >
-            <AppLayout />
-          </Suspense>
-        </ModalProvider>
+        <LanguageProvider>
+          <ModalProvider>
+            <Suspense
+              fallback={
+                <div className="min-h-screen flex items-center justify-center bg-background">
+                  <Loader />
+                </div>
+              }
+            >
+              <AppLayout />
+            </Suspense>
+          </ModalProvider>
+        </LanguageProvider>
       </AuthProvider>
     </Router>
   );

@@ -13,7 +13,11 @@ const userSchema = new mongoose.Schema({
   },
   preferences: {
     travelStyle: { type: String, enum: ['budget', 'moderate', 'luxury', 'backpacker'], default: 'moderate' },
-    currency: { type: String, default: 'USD' }
+    currency: { type: String, default: 'USD' },
+    language: { type: String, default: 'en' },
+    homeLocation: { type: String, default: '', trim: true },
+    homeCountry: { type: String, default: '', trim: true },
+    homeCity: { type: String, default: '', trim: true }
   },
   createdAt: { type: Date, default: Date.now }
 });

@@ -10,7 +10,7 @@ const generateToken = (id) => {
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, travelStyle, currency } = req.body;
+    const { name, email, password, travelStyle, currency, language, homeLocation, homeCountry, homeCity } = req.body;
     if (!name || !email || !password) {
       return sendError(res, 'Please provide all required fields', 400);
     }
@@ -29,7 +29,11 @@ export const register = async (req, res) => {
       password,
       preferences: {
         travelStyle: travelStyle || 'moderate',
-        currency: currency || 'USD'
+        currency: currency || 'USD',
+        language: language || 'en',
+        homeLocation: homeLocation || '',
+        homeCountry: homeCountry || '',
+        homeCity: homeCity || ''
       }
     });
 
@@ -86,16 +90,24 @@ export const getProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { name, travelStyle, currency, avatar } = req.body;
+    const { name, travelStyle, currency, language, homeLocation, homeCountry, homeCity, avatar } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) {
       return sendError(res, 'User not found', 404);
     }
 
+    if (!user.preferences) {
+      user.preferences = {};
+    }
+
     if (name) user.name = name.trim();
-    if (travelStyle) user.preferences.travelStyle = travelStyle;
-    if (currency) user.preferences.currency = currency;
+    if (travelStyle !== undefined) user.preferences.travelStyle = travelStyle;
+    if (currency !== undefined) user.preferences.currency = currency;
+    if (language !== undefined) user.preferences.language = language;
+    if (homeLocation !== undefined) user.preferences.homeLocation = homeLocation.trim();
+    if (homeCountry !== undefined) user.preferences.homeCountry = homeCountry.trim();
+    if (homeCity !== undefined) user.preferences.homeCity = homeCity.trim();
     if (avatar) user.avatar = avatar;
 
     const updatedUser = await user.save();

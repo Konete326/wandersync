@@ -7,6 +7,8 @@ const messageSchema = new mongoose.Schema({
   image: { type: String, default: '' },
   images: [{ type: String }],
   destinationTag: { type: String, default: '', trim: true },
+  authorBadge: { type: String, enum: ['resident', 'traveler', 'creator', 'member', ''], default: '' },
+  trip: { type: mongoose.Schema.Types.ObjectId, ref: 'Trip', default: null },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   pinned: { type: Boolean, default: false }
 }, { timestamps: true });
