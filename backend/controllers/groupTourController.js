@@ -12,6 +12,7 @@ export const getGroupTours = async (req, res) => {
       filter.$or = [{ title: new RegExp(req.query.search, 'i') }, { city: new RegExp(req.query.search, 'i') }, { country: new RegExp(req.query.search, 'i') }];
     }
     if (req.query.country && req.query.country !== 'All') filter.country = new RegExp(`^${req.query.country}$`, 'i');
+    if (req.query.category && req.query.category !== 'All') filter.category = new RegExp(`^${req.query.category}$`, 'i');
     if (req.query.status && req.query.status !== 'All') filter.status = req.query.status;
     const total = await GroupTour.countDocuments(filter);
     const tours = await GroupTour.find(filter).sort({ startDate: 1 }).skip((page - 1) * limit).limit(limit).lean();

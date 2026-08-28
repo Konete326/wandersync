@@ -9,6 +9,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import PublicRoute from './components/common/PublicRoute';
 import ClientRoute from './components/common/ClientRoute';
 import AiChatWidget from './components/common/AiChatWidget';
+import { Agentation } from 'agentation';
 
 const Home = lazy(() => import('./pages/Home'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
@@ -208,6 +209,7 @@ function App() {
             >
               <AppLayout />
             </Suspense>
+            <Agentation />
           </ModalProvider>
         </LanguageProvider>
       </AuthProvider>

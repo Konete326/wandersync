@@ -36,11 +36,19 @@ export const createPOSBooking = async (req, res) => {
 
 export const getTourBookings = async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit, 10) || 20;
+    const limit = parseInt(req.query.limit, 10) || 50;
     const filter = {};
-    if (req.query.tourId) filter.tour = req.query.tourId;
-    const bookings = await TourBooking.find(filter).populate('tour').sort({ createdAt: -1 }).limit(limit);
-    return sendSuccess(res, 'Tour bookings retrieved', bookings);
+    if (req.query.tourId && req.query.tourId !== 'All') filter.tour = req.query.tourId;
+    if (req.query.search) {
+      const regex = new RegExp(req.query.search, 'i');
+      filter.$or = [{ bookingCode: regex }, { customerName: regex }, { customerEmail: regex }];
+    }
+    const bookings = await TourBooking.find(filter).populate('tour').sort({ createdAt: -1 }).limit(limit).lean();
+    const statsAgg = await TourBooking.aggregate([
+      { $group: { _id: null, totalRevenue: { $sum: '$totalPaid' }, totalTickets: { $sum: '$passengersCount' }, count: { $sum: 1 } } }
+    ]);
+    const stats = statsAgg[0] || { totalRevenue: 0, totalTickets: 0, count: 0 };
+    return sendSuccess(res, 'Tour bookings retrieved', { bookings, stats });
   } catch (error) {
     return sendError(res, error.message, 500);
   }

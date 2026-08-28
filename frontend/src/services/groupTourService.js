@@ -1,10 +1,11 @@
 import api from './api';
 
-export const fetchGroupTours = async (page = 1, limit = 6, search = '', country = '', status = '') => {
+export const fetchGroupTours = async (page = 1, limit = 6, search = '', country = '', status = '', category = '') => {
   const params = new URLSearchParams({ page, limit });
   if (search) params.append('search', search);
   if (country && country !== 'All') params.append('country', country);
   if (status && status !== 'All') params.append('status', status);
+  if (category && category !== 'All') params.append('category', category);
 
   const response = await api.get(`/group-tours?${params.toString()}`);
   return response.data;
@@ -39,9 +40,10 @@ export const createPOSBooking = async (bookingData) => {
   return response.data;
 };
 
-export const fetchTourBookings = async (tourId = '') => {
+export const fetchTourBookings = async (tourId = '', search = '') => {
   const params = new URLSearchParams();
-  if (tourId) params.append('tourId', tourId);
+  if (tourId && tourId !== 'All') params.append('tourId', tourId);
+  if (search) params.append('search', search);
   const response = await api.get(`/group-tours/bookings?${params.toString()}`);
   return response.data;
 };
