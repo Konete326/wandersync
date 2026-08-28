@@ -12,8 +12,7 @@ import AiChatWidget from './components/common/AiChatWidget';
 import { Agentation } from 'agentation';
 
 const Home = lazy(() => import('./pages/Home'));
-const HowItWorks = lazy(() => import('./pages/HowItWorks'));
-const Features = lazy(() => import('./pages/Features'));
+
 const Gallery = lazy(() => import('./pages/Gallery'));
 const DestinationExplorer = lazy(() => import('./pages/DestinationExplorer'));
 const Pricing = lazy(() => import('./pages/Pricing'));
@@ -102,22 +101,7 @@ function AppLayout() {
       <Navbar />
       <main className="flex-1">
         <Routes>
-          <Route
-            path="/how-it-works"
-            element={
-              <ClientRoute>
-                <HowItWorks />
-              </ClientRoute>
-            }
-          />
-          <Route
-            path="/features"
-            element={
-              <ClientRoute>
-                <Features />
-              </ClientRoute>
-            }
-          />
+
           <Route
             path="/gallery"
             element={

@@ -53,7 +53,7 @@ const USER_NAVIGATION_MAP = [
   { keywords: ['community', 'chat', 'forum', 'lounge', 'meetup'], path: '/community', label: 'Join Community', icon: Users },
   { keywords: ['my trip', 'my booking', 'saved trips'], path: '/my-trips', label: 'View My Trips', icon: Compass },
   { keywords: ['pricing', 'subscription', 'upgrade', 'cost'], path: '/pricing', label: 'View Pricing', icon: CreditCard },
-  { keywords: ['how it works', 'guide'], path: '/how-it-works', label: 'How It Works', icon: Compass }
+  { keywords: ['how it works', 'guide', 'how to use'], path: '/create', label: 'AI Trip Builder', icon: Compass }
 ];
 
 const adminQuickPrompts = [

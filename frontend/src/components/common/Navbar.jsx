@@ -42,26 +42,7 @@ const Navbar = () => {
         </Link>
 
         <nav className="hidden md:flex items-center gap-1 font-sans">
-          <Link
-            to="/how-it-works"
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-              isActive('/how-it-works')
-                ? 'bg-orange-500/15 text-orange-400 border border-orange-500/40 font-bold shadow-sm shadow-orange-500/10'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
-            }`}
-          >
-            How It Works
-          </Link>
-          <Link
-            to="/features"
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-              isActive('/features')
-                ? 'bg-orange-500/15 text-orange-400 border border-orange-500/40 font-bold shadow-sm shadow-orange-500/10'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
-            }`}
-          >
-            Features
-          </Link>
+
           <Link
             to="/gallery"
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
@@ -183,20 +164,7 @@ const Navbar = () => {
 
       {mobileMenuOpen && (
         <div className="md:hidden px-4 pt-2 pb-6 border-t border-border bg-background/95 backdrop-blur-md space-y-2 font-sans">
-          <Link
-            to="/how-it-works"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
-          >
-            How It Works
-          </Link>
-          <Link
-            to="/features"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
-          >
-            Features
-          </Link>
+
           <Link
             to="/gallery"
             onClick={() => setMobileMenuOpen(false)}
