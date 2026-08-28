@@ -4,7 +4,8 @@ import {
   refineItinerary,
   chatAssistant,
   autofillDestination,
-  autofillEntity
+  autofillEntity,
+  translateMessage
 } from '../controllers/aiController.js';
 import { protect, optionalProtect, adminOnly } from '../middlewares/authMiddleware.js';
 
@@ -15,5 +16,6 @@ router.post('/chat-refine', optionalProtect, refineItinerary);
 router.post('/chat', optionalProtect, chatAssistant);
 router.post('/autofill-destination', optionalProtect, autofillDestination);
 router.post('/autofill-entity', optionalProtect, autofillEntity);
+router.post('/translate-message', optionalProtect, translateMessage);
 
 export default router;

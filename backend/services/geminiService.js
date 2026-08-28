@@ -235,3 +235,35 @@ If the user is only chatting, set "generatedItinerary": null and provide your an
     };
   }
 };
+
+export const translateChatMessage = async (text, targetLang = 'ur', sourceLang = 'auto') => {
+  try {
+    let instruction = '';
+    if (targetLang === 'ur' || targetLang === 'pk' || targetLang === 'urdu') {
+      instruction = 'Translate this message into natural, conversational Roman Urdu (conversational Urdu written in English alphabets, e.g. "Yeh bohat achi jagah hai, aapko shaam mein zaroor jana chahiye"). Output only the translated text without quotes or explanations.';
+    } else if (targetLang === 'hi' || targetLang === 'in' || targetLang === 'hindi') {
+      instruction = 'Translate this message into natural Roman Hindi (Hindi written in English alphabets, e.g. "Yeh bahut achhi jagah hai, aapko shaam ko zaroor jana chahiye"). Output only the translated text without quotes or explanations.';
+    } else if (targetLang === 'en' || targetLang === 'english') {
+      instruction = 'Translate this message (which may be in Roman Urdu, Roman Hindi, Urdu script, or any other language) into fluent, natural English. Output only the translated text without quotes or explanations.';
+    } else if (targetLang === 'ar') {
+      instruction = 'Translate this message into clear, conversational Arabic. Output only the translated text without quotes or explanations.';
+    } else {
+      instruction = `Translate this message into ${targetLang}. Output only the translated text without quotes or explanations.`;
+    }
+
+    const prompt = `You are a real-time travel community translator.
+${instruction}
+
+Message to translate:
+"""${text}"""
+
+Translation:`;
+
+    const model = getGeminiModel();
+    const result = await model.generateContent(prompt);
+    const translation = result?.response?.text()?.trim() || text;
+    return translation.replace(/^["']|["']$/g, '').trim();
+  } catch {
+    return text;
+  }
+};

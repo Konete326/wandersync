@@ -1,4 +1,4 @@
-import { generateAiItinerary, refineAiItinerary, chatWithGemini, autofillDestinationData } from '../services/geminiService.js';
+import { generateAiItinerary, refineAiItinerary, chatWithGemini, autofillDestinationData, translateChatMessage } from '../services/geminiService.js';
 import { generateOpenAiItinerary, refineOpenAiItinerary, chatWithOpenAi } from '../services/openaiService.js';
 import { isOpenAiConfigured } from '../config/openai.js';
 import { autofillEntityData } from '../services/geminiEntityService.js';
@@ -112,5 +112,22 @@ export const autofillEntity = async (req, res) => {
     return sendSuccess(res, `AI generated ${type} metadata successfully`, data);
   } catch (error) {
     return sendError(res, error.message || 'Failed to generate entity with AI', 500);
+  }
+};
+
+export const translateMessage = async (req, res) => {
+  try {
+    const { text, targetLang, sourceLang } = req.body;
+    if (!text || !text.trim()) {
+      return sendError(res, 'Text to translate is required', 400);
+    }
+    const translatedText = await translateChatMessage(text.trim(), targetLang || 'ur', sourceLang || 'auto');
+    return sendSuccess(res, 'Message translated successfully', {
+      originalText: text,
+      translatedText,
+      targetLang: targetLang || 'ur'
+    });
+  } catch (error) {
+    return sendError(res, error.message || 'Failed to translate message', 500);
   }
 };

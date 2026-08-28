@@ -22,16 +22,13 @@ import {
   Check,
   Share2,
   Clock,
-  CheckCircle2,
   Lock,
   Home as HomeIcon,
   ShieldAlert,
   ShieldCheck,
-  ChevronRight,
-  Info,
-  Calendar,
   MessageCircle,
-  Plus
+  Plus,
+  Languages
 } from 'lucide-react';
 import {
   fetchCommunityMessages,
@@ -58,6 +55,7 @@ import { getPublicCommunityTrips, getMyTrips } from '@/services/tripService';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/context/ModalContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { translateMessageContent, detectMessageLanguage } from '@/utils/chatTranslator';
 import { compressImage } from '@/utils/imageCompressor';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
@@ -206,7 +204,7 @@ export default function Community() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { showModal, showToast } = useModal();
-  const { t } = useLanguage();
+  const { currentLang } = useLanguage();
 
   // Navigation tabs: 'chat' | 'trip_circles' | 'friends_chat' | 'find_friends' | 'itineraries'
   const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'chat');
@@ -222,7 +220,16 @@ export default function Community() {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [previewModalImg, setPreviewModalImg] = useState(null);
 
-  // --- TRIP & DESTINATION CIRCLES (Restricted to Residents & Active Journey Travelers) ---
+  // --- IN-CHAT TRANSLATION STATE (Roman Urdu <-> English) ---
+  const [autoTranslateEnabled, setAutoTranslateEnabled] = useState(true);
+  const [translatedMap, setTranslatedMap] = useState({});
+  const [translationLoadingMap, setTranslationLoadingMap] = useState({});
+  const [viewOriginalMap, setViewOriginalMap] = useState({});
+
+  const userPreferredLang = user?.preferences?.language || currentLang || 'en';
+  const isUrduHindiUser = userPreferredLang === 'ur' || userPreferredLang === 'hi' || userPreferredLang === 'pk';
+
+  // --- TRIP & DESTINATION CIRCLES ---
   const [selectedTripCircle, setSelectedTripCircle] = useState(null);
   const [tripCircleMessages, setTripCircleMessages] = useState([]);
   const [loadingTripCircleMessages, setLoadingTripCircleMessages] = useState(false);
@@ -235,7 +242,7 @@ export default function Community() {
   const tripCircleMessagesEndRef = useRef(null);
 
   // Friends & Chat Modes ('direct' | 'groups')
-  const [chatSubMode, setChatSubMode] = useState('direct'); // 'direct' | 'groups'
+  const [chatSubMode, setChatSubMode] = useState('direct');
   const [friendsList, setFriendsList] = useState([]);
   const [loadingFriends, setLoadingFriends] = useState(false);
   const [activeFriend, setActiveFriend] = useState(null);
@@ -272,9 +279,9 @@ export default function Community() {
   const [outgoingRequests, setOutgoingRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
-  const [friendsFilter, setFriendsFilter] = useState('search'); // 'search' | 'requests' | 'my_friends'
+  const [friendsFilter, setFriendsFilter] = useState('search');
 
-  // User Profile Inspection Modal in Lounge
+  // User Profile Inspection Modal
   const [selectedProfileUser, setSelectedProfileUser] = useState(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
 
@@ -288,13 +295,29 @@ export default function Community() {
   const [loadingTrips, setLoadingTrips] = useState(true);
 
   const fileInputRef = useRef(null);
-  const chatFileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const chatMessagesEndRef = useRef(null);
 
-  // @Mention Autocomplete state
-  const [mentionQuery, setMentionQuery] = useState(null);
-  const [mentionTarget, setMentionTarget] = useState(null); // 'lounge' | 'chat' | 'circle'
+  // Translation handler for messages
+  const handleTranslateSingleMessage = async (msgId, text) => {
+    if (!text || translatedMap[msgId] || translationLoadingMap[msgId]) return;
+    setTranslationLoadingMap((prev) => ({ ...prev, [msgId]: true }));
+    try {
+      const translated = await translateMessageContent(text, userPreferredLang);
+      setTranslatedMap((prev) => ({ ...prev, [msgId]: translated }));
+    } catch {
+      // Keep original text on failure
+    } finally {
+      setTranslationLoadingMap((prev) => ({ ...prev, [msgId]: false }));
+    }
+  };
+
+  const toggleMessageTranslationView = (msgId, text) => {
+    if (!translatedMap[msgId]) {
+      handleTranslateSingleMessage(msgId, text);
+    }
+    setViewOriginalMap((prev) => ({ ...prev, [msgId]: !prev[msgId] }));
+  };
 
   // Helper to format @mentions in messages
   const renderFormattedText = (rawText) => {
@@ -320,7 +343,7 @@ export default function Community() {
     });
   };
 
-  // --- Group Channel Messages Loading ---
+  // Load Channel Messages
   const loadMessages = async (silent = false) => {
     const key = `community_msg_${activeGroup.id}`;
     const cached = getCachedData(key);
@@ -342,7 +365,7 @@ export default function Community() {
     }
   };
 
-  // --- Public Trips Loading ---
+  // Load Public Trips
   const loadTrips = async (silent = false) => {
     const key = 'community_public_trips';
     const cached = getCachedData(key);
@@ -361,7 +384,7 @@ export default function Community() {
     }
   };
 
-  // --- User's MyTrips Loading ---
+  // Load User's Trips
   const loadUserTrips = async () => {
     if (!user) return;
     setLoadingMyTrips(true);
@@ -376,22 +399,19 @@ export default function Community() {
     }
   };
 
-  // --- Friends List Loading ---
+  // Load Friends & Requests
   const loadFriends = async (silent = false) => {
     if (!user) return;
     if (!silent) setLoadingFriends(true);
     try {
       const res = await fetchFriendsList();
-      if (res.data) {
-        setFriendsList(res.data);
-      }
+      if (res.data) setFriendsList(res.data);
     } catch {
     } finally {
       if (!silent) setLoadingFriends(false);
     }
   };
 
-  // --- Friend Requests Loading ---
   const loadFriendRequests = async (silent = false) => {
     if (!user) return;
     if (!silent) setLoadingRequests(true);
@@ -407,52 +427,43 @@ export default function Community() {
     }
   };
 
-  // --- Friend Groups Loading ---
   const loadFriendGroups = async (silent = false) => {
     if (!user) return;
     if (!silent) setLoadingGroups(true);
     try {
       const res = await fetchFriendGroups();
-      if (res.data) {
-        setFriendGroups(res.data);
-      }
+      if (res.data) setFriendGroups(res.data);
     } catch {
     } finally {
       if (!silent) setLoadingGroups(false);
     }
   };
 
-  // --- Direct 1-on-1 Messages Loading ---
   const loadDirectMessages = async (silent = false) => {
     if (!user || !activeFriend) return;
     if (!silent) setLoadingDMs(true);
     try {
       const res = await fetchDirectMessages(activeFriend._id);
-      if (res.data) {
-        setDirectMessages(res.data);
-      }
+      if (res.data) setDirectMessages(res.data);
     } catch {
     } finally {
       if (!silent) setLoadingDMs(false);
     }
   };
 
-  // --- Group Chat Messages Loading ---
   const loadGroupMessages = async (silent = false) => {
     if (!user || !activeCustomGroup) return;
     if (!silent) setLoadingGroupDMs(true);
     try {
       const res = await fetchGroupMessages(activeCustomGroup._id);
-      if (res.data) {
-        setGroupMessages(res.data);
-      }
+      if (res.data) setGroupMessages(res.data);
     } catch {
     } finally {
       if (!silent) setLoadingGroupDMs(false);
     }
   };
 
-  // --- Trip / Destination Circles Messages Loading ---
+  // Load Trip / Destination Circles Messages
   const loadTripCircleMessages = async (circle, silent = false) => {
     if (!circle) return;
     const room = circle.isTrip ? `trip-${circle.tripData?._id}` : `dest-${circle.city.toLowerCase()}`;
@@ -557,7 +568,6 @@ export default function Community() {
     return list;
   }, [myTrips, publicTrips]);
 
-  // Set default active trip circle
   useEffect(() => {
     if (allTripCircles.length > 0 && !selectedTripCircle) {
       setSelectedTripCircle(allTripCircles[0]);
@@ -569,6 +579,16 @@ export default function Community() {
       loadTripCircleMessages(selectedTripCircle);
     }
   }, [selectedTripCircle?.id]);
+
+  // Auto-translate messages when auto-translate is ON
+  useEffect(() => {
+    if (!autoTranslateEnabled || !tripCircleMessages.length) return;
+    tripCircleMessages.forEach((msg) => {
+      if (msg._id && msg.text && !translatedMap[msg._id] && !translationLoadingMap[msg._id]) {
+        handleTranslateSingleMessage(msg._id, msg.text);
+      }
+    });
+  }, [tripCircleMessages, autoTranslateEnabled, userPreferredLang]);
 
   // Eligibility Verification for the selected circle
   const circleEligibility = useMemo(() => {
@@ -631,7 +651,7 @@ export default function Community() {
     tripCircleMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // --- Handlers for Trip / Destination Circles Messaging ---
+  // Handlers for Trip / Destination Circles Messaging
   const handleSendTripCircleMessage = async (e) => {
     e.preventDefault();
     if (!user) {
@@ -640,7 +660,7 @@ export default function Community() {
       return;
     }
     if (!circleEligibility.canPost) {
-      showToast(t('restrictedNotice'), 'warning');
+      showToast('Only local residents or travelers with a planned journey can post here', 'warning');
       return;
     }
     if (!tripCircleInputText.trim() && tripCircleSelectedImages.length === 0) return;
@@ -727,7 +747,6 @@ export default function Community() {
     }
   };
 
-  // Switch to trip circle from public trip card
   const handleOpenTripDiscussion = (trip) => {
     const matched = allTripCircles.find((c) => c.tripData?._id === trip._id) || {
       id: `pubtrip-${trip._id}`,
@@ -746,7 +765,6 @@ export default function Community() {
     setMobileShowChat(true);
   };
 
-  // Lounge Message Sender
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!user) {
@@ -814,36 +832,6 @@ export default function Community() {
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleChatImageSelect = async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    if (chatSelectedImages.length + files.length > 3) {
-      showToast('Maximum 3 images allowed per message', 'warning');
-      return;
-    }
-    const newImages = [];
-    const newPreviews = [];
-    for (const file of files) {
-      if (chatSelectedImages.length + newImages.length >= 3) break;
-      try {
-        const compressed = await compressImage(file);
-        newImages.push(compressed);
-        newPreviews.push(URL.createObjectURL(compressed));
-      } catch {
-        newImages.push(file);
-        newPreviews.push(URL.createObjectURL(file));
-      }
-    }
-    setChatSelectedImages((prev) => [...prev, ...newImages]);
-    setChatImagePreviews((prev) => [...prev, ...newPreviews]);
-    if (chatFileInputRef.current) chatFileInputRef.current.value = '';
-  };
-
-  const removeChatSelectedImage = (index) => {
-    setChatSelectedImages((prev) => prev.filter((_, i) => i !== index));
-    setChatImagePreviews((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const handleLike = async (msgId) => {
     if (!user) {
       showToast('Please log in to like messages', 'warning');
@@ -892,9 +880,7 @@ export default function Community() {
     setSearching(true);
     try {
       const res = await searchCommunityUsers(searchQuery.trim());
-      if (res.data) {
-        setSearchResults(res.data);
-      }
+      if (res.data) setSearchResults(res.data);
     } catch {
       showToast('Failed to search users', 'error');
     } finally {
@@ -1101,7 +1087,7 @@ export default function Community() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-extrabold text-foreground tracking-tight font-heading">
-                {t('communityHub')}
+                WanderSync Community & Destination Circles
               </h1>
               <span className="px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 text-[10px] font-bold border border-orange-500/30 flex items-center gap-1">
                 <Sparkles className="size-2.5" />
@@ -1109,7 +1095,7 @@ export default function Community() {
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Discuss with local residents, chat 1-on-1, create travel friend groups & explore community itineraries.
+              Discuss with local residents, chat 1-on-1, create travel friend groups & auto-translate messages seamlessly.
             </p>
           </div>
 
@@ -1124,10 +1110,10 @@ export default function Community() {
               }`}
             >
               <Globe className="size-3.5" />
-              <span>{t('publicLounges')}</span>
+              <span>Public Lounges</span>
             </button>
 
-            {/* TAB 2: TRIP & DESTINATION CIRCLES (Restricted to Residents & Journey Travelers) */}
+            {/* TAB 2: TRIP & DESTINATION CIRCLES */}
             <button
               onClick={() => setActiveTab('trip_circles')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 relative ${
@@ -1137,7 +1123,7 @@ export default function Community() {
               }`}
             >
               <MapPin className="size-3.5 text-emerald-400" />
-              <span>{t('tripCircles')}</span>
+              <span>Destination & Trip Circles</span>
               <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/30">
                 Verified
               </span>
@@ -1159,7 +1145,7 @@ export default function Community() {
               }`}
             >
               <MessageSquare className="size-3.5" />
-              <span>{t('friendsGroups')}</span>
+              <span>Friends & Groups</span>
               {totalUnreadCount > 0 && (
                 <span className="size-4 rounded-full bg-orange-500 text-white text-[9px] font-bold flex items-center justify-center">
                   {totalUnreadCount}
@@ -1183,7 +1169,7 @@ export default function Community() {
               }`}
             >
               <UserPlus className="size-3.5" />
-              <span>{t('findFriends')}</span>
+              <span>Find Friends</span>
               {pendingRequestsCount > 0 && (
                 <span className="size-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
                   {pendingRequestsCount}
@@ -1200,7 +1186,7 @@ export default function Community() {
               }`}
             >
               <Compass className="size-3.5" />
-              <span>{t('publicTrips')}</span>
+              <span>Public Trips</span>
             </button>
           </div>
         </div>
@@ -1424,7 +1410,7 @@ export default function Community() {
           </div>
         )}
 
-        {/* --- TAB 2: TRIP & DESTINATION CIRCLES (Restricted to Residents & Active Journey Travelers) --- */}
+        {/* --- TAB 2: TRIP & DESTINATION CIRCLES (Restricted Rooms with Smart Auto-Translation) --- */}
         {activeTab === 'trip_circles' && (
           <div className="rounded-2xl bg-[#121215] border border-border/80 overflow-hidden shadow-lg h-[calc(100vh-210px)] min-h-[560px] flex flex-col md:flex-row">
             {/* Sidebar with Filterable Trips & Destinations */}
@@ -1510,8 +1496,8 @@ export default function Community() {
 
             {/* Main Destination Discussion Room */}
             <div className={`flex-1 flex flex-col bg-[#121215] min-w-0 ${mobileShowChat ? 'flex' : 'hidden md:flex'}`}>
-              {/* Room Header with verified status indicator */}
-              <div className="p-3.5 border-b border-border/80 flex items-center justify-between bg-[#141418]">
+              {/* Room Header with Auto-Translate Switcher */}
+              <div className="p-3.5 border-b border-border/80 flex items-center justify-between bg-[#141418] flex-wrap gap-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <button
                     onClick={() => setMobileShowChat(false)}
@@ -1538,10 +1524,10 @@ export default function Community() {
                           <ShieldCheck className="size-3" />
                           <span>
                             {circleEligibility.reason === 'resident'
-                              ? t('residentBadge')
+                              ? 'Local Resident'
                               : circleEligibility.reason === 'creator'
-                              ? t('creatorBadge')
-                              : t('travelerBadge')}
+                              ? 'Trip Creator'
+                              : 'Active Explorer'}
                           </span>
                         </span>
                       ) : (
@@ -1556,9 +1542,29 @@ export default function Community() {
                     </p>
                   </div>
                 </div>
+
+                {/* Live Auto-Translation Toggle Bar */}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#18181b] border border-border/80 text-[11px] shadow-xs">
+                  <Languages className="size-3.5 text-cyan-400" />
+                  <span className="text-muted-foreground hidden sm:inline">Auto-Translate:</span>
+                  <span className="font-bold text-cyan-300">
+                    {isUrduHindiUser ? 'Roman Urdu' : 'English'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setAutoTranslateEnabled((prev) => !prev)}
+                    className={`px-2 py-0.5 rounded-md font-bold text-[10px] transition-all cursor-pointer ${
+                      autoTranslateEnabled
+                        ? 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 shadow-xs'
+                        : 'bg-secondary text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {autoTranslateEnabled ? 'ON' : 'OFF'}
+                  </button>
+                </div>
               </div>
 
-              {/* Message Feed */}
+              {/* Message Feed with Dual Real/Translated View */}
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
                 {loadingTripCircleMessages ? (
                   <div className="py-20 flex items-center justify-center">
@@ -1571,13 +1577,26 @@ export default function Community() {
                       Welcome to {selectedTripCircle?.name} Circle
                     </h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      This dedicated discussion forum is exclusive for local residents living in {selectedTripCircle?.city || selectedTripCircle?.name} and verified travelers with an active planned journey here.
+                      Exclusive community discussion for locals living in {selectedTripCircle?.city || selectedTripCircle?.name} and travelers with a planned journey here.
                     </p>
                   </div>
                 ) : (
                   tripCircleMessages.map((msg) => {
                     const isAuthor = user && (msg.user?._id === user._id || msg.user === user._id);
                     const isLiked = user && msg.likes?.includes(user._id);
+
+                    const isOriginalView = viewOriginalMap[msg._id];
+                    const translatedText = translatedMap[msg._id];
+                    const isTranslating = translationLoadingMap[msg._id];
+                    const hasTranslation = Boolean(translatedText && translatedText.trim() !== msg.text.trim());
+
+                    // Determine displayed text
+                    const displayedText = (autoTranslateEnabled && hasTranslation && !isOriginalView)
+                      ? translatedText
+                      : msg.text;
+
+                    const detectedLang = detectMessageLanguage(msg.text);
+                    const targetLangLabel = isUrduHindiUser ? 'Roman Urdu' : 'English';
 
                     return (
                       <div key={msg._id} className="flex items-start gap-3 group">
@@ -1610,19 +1629,19 @@ export default function Community() {
                             {msg.authorBadge === 'resident' && (
                               <span className="px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 text-[9px] font-bold border border-emerald-500/30 flex items-center gap-0.5">
                                 <HomeIcon className="size-2.5" />
-                                <span>{t('residentBadge')}</span>
+                                <span>Local Resident</span>
                               </span>
                             )}
                             {msg.authorBadge === 'traveler' && (
                               <span className="px-1.5 py-0.2 rounded bg-cyan-500/15 text-cyan-400 text-[9px] font-bold border border-cyan-500/30 flex items-center gap-0.5">
                                 <Plane className="size-2.5" />
-                                <span>{t('travelerBadge')}</span>
+                                <span>Active Traveler</span>
                               </span>
                             )}
                             {msg.authorBadge === 'creator' && (
                               <span className="px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 text-[9px] font-bold border border-amber-500/30 flex items-center gap-0.5">
                                 <Crown className="size-2.5" />
-                                <span>{t('creatorBadge')}</span>
+                                <span>Trip Creator</span>
                               </span>
                             )}
                             {msg.user?.role === 'admin' && (
@@ -1637,8 +1656,51 @@ export default function Community() {
                             </span>
                           </div>
 
-                          <div className="p-3 rounded-2xl bg-[#18181c] border border-border/80 inline-block max-w-2xl text-xs text-foreground leading-relaxed shadow-xs">
-                            {renderFormattedText(msg.text)}
+                          <div className="p-3.5 rounded-2xl bg-[#18181c] border border-border/80 inline-block max-w-2xl text-xs text-foreground leading-relaxed shadow-xs space-y-2">
+                            {isTranslating ? (
+                              <div className="flex items-center gap-1.5 text-cyan-400 italic text-[11px] py-1">
+                                <Languages className="size-3.5 animate-spin" />
+                                <span>Translating message into {targetLangLabel}...</span>
+                              </div>
+                            ) : (
+                              <div>{renderFormattedText(displayedText)}</div>
+                            )}
+
+                            {/* Translation Switcher / Badge */}
+                            {hasTranslation && (
+                              <div className="pt-2 border-t border-border/50 flex items-center justify-between gap-3 text-[10px]">
+                                <span className="text-muted-foreground flex items-center gap-1">
+                                  <Languages className="size-3 text-cyan-400" />
+                                  <span>
+                                    {isOriginalView
+                                      ? 'Original Raw Message'
+                                      : `Translated into ${targetLangLabel}`}
+                                  </span>
+                                </span>
+
+                                <button
+                                  type="button"
+                                  onClick={() => toggleMessageTranslationView(msg._id, msg.text)}
+                                  className="px-2 py-0.5 rounded-md bg-secondary hover:bg-secondary/80 text-cyan-400 hover:text-cyan-300 font-bold border border-cyan-500/30 cursor-pointer transition-colors"
+                                >
+                                  {isOriginalView ? '⚡ Show Translated' : '🔄 Show Original'}
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Manual Translate Button if not auto-translated yet */}
+                            {!hasTranslation && !isTranslating && (
+                              <div className="pt-1 flex items-center justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleMessageTranslationView(msg._id, msg.text)}
+                                  className="text-[10px] text-muted-foreground hover:text-cyan-400 flex items-center gap-1 cursor-pointer transition-colors"
+                                >
+                                  <Languages className="size-3" />
+                                  <span>Translate into {targetLangLabel}</span>
+                                </button>
+                              </div>
+                            )}
 
                             {msg.images && msg.images.length > 0 && (
                               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
@@ -1683,7 +1745,7 @@ export default function Community() {
                 <div ref={tripCircleMessagesEndRef} />
               </div>
 
-              {/* Bottom Input Area: ACTIVE if Eligible, or RESTRICTION BANNER if Ineligible */}
+              {/* Bottom Input Area */}
               {circleEligibility.canPost ? (
                 <form onSubmit={handleSendTripCircleMessage} className="p-3 bg-[#141418] border-t border-border/80 space-y-2">
                   {tripCircleImagePreviews.length > 0 && (
@@ -1720,7 +1782,7 @@ export default function Community() {
                       type="text"
                       value={tripCircleInputText}
                       onChange={(e) => setTripCircleInputText(e.target.value)}
-                      placeholder={t('typeMessage')}
+                      placeholder="Write your message (English or Roman Urdu)..."
                       className="flex-1 px-3.5 py-2 rounded-xl bg-[#18181b] border border-border/80 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-emerald-500/60"
                     />
 
@@ -1741,10 +1803,10 @@ export default function Community() {
                     </div>
                     <div className="space-y-0.5">
                       <h4 className="text-xs font-bold text-amber-300">
-                        {t('restrictedRoom')}
+                        Restricted Discussion Circle
                       </h4>
                       <p className="text-[11px] text-muted-foreground max-w-lg leading-relaxed">
-                        {t('restrictedNotice')}
+                        Only verified local residents living in {selectedTripCircle?.city || selectedTripCircle?.name} or travelers with an active planned journey here can post messages.
                       </p>
                     </div>
                   </div>
@@ -1755,7 +1817,7 @@ export default function Community() {
                       className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs"
                     >
                       <MapPin className="size-3.5" />
-                      <span>{t('updateProfileBtn')}</span>
+                      <span>Set Resident City</span>
                     </button>
 
                     <button
@@ -1767,7 +1829,7 @@ export default function Community() {
                       className="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-zinc-950 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs"
                     >
                       <Plane className="size-3.5" />
-                      <span>{t('planTripBtn')}</span>
+                      <span>Plan Journey</span>
                     </button>
                   </div>
                 </div>
@@ -2424,7 +2486,6 @@ export default function Community() {
                 />
               </div>
 
-              {/* Friend Multi-Select List */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-foreground">
                   Select Friends to Add ({selectedMemberIds.length} selected) *
