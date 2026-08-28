@@ -41,13 +41,20 @@ const navLinks = [
 
 const Home = () => {
   const [activeVideo, setActiveVideo] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [promptText, setPromptText] = useState('');
   const videoRefs = useRef([]);
   const navigate = useNavigate();
   const { showToast } = useModal();
-  const transitionTimeout = useRef(null);
+
+  // Auto-switch slider every 1.5 seconds (1500ms)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveVideo((prev) => (prev + 1) % videos.length);
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [activeVideo]);
 
   useEffect(() => {
     videoRefs.current.forEach((vid, idx) => {
@@ -61,19 +68,8 @@ const Home = () => {
   }, [activeVideo]);
 
   const handleVideoSwitch = (index) => {
-    if (index === activeVideo || isTransitioning) return;
-    setIsTransitioning(true);
-
-    const targetVid = videoRefs.current[index];
-    if (targetVid) {
-      targetVid.play().catch(() => {});
-    }
-
+    if (index === activeVideo) return;
     setActiveVideo(index);
-    if (transitionTimeout.current) clearTimeout(transitionTimeout.current);
-    transitionTimeout.current = setTimeout(() => {
-      setIsTransitioning(false);
-    }, 1000);
   };
 
   const handleStartPlanning = (e) => {
@@ -103,7 +99,7 @@ const Home = () => {
             playsInline
             disablePictureInPicture
             disableRemotePlayback
-            preload={idx === 0 ? 'auto' : 'metadata'}
+            preload="auto"
             className={`absolute inset-0 w-full h-full object-cover transform-gpu will-change-transform will-change-opacity transition-opacity duration-1000 ease-in-out ${
               activeVideo === idx ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
             }`}
