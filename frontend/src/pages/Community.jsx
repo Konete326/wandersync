@@ -59,7 +59,12 @@ import { translateMessageContent, detectMessageLanguage } from '@/utils/chatTran
 import { compressImage } from '@/utils/imageCompressor';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
-import { getCachedData, setCachedData } from '@/utils/realtimeSync';
+import {
+  getCachedData,
+  setCachedData,
+  subscribeRealtimeUpdate,
+  broadcastRealtimeUpdate
+} from '@/utils/realtimeSync';
 
 const COMMUNITY_GROUPS = [
   {
@@ -506,6 +511,59 @@ export default function Community() {
     }
   }, [activeFriend, activeCustomGroup, chatSubMode]);
 
+  useEffect(() => {
+    if (selectedTripCircle) {
+      loadTripCircleMessages(selectedTripCircle);
+    }
+  }, [selectedTripCircle]);
+
+  useEffect(() => {
+    const unsubCommunity = subscribeRealtimeUpdate('community', () => {
+      loadMessages(true);
+    });
+    const unsubDMs = subscribeRealtimeUpdate('direct-messages', () => {
+      if (chatSubMode === 'direct' && activeFriend) loadDirectMessages(true);
+      if (chatSubMode === 'groups' && activeCustomGroup) loadGroupMessages(true);
+    });
+    const unsubCircles = subscribeRealtimeUpdate('trip-circles', () => {
+      if (selectedTripCircle) loadTripCircleMessages(selectedTripCircle, true);
+    });
+    const unsubFriends = subscribeRealtimeUpdate('friends', () => {
+      loadFriends(true);
+      loadFriendRequests(true);
+      loadFriendGroups(true);
+    });
+
+    const livePollTimer = setInterval(() => {
+      if (activeTab === 'community') {
+        loadMessages(true);
+      } else if (activeTab === 'friends_chat') {
+        if (chatSubMode === 'direct' && activeFriend) {
+          loadDirectMessages(true);
+        } else if (chatSubMode === 'groups' && activeCustomGroup) {
+          loadGroupMessages(true);
+        }
+      } else if (activeTab === 'trip_circles' && selectedTripCircle) {
+        loadTripCircleMessages(selectedTripCircle, true);
+      }
+    }, 2500);
+
+    const slowPollTimer = setInterval(() => {
+      if (user) {
+        loadFriendRequests(true);
+      }
+    }, 8000);
+
+    return () => {
+      unsubCommunity();
+      unsubDMs();
+      unsubCircles();
+      unsubFriends();
+      clearInterval(livePollTimer);
+      clearInterval(slowPollTimer);
+    };
+  }, [activeTab, activeGroup.id, chatSubMode, activeFriend, activeCustomGroup, selectedTripCircle, user]);
+
   // Combined List of Destination & Trip Circles
   const allTripCircles = useMemo(() => {
     const list = [];
@@ -680,6 +738,7 @@ export default function Community() {
       });
 
       await postCommunityMessage(formData);
+      broadcastRealtimeUpdate('trip-circles');
       setTripCircleInputText('');
       setTripCircleSelectedImages([]);
       setTripCircleImagePreviews([]);
@@ -785,6 +844,7 @@ export default function Community() {
       });
 
       await postCommunityMessage(formData);
+      broadcastRealtimeUpdate('community');
       setInputText('');
       setSelectedImages([]);
       setImagePreviews([]);
@@ -839,6 +899,7 @@ export default function Community() {
     }
     try {
       const res = await toggleLikeMessage(msgId);
+      broadcastRealtimeUpdate('community');
       setMessages((prev) =>
         prev.map((m) =>
           m._id === msgId
@@ -864,6 +925,8 @@ export default function Community() {
       onConfirm: async () => {
         try {
           await deleteCommunityMessage(msg._id);
+          broadcastRealtimeUpdate('community');
+          broadcastRealtimeUpdate('trip-circles');
           showToast('Message deleted', 'success');
           setMessages((prev) => prev.filter((m) => m._id !== msg._id));
           setTripCircleMessages((prev) => prev.filter((m) => m._id !== msg._id));
@@ -908,6 +971,7 @@ export default function Community() {
     setActionLoadingId(requestId);
     try {
       await respondFriendRequest(requestId, action);
+      broadcastRealtimeUpdate('friends');
       showToast(`Request ${action === 'accept' ? 'accepted' : 'declined'}`, 'success');
       loadFriendRequests(true);
       loadFriends(true);
@@ -926,6 +990,7 @@ export default function Community() {
       onConfirm: async () => {
         try {
           await removeFriendConnection(friendshipId);
+          broadcastRealtimeUpdate('friends');
           showToast('Friend removed', 'success');
           loadFriends();
           if (activeFriend?.name === friendName) setActiveFriend(null);
@@ -969,6 +1034,7 @@ export default function Community() {
         memberIds: selectedMemberIds
       };
       const res = await createFriendGroup(payload);
+      broadcastRealtimeUpdate('friends');
       showToast(`Group "${newGroupName}" created successfully!`, 'success');
       setCreateGroupModalOpen(false);
       setNewGroupName('');
@@ -1002,12 +1068,14 @@ export default function Community() {
 
       if (chatSubMode === 'direct' && activeFriend) {
         await sendDirectMessage(activeFriend._id, formData);
+        broadcastRealtimeUpdate('direct-messages');
         setChatInputText('');
         setChatSelectedImages([]);
         setChatImagePreviews([]);
         await loadDirectMessages(true);
       } else if (chatSubMode === 'groups' && activeCustomGroup) {
         await sendGroupMessage(activeCustomGroup._id, formData);
+        broadcastRealtimeUpdate('direct-messages');
         setChatInputText('');
         setChatSelectedImages([]);
         setChatImagePreviews([]);
@@ -1031,10 +1099,12 @@ export default function Community() {
 
       if (chatSubMode === 'direct' && activeFriend) {
         await sendDirectMessage(activeFriend._id, payload);
+        broadcastRealtimeUpdate('direct-messages');
         showToast(`Itinerary shared with ${activeFriend.name}!`, 'success');
         await loadDirectMessages(true);
       } else if (chatSubMode === 'groups' && activeCustomGroup) {
         await sendGroupMessage(activeCustomGroup._id, payload);
+        broadcastRealtimeUpdate('direct-messages');
         showToast(`Itinerary shared with ${activeCustomGroup.name}!`, 'success');
         await loadGroupMessages(true);
       }

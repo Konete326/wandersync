@@ -31,6 +31,7 @@ import { useModal } from '@/context/ModalContext';
 import { compressImage } from '@/utils/imageCompressor';
 import Loader from '@/components/common/Loader';
 import GlowingButton from '@/components/common/GlowingButton';
+import { subscribeRealtimeUpdate, broadcastRealtimeUpdate } from '@/utils/realtimeSync';
 
 const COMMUNITY_GROUPS = [
   {
@@ -117,10 +118,16 @@ export default function AdminCommunity() {
   }, [activeGroup]);
 
   useEffect(() => {
+    const unsub = subscribeRealtimeUpdate('community', () => {
+      loadMessages(true);
+    });
     const interval = setInterval(() => {
       loadMessages(true);
-    }, 3000);
-    return () => clearInterval(interval);
+    }, 2500);
+    return () => {
+      unsub();
+      clearInterval(interval);
+    };
   }, [activeGroup, search]);
 
   const handleGroupSelect = (grp) => {
@@ -164,6 +171,7 @@ export default function AdminCommunity() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
+    if (!user) return;
     if (!inputText.trim() && selectedImages.length === 0) return;
 
     setSending(true);
@@ -177,6 +185,7 @@ export default function AdminCommunity() {
       });
 
       await postCommunityMessage(formData);
+      broadcastRealtimeUpdate('community');
       setInputText('');
       setSelectedImages([]);
       setImagePreviews([]);
@@ -192,6 +201,7 @@ export default function AdminCommunity() {
   const handleTogglePin = async (msg) => {
     try {
       await togglePinMessage(msg._id);
+      broadcastRealtimeUpdate('community');
       showToast(`Message ${!msg.pinned ? 'pinned as group announcement' : 'unpinned'}`, 'success');
       setMessages((prev) =>
         prev.map((m) => (m._id === msg._id ? { ...m, pinned: !m.pinned } : m))
@@ -209,6 +219,7 @@ export default function AdminCommunity() {
       onConfirm: async () => {
         try {
           await deleteCommunityMessage(msg._id);
+          broadcastRealtimeUpdate('community');
           showToast('Message removed from community stream', 'success');
           setMessages((prev) => prev.filter((m) => m._id !== msg._id));
         } catch {
