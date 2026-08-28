@@ -51,6 +51,34 @@ function AppLayout() {
     );
   }
 
+  const isCreatePage = location.pathname === '/create' || location.pathname === '/create-trip';
+
+  if (isCreatePage) {
+    return (
+      <>
+        <Routes>
+          <Route
+            path="/create"
+            element={
+              <ClientRoute>
+                <CreateTrip />
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/create-trip"
+            element={
+              <ClientRoute>
+                <CreateTrip />
+              </ClientRoute>
+            }
+          />
+        </Routes>
+        <AiChatWidget />
+      </>
+    );
+  }
+
   if (isHomePage) {
     return (
       <>
@@ -133,33 +161,41 @@ function AppLayout() {
           <Route
             path="/create"
             element={
-              <ProtectedRoute>
+              <ClientRoute>
                 <CreateTrip />
-              </ProtectedRoute>
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/create-trip"
+            element={
+              <ClientRoute>
+                <CreateTrip />
+              </ClientRoute>
             }
           />
           <Route
             path="/trips/:id"
             element={
-              <ProtectedRoute>
+              <ClientRoute>
                 <ItineraryDetails />
-              </ProtectedRoute>
+              </ClientRoute>
             }
           />
           <Route
             path="/itinerary/:id"
             element={
-              <ProtectedRoute>
+              <ClientRoute>
                 <ItineraryDetails />
-              </ProtectedRoute>
+              </ClientRoute>
             }
           />
           <Route
             path="/itineraries/:id"
             element={
-              <ProtectedRoute>
+              <ClientRoute>
                 <ItineraryDetails />
-              </ProtectedRoute>
+              </ClientRoute>
             }
           />
           <Route
